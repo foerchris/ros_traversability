@@ -82,6 +82,7 @@ class GetContactPoints
 
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a);
 
+
 	private:
 	// *********** definitions for tf tranform
 	std::string BASE_FRAME;
@@ -107,10 +108,11 @@ class GetContactPoints
 	double resultion;
 	double xLength  ;
 	double yLength  ;
-	double FlipperTrackLength;
 	double mapSizeX;
 	double mapSizeY;
 	double TracksBaseLinkDist;
+	double FlipperTrackLength;
+
 };
 
 

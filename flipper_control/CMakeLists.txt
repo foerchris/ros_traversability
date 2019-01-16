@@ -74,6 +74,7 @@ add_executable(flipper_control_server
 				src/flipper_control_server.cpp
 				src/FlipperControl.cpp
 				src/GetContactPoints.cpp
+				src/CalcFlipperAngles.cpp
 				)
 
 add_executable(flipper_tf_broadcaster

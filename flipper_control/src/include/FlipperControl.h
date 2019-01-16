@@ -47,9 +47,7 @@ class FlipperControl
 	void SequenceControl(cv::Mat mapImage);
 
 
-	geometry_msgs::Pose clcDesiredPose(const geometry_msgs::Pose& meanPose);
 
-	geometry_msgs::Pose clcMean(std::vector<geometry_msgs::Pose> poses);
 
 
 	ros::Publisher frontFlipperAngleDesiredPub;
@@ -71,6 +69,7 @@ class FlipperControl
 
 	// true if
 	bool mapImageSet;
+
 
 
 };

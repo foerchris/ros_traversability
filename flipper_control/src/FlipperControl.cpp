@@ -94,12 +94,14 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	tracksContactPoints = getContactPoints.procTrackMaps(TracksAndFlipperImage[0], 1, "/static_base_link");
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "tacks_left", "/static_base_link"));
-	geometry_msgs::Pose meanPoseTrackLeft = clcMean(tracksContactPoints);
+
+//geometry_msgs::Pose meanPoseTrackLeft = clcMean(tracksContactPoints);
 
 
 	tracksContactPoints = getContactPoints.procTrackMaps(TracksAndFlipperImage[1], -1, "/static_base_link");
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "tracks_right","/static_base_link"));
-	geometry_msgs::Pose meanPoseTrackRight = clcMean(tracksContactPoints);
+
+	//geometry_msgs::Pose meanPoseTrackRight = clcMean(tracksContactPoints);
 
 
 
@@ -107,15 +109,6 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 	//publishAngles(robotFlipperAngles);
 }
 
-geometry_msgs::Pose FlipperControl::clcDesiredPose(const geometry_msgs::Pose& meanPose)
-{
-/*	geometry_msgs::Pose desiredPose;
-
-	double aplhaXY = meanPose.position.x *  meanPose.position.y
-
-	double a = ()
-	return desiredPose;*/
-}
 
 
 void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
@@ -149,25 +142,5 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 }
 
 
-
-geometry_msgs::Pose FlipperControl::clcMean(std::vector<geometry_msgs::Pose> poses)
-{
-	geometry_msgs::Pose mean;
-	mean.position.x = 0;
-	mean.position.y = 0;
-	mean.position.z = 0;
-	int N = poses.size();
-	for(int i=0; i<N;i++)
-	{
-		mean.position.x = mean.position.x + poses[i].position.x;
-		mean.position.y = mean.position.y + poses[i].position.y;
-		mean.position.z = mean.position.z + poses[i].position.z;
-	}
-	mean.position.x = mean.position.x/N;
-	mean.position.y = mean.position.y/N;
-	mean.position.z = mean.position.z/N;
-
-	return mean;
-}
 
 
