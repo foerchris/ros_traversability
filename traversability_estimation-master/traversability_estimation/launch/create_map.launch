@@ -1,0 +1,9 @@
+<launch>
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+		<node pkg="traversability_estimation" name="robot_positioning_node" type="robot_positioning_node" output="screen">
+		</node>
+	</group>
+
+</launch>

@@ -1,0 +1,11 @@
+<launch>
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+
+		<node pkg="elevation_mapper" name="elevation_mapper_node" type="elevation_mapper_node" output="screen" respawn="false">
+		</node>
+	</group>
+
+
+</launch>

@@ -1,0 +1,11 @@
+<launch>
+
+<group ns="GETjag">
+
+	<node pkg="robot_navigation" name="robot_navigation_server" type="robot_navigation_server" output="screen">
+	</node>
+	<node name="dummy_map" pkg="tf" type="static_transform_publisher" args="0.0 0.0 0.0 0.0 0.0 0.0 GETjag/map GETjag/odom 100" respawn="true" />
+
+</group>
+
+</launch>

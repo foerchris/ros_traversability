@@ -1,0 +1,53 @@
+gui:
+    version: 4
+    views:
+        - name                : Autonomous Behavior View
+          is_victim_found_view: 0
+          widgets             :
+            - name            : Video Camera Objects
+              widget          : QImageWidget
+              position        : top
+              auto_unsubscribe: true
+              topics          :
+                    - type : image
+                      topic: xtion/rgb/image_raw
+
+                    - type : image_marker
+                      topic: image_marker
+
+              services        :
+                    - name        : Select Region
+                      service     : select_region
+
+            - name            : Object Control
+              widget          : ObjectControlWidget
+              position        : bottom
+              auto_unsubscribe: true
+              topics          :
+                    - type : image_marker
+                      topic: image_marker
+
+              services        :
+                    - name        : Select Lines
+                      service     : select_line_Search
+
+                    - name        : Select Bars
+                      service     : select_bar_Search
+
+                    - name        : Select Flipper Mode
+                      service     : flipper_control_select_mode
+
+                    - name        : Select Stairs
+                      service     : select_stair_Search
+
+                    - name        : Chose Lines
+                      service     : chose_line
+
+                    - name        : Search Object
+                      service     : search_objects_in_image
+
+                    - name        : Follow Object
+                      service     : follow_object_in_image
+
+                    - name        : Forward Backward Mode
+                      service     : forward_backward_mode
