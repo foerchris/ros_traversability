@@ -14,9 +14,6 @@
 #include <opencv2/core.hpp>
 #include <nav_msgs/Odometry.h>
 
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
-
 // Tf
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
@@ -64,30 +61,13 @@ class FlipperControl
 	geometry_msgs::Pose flipperToMapTransform(const geometry_msgs::Pose& pose,const std::string& tfID);
 	geometry_msgs::Pose mapToFlipperTransform(const geometry_msgs::Pose& pose,const std::string& tfID);
 	flipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values, std::string flipperFrame);
-	std::vector<geometry_msgs::Pose> getContactPoints(cv::Mat flipperMaps, std::string flipperFrame);
-
-	void displayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name,const std::string& frame);
-	void DrawRotatedRectangle(cv::Mat& image,cv::RotatedRect rotatedRectangle);
-
-	void FlipperSequenzCallback(const ros::TimerEvent& event);
-	void publishAngles (flipperAngles robotFlipperAngles);
-
+	std::vector<geometry_msgs::Pose> getContactPoints(cv::Mat flipperMaps);
 
 	void SequenceControl(cv::Mat mapImage);
 	std::vector<cv::Mat> getFlipperRegions(cv::Mat mapImage);
 	cv::Mat getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage);
-
-	std::vector<cv::Mat> getTrackedRegions(cv::Mat mapImage, const std::string& flipperFrame);
-	cv::Mat getTracksImage(geometry_msgs::Pose& pose, cv::Mat mapImage);
-
-	double clcFlipperAngles(flipperContactPointsAngles flipperLeft, flipperContactPointsAngles flipperRight);
-	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a);
-
-	geometry_msgs::Pose FlipperControl::clcDesiredPose(const geometry_msgs::Pose& meanPose);
-
-	geometry_msgs::Pose clcMean(std::vector<geometry_msgs::Pose> poses);
-
-	std::vector<geometry_msgs::Pose> procTrackMaps(cv::Mat flipperMaps, const int& flipperLeftRight, std::string flipperFrame);
+	std::vector<minMaxFlipperVel> clcMinMaxVels(std::vector<cv::Mat> flipperMaps);
+	void clcFlipperAngles(const std::vector<minMaxFlipperVel>& minMaxVel, flipperAngles& robotFlipperAngles);
 
 	std::string BASE_FRAME;
 	std::string ODOM_FRAME;
@@ -101,12 +81,9 @@ class FlipperControl
 
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher rearFlipperAngleDesiredPub;
-	ros::Publisher markerPublisher;
 
+	void publishAngles (flipperAngles robotFlipperAngles);
 
-	cv::Mat globalMapImage;
-	bool mapImageSet;
-	ros::Timer msg_timer ;
 	// Robot parameter
 	double R;		// Radius of the wheel of the robot body
 	double r;		// Radius of the wheel on the end of the flipper
@@ -114,15 +91,13 @@ class FlipperControl
 	//double d;		// Distance between body wheel axis and "downside of flipper wheel"
 	double theta;	// Angle of distance (see above) and flipper wheel radius
 	double dThreshold;
-	double trackLength;
+
 	/////*********************** the image variables
 	double resultion;
 	double xLength  ;
 	double yLength  ;
-	double FlipperTrackLength;
 	double mapSizeX;
 	double mapSizeY;
-	double TracksBaseLinkDist;
 };
 
 

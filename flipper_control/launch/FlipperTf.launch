@@ -1,0 +1,21 @@
+<launch>
+
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+
+		<node pkg="robot_navigation" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_front_left" args="static_flipper_front_left base_link 0.244 0.275 0.082 " respawn="true" output="screen">
+		</node>
+
+		<node pkg="robot_navigation" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_front_right" args="static_flipper_front_right base_link 0.244 -0.275 0.082" respawn="true" output="screen">
+		</node>
+
+		<node pkg="robot_navigation" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_rear_left" args="static_flipper_rear_left base_link -0.244 0.275 0.082" respawn="true" output="screen">
+		</node>
+
+		<node pkg="robot_navigation" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_rear_right" args="static_flipper_rear_right base_link -0.244 -0.275 0.082" respawn="true" output="screen">
+		</node>
+
+	</group>
+
+</launch>
