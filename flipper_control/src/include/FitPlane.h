@@ -1,34 +1,30 @@
 /*
- * CalcFlipperAngles.h
+ * FitPlane.h
  *
- *  Created on: 16.01.2019
+ *  Created on: 17.01.2019
  *      Author: chfo
  */
 
-#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_
-#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_
-
+#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FITPLANE_H_
+#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FITPLANE_H_
 
 // ROS
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-#include "FitPlane.h"
-#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 
-
-class CalcFlipperAngles
+class FitPlane
 {
 	public:
-	CalcFlipperAngles();
-	virtual ~CalcFlipperAngles();
+	FitPlane();
+	virtual ~FitPlane();
 
 	private:
 	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
-	void tfBoradcaster(const geometry_msgs::Pose poses);
-
-	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-
+	// returns a,b,c fitted plan (z = a*x + b*y + c)
+	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses, double& a, double& b, double& c);
+	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
+	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
 
 
 	// Robot parameter
@@ -47,12 +43,10 @@ class CalcFlipperAngles
 	double FlipperTrackLength;
 
 
-	FitPlane fitPlane;
 	// **** parameter for valide pose
 	double velocitiy_robot;
 	double delta_t;
 
 };
 
-
-#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_ */
+#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FITPLANE_H_ */

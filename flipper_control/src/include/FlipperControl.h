@@ -47,9 +47,6 @@ class FlipperControl
 	void SequenceControl(cv::Mat mapImage);
 
 
-
-
-
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher rearFlipperAngleDesiredPub;
 	ros::Publisher markerPublisher;

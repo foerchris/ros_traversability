@@ -5,6 +5,7 @@
  *      Author: chfo
  */
 #include "CalcFlipperAngles.h"
+#include "math.h"
 
 
 CalcFlipperAngles::CalcFlipperAngles()
@@ -33,6 +34,62 @@ CalcFlipperAngles::~CalcFlipperAngles()
 
 }
 
+/*
+void rotate_vector_by_quaternion(const tf2::Vector3& v, const tf2::Quaternion& q, tf2::Vector3& vprime)
+{
+    // Extract the vector part of the quaternion
+	tf2::Vector3 u(q.x, q.y, q.z);
+
+    // Extract the scalar part of the quaternion
+    float s = q.w;
+
+    // Do the math
+    vprime = 2.0f * dot(u, v) * u
+          + (s*s - dot(u, u)) * v
+          + 2.0f * s * cross(u, v);
+}
+*/
+
+std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
+{
+	tf2::Quaternion q_prime = q.inverse();
+	tf2::Quaternion p;
+	p.setX(0);
+	tf2::Quaternion p_prime;
+
+	std::vector<geometry_msgs::Pose> newPoses;
+	geometry_msgs::Pose pose_prime;
+	for(auto pose : poses)
+	{
+		p.setY(pose.position.x);
+		p.setZ(pose.position.y);
+		p.setW(pose.position.z);
+
+		p_prime=q*p*q_prime;
+		pose_prime.position.x = p_prime.getY();
+		pose_prime.position.y = p_prime.getZ();
+		pose_prime.position.z = p_prime.getW();
+		newPoses.push_back(pose_prime);
+	}
+
+	double maxZ = 0;
+	for(auto pose : newPoses)
+	{
+		if(pose.position.z > maxZ)
+		{
+			pose.position.z = maxZ;
+		}
+	}
+
+	for(std::size_t i=0; i < newPoses.size(); i++)
+	{
+		newPoses[i].position.z = newPoses[i].position.z - maxZ;
+	}
+
+	return newPoses;
+}
+
+
 std::vector<geometry_msgs::Pose> CalcFlipperAngles::isTrackInRange(const std::vector<geometry_msgs::Pose>& poses)
 {
 	std::vector<geometry_msgs::Pose> validPose;
@@ -43,93 +100,8 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::isTrackInRange(const std::ve
 			validPose.push_back(poses[i]);
 		}
 	}
+	return validPose;
 
 }
 
-geometry_msgs::Pose CalcFlipperAngles::clcDesiredPose(const std::vector<geometry_msgs::Pose>& poses)
-{
-	geometry_msgs::Pose desiredPose;
-	geometry_msgs::Pose meanPose;
-	std::vector<double> crossMeanPose;
-	meanPose = clcMean(poses);
-	crossMeanPose = clcCrossMean(poses);
-
-	double meanXX = crossMeanPose[0];
-	double meanXY = crossMeanPose[1];
-	double meanYY = crossMeanPose[2];
-	double meanYZ = crossMeanPose[3];
-	double meanZX = crossMeanPose[4];
-
-	double alpha_xx = meanXX - meanPose.position.x*meanPose.position.x;
-	double alpha_xy = meanXY - meanPose.position.x*meanPose.position.y;
-	double alpha_yy = meanYY - meanPose.position.y*meanPose.position.y;
-	double alpha_yz = meanYZ - meanPose.position.y*meanPose.position.z;
-	double alpha_zx = meanZX - meanPose.position.z*meanPose.position.x;
-
-	double a = (alpha_zx*alpha_yy - alpha_xy*alpha_yz)/(alpha_xx*alpha_yy - alpha_xy*alpha_xy);
-	double b = (alpha_yz*alpha_xx - alpha_xy*alpha_zx)/(alpha_xx*alpha_yy - alpha_xy*alpha_xy);
-	double c = meanPose.position.z - meanPose.position.x*a - meanPose.position.y*b;
-
-	//double aplhaXY = meanPose.position.x *  meanPose.position.y
-
-	//double a = ()
-	return desiredPose;
-}
-
-geometry_msgs::Pose CalcFlipperAngles::clcMean(const std::vector<geometry_msgs::Pose>& poses)
-{
-	geometry_msgs::Pose mean;
-	mean.position.x = 0;
-	mean.position.y = 0;
-	mean.position.z = 0;
-
-
-	int N = poses.size();
-	for(int i=0; i<N;i++)
-	{
-		mean.position.x = mean.position.x + poses[i].position.x;
-		mean.position.y = mean.position.y + poses[i].position.y;
-		mean.position.z = mean.position.z + poses[i].position.z;
-	}
-	mean.position.x = mean.position.x/N;
-	mean.position.y = mean.position.y/N;
-	mean.position.z = mean.position.z/N;
-
-	return mean;
-}
-
-std::vector<double> CalcFlipperAngles::clcCrossMean(const std::vector<geometry_msgs::Pose>& poses)
-{
-	std::vector<double> crossMean;
-
-	double meanXX;
-	double meanXY;
-	double meanYY;
-	double meanYZ;
-	double meanZX;
-
-	int N = poses.size();
-	for(int i=0; i<N;i++)
-	{
-		meanXX = meanXX + poses[i].position.x*poses[i].position.x;
-		meanXY = meanXY + poses[i].position.x*poses[i].position.y;
-		meanYY = meanYY + poses[i].position.y*poses[i].position.y;
-		meanYZ = meanYZ + poses[i].position.y*poses[i].position.z;
-		meanZX = meanZX + poses[i].position.z*poses[i].position.x;
-
-	}
-	meanXX = meanXX/N;
-	meanXY = meanXY/N;
-	meanYY = meanYY/N;
-    meanYZ = meanYZ/N;
-	meanZX = meanZX/N;
-
-	crossMean.push_back(meanXX);
-	crossMean.push_back(meanXY);
-	crossMean.push_back(meanYY);
-	crossMean.push_back(meanYZ);
-	crossMean.push_back(meanZX);
-
-	return crossMean;
-}
 
