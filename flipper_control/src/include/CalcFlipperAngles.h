@@ -12,7 +12,7 @@
 // ROS
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-#include "FitPlane.h"
+#include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 
 
@@ -21,10 +21,9 @@ class CalcFlipperAngles
 	public:
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
+	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses,tf2::Quaternion q);
 
 	private:
-	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
 	void tfBoradcaster(const geometry_msgs::Pose poses);
 
 	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
@@ -47,7 +46,6 @@ class CalcFlipperAngles
 	double FlipperTrackLength;
 
 
-	FitPlane fitPlane;
 	// **** parameter for valide pose
 	double velocitiy_robot;
 	double delta_t;

@@ -78,7 +78,7 @@ class GetContactPoints
 	std::vector<geometry_msgs::Pose> procTrackMaps(cv::Mat flipperMaps, const int& flipperLeftRight, std::string flipperFrame);
 
 	// display the each point through a marker array
-	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame);
+	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b);
 
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a);
 

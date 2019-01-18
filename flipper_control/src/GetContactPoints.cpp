@@ -99,7 +99,7 @@ visualization_msgs::Marker GetContactPoints::createMarker (std::string ns, int i
 }
 
 
-visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame)
+visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	geometry_msgs::Pose displayPose;
 	visualization_msgs::MarkerArray markerArray;

@@ -66,6 +66,7 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	quat.setY(b*sin(theta_rot/2));
 	quat.setZ(-a*sin(theta_rot/2));
 	quat.setW(0);
+	return quat;
 }
 
 
@@ -79,12 +80,15 @@ geometry_msgs::Pose FitPlane::clcMean(const std::vector<geometry_msgs::Pose>& po
 	mean.position.z = 0;
 
 
-	int N = poses.size();
-	for(int i=0; i<N;i++)
+	int N = 0;
+	for(auto pose : poses)
 	{
-		mean.position.x = mean.position.x + poses[i].position.x;
-		mean.position.y = mean.position.y + poses[i].position.y;
-		mean.position.z = mean.position.z + poses[i].position.z;
+		if(isTrackInRange(pose))
+		{
+			mean.position.x = mean.position.x + pose.position.x;
+			mean.position.y = mean.position.y + pose.position.y;
+			mean.position.z = mean.position.z + pose.position.z;
+		}
 	}
 	mean.position.x = mean.position.x/N;
 	mean.position.y = mean.position.y/N;
@@ -97,21 +101,25 @@ std::vector<double> FitPlane::clcCrossMean(const std::vector<geometry_msgs::Pose
 {
 	std::vector<double> crossMean;
 
-	double meanXX;
-	double meanXY;
-	double meanYY;
-	double meanYZ;
-	double meanZX;
+	double meanXX = 0;
+	double meanXY = 0;
+	double meanYY = 0;
+	double meanYZ = 0;
+	double meanZX = 0;
 
-	int N = poses.size();
-	for(int i=0; i<N;i++)
+	int N = 0;
+	for(auto pose : poses)
 	{
-		meanXX = meanXX + poses[i].position.x*poses[i].position.x;
-		meanXY = meanXY + poses[i].position.x*poses[i].position.y;
-		meanYY = meanYY + poses[i].position.y*poses[i].position.y;
-		meanYZ = meanYZ + poses[i].position.y*poses[i].position.z;
-		meanZX = meanZX + poses[i].position.z*poses[i].position.x;
+		if(isTrackInRange(pose))
+		{
 
+			meanXX = meanXX + pose.position.x*pose.position.x;
+			meanXY = meanXY + pose.position.x*pose.position.y;
+			meanYY = meanYY + pose.position.y*pose.position.y;
+			meanYZ = meanYZ + pose.position.y*pose.position.z;
+			meanZX = meanZX + pose.position.z*pose.position.x;
+			N += 1;
+		}
 	}
 	meanXX = meanXX/N;
 	meanXY = meanXY/N;
@@ -126,6 +134,18 @@ std::vector<double> FitPlane::clcCrossMean(const std::vector<geometry_msgs::Pose
 	crossMean.push_back(meanZX);
 
 	return crossMean;
+}
+
+bool FitPlane::isTrackInRange(const geometry_msgs::Pose pose)
+{
+	if(-FlipperTrackLength/2>pose.position.x-velocitiy_robot*delta_t && FlipperTrackLength/2<pose.position.x-velocitiy_robot*delta_t)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 

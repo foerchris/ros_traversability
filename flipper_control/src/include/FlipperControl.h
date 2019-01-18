@@ -21,6 +21,8 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 #include "GetContactPoints.h"
+#include "CalcFlipperAngles.h"
+#include "FitPlane.h"
 
 class FlipperControl
 {
@@ -46,6 +48,8 @@ class FlipperControl
 
 	void SequenceControl(cv::Mat mapImage);
 
+	void flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight);
+
 
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher rearFlipperAngleDesiredPub;
@@ -60,7 +64,8 @@ class FlipperControl
 
 	// Obeject declarations
 	GetContactPoints getContactPoints;
-
+	FitPlane fitPlane;
+	CalcFlipperAngles calcFlipperAngles;
 
 	cv::Mat globalMapImage;
 

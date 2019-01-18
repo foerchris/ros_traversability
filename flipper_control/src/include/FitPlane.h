@@ -18,13 +18,14 @@ class FitPlane
 	public:
 	FitPlane();
 	virtual ~FitPlane();
+	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses);
 
 	private:
-	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses);
+	bool isTrackInRange(const geometry_msgs::Pose pose);
 	// returns a,b,c fitted plan (z = a*x + b*y + c)
-	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses, double& a, double& b, double& c);
 	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
 	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
+	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses);
 
 
 	// Robot parameter

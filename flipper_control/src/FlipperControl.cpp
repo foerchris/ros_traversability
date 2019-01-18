@@ -90,25 +90,32 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	TracksAndFlipperImage = getContactPoints.getTrackedRegions(mapImage, "/static_base_link");
 
-	std::vector<geometry_msgs::Pose> tracksContactPoints;
-
-	tracksContactPoints = getContactPoints.procTrackMaps(TracksAndFlipperImage[0], 1, "/static_base_link");
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "tacks_left", "/static_base_link"));
-
-//geometry_msgs::Pose meanPoseTrackLeft = clcMean(tracksContactPoints);
+	//*********************** calculations for the the left flippers
+	flipperLeftRight("tacks_left",TracksAndFlipperImage[0], 1);
 
 
-	tracksContactPoints = getContactPoints.procTrackMaps(TracksAndFlipperImage[1], -1, "/static_base_link");
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "tracks_right","/static_base_link"));
-
-	//geometry_msgs::Pose meanPoseTrackRight = clcMean(tracksContactPoints);
-
-
+	//*********************** calculations for the the right flippers
+	flipperLeftRight("tacks_right",TracksAndFlipperImage[1], -1);
 
 
 	//publishAngles(robotFlipperAngles);
 }
 
+void FlipperControl::flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight)
+{
+	std::vector<geometry_msgs::Pose> tracksContactPoints;
+	tracksContactPoints = getContactPoints.procTrackMaps(image, flipperLeftRight, "/static_base_link");
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, flipper, "/static_base_link",  1.0, 1.0, 0.0));
+
+	tf2::Quaternion quat;
+
+	quat = fitPlane.fitPlane(tracksContactPoints);
+
+	std::vector<geometry_msgs::Pose> newtracksContactPoints;
+	newtracksContactPoints = calcFlipperAngles.clcNewPoses(tracksContactPoints,quat);
+
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newtracksContactPoints, flipper, "/static_base_link",  0.0, 1.0, 0.0));
+}
 
 
 void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)

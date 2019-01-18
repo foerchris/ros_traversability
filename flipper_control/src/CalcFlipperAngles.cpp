@@ -90,18 +90,5 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 }
 
 
-std::vector<geometry_msgs::Pose> CalcFlipperAngles::isTrackInRange(const std::vector<geometry_msgs::Pose>& poses)
-{
-	std::vector<geometry_msgs::Pose> validPose;
-	for(std::size_t i = 0; i<poses.size(); i++)
-	{
-		if(-FlipperTrackLength/2>poses[i].position.x-velocitiy_robot*delta_t && FlipperTrackLength/2<poses[i].position.x-velocitiy_robot*delta_t)
-		{
-			validPose.push_back(poses[i]);
-		}
-	}
-	return validPose;
-
-}
 
 
