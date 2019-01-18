@@ -30,11 +30,13 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&FlipperControl::MapImageCallback, this, _1));
 
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
+    odomSub = nodeHandle_.subscribe<nav_msgs::Odometry> ("odom", 1, &FlipperControl::odomCallback,this);
 
 	frontFlipperAngleDesiredPub = nodeHandle_.advertise < std_msgs::Float64 > ("flipper_front_controller/command", 1);
 	rearFlipperAngleDesiredPub 	= nodeHandle_.advertise < std_msgs::Float64 > ("flipper_rear_controller/command", 1);
 
 	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&FlipperControl::FlipperSequenzCallback, this, _1));
+
 
 	mapImageSet = false;
 
@@ -43,7 +45,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	tf_prefix = ros::this_node::getNamespace();
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
-
+	t = ros::Time::now().nsec;
 }
 
 FlipperControl::~FlipperControl()
@@ -67,8 +69,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat mapImage = cv_ptr->image;
 
 	mapImage.copyTo(globalMapImage);
-
-	//SequenceControl(globalMapImage);
+	//ROS_INFO (" MapImageCallback");
 
 	mapImageSet = true;
 }
@@ -88,7 +89,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	std::vector<cv::Mat> TracksAndFlipperImage;
 
-	TracksAndFlipperImage = getContactPoints.getTrackedRegions(mapImage, "/static_base_link");
+	TracksAndFlipperImage = getContactPoints.getTrackedRegions(mapImage, "/base_link");
 
 	//*********************** calculations for the the left flippers
 	flipperLeftRight("tacks_left",TracksAndFlipperImage[0], 1);
@@ -96,6 +97,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	//*********************** calculations for the the right flippers
 	flipperLeftRight("tacks_right",TracksAndFlipperImage[1], -1);
+	t = ros::Time::now().nsec;
 
 
 	//publishAngles(robotFlipperAngles);
@@ -105,16 +107,17 @@ void FlipperControl::flipperLeftRight(const std::string& flipper, cv::Mat image,
 {
 	std::vector<geometry_msgs::Pose> tracksContactPoints;
 	tracksContactPoints = getContactPoints.procTrackMaps(image, flipperLeftRight, "/static_base_link");
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, flipper, "/static_base_link",  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "/flipper_pose" + flipper, "/base_link",  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat;
+	tracksContactPoints = fitPlane.isTrackInRange(tracksContactPoints, currentVelocity.linear.x, t);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "/new_flipper_pose" + flipper, "/base_link",  0.0, 1.0, 0.0));
 
 	quat = fitPlane.fitPlane(tracksContactPoints);
 
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
 	newtracksContactPoints = calcFlipperAngles.clcNewPoses(tracksContactPoints,quat);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newtracksContactPoints, flipper, "/static_base_link",  0.0, 1.0, 0.0));
 }
 
 
@@ -148,6 +151,12 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 	}
 }
 
+void FlipperControl::odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
+{
+
+	currentVelocity = odomMsg->twist.twist;
+	//std::cout<<"currentVelocity: "<< currentVelocity.linear.x<<std::endl;
+}
 
 
 

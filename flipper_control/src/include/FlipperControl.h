@@ -13,6 +13,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core.hpp>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Twist.h>
 
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -50,10 +51,13 @@ class FlipperControl
 
 	void flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight);
 
+	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
 
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher rearFlipperAngleDesiredPub;
 	ros::Publisher markerPublisher;
+
+	ros::Subscriber	odomSub;
 
 	ros::NodeHandle nodeHandle_;
 
@@ -69,6 +73,9 @@ class FlipperControl
 
 	cv::Mat globalMapImage;
 
+	geometry_msgs::Twist currentVelocity;
+
+	double t;
 	// true if
 	bool mapImageSet;
 

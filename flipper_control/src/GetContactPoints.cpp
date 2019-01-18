@@ -57,6 +57,7 @@ GetContactPoints::GetContactPoints()
 	trackLength = 0.5;
 	FlipperTrackLength = 2*(xLength + R) + trackLength;
 	TracksBaseLinkDist = 0.275;
+	cropeMapLength = 2;
 }
 
 GetContactPoints::~GetContactPoints()
@@ -155,7 +156,9 @@ cv::Mat GetContactPoints::getTracksImage(geometry_msgs::Pose& pose, cv::Mat mapI
    	int y = mapSizeY/2 - pose.position.x/resultion;
 
 	int widthX = yLength/resultion;
-	int widthY = FlipperTrackLength/resultion;
+	//int widthY = FlipperTrackLength/resultion;
+
+	int widthY = cropeMapLength/resultion;
 
 	cv::Point2f point(x,y);
 	cv::Size2f size(widthX,widthY);
@@ -265,13 +268,13 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procTrackMaps(cv::Mat flipper
 	flipperPose.orientation.z = 0.0;
 	flipperPose.orientation.w = 1.0;
 
-    std::cout<<"flipperMaps.size"<<flipperMaps.rows*flipperMaps.cols<<std::endl;
+    //std::cout<<"flipperMaps.size"<<flipperMaps.rows*flipperMaps.cols<<std::endl;
 
 	for(int i=0; i<flipperMaps.rows; i++)
 	{
 	    for(int j=0; j<flipperMaps.cols; j++)
 	    {
-	    	pose.position.x = (FlipperTrackLength/2  - FlipperTrackLength/(flipperMaps.rows*2)) - i*resultion;
+	    	pose.position.x = (cropeMapLength/2  - cropeMapLength/(flipperMaps.rows*2)) - i*resultion;
 	    	pose.position.y = j*resultion + flipperLeftRight*TracksBaseLinkDist;
 
 	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;

@@ -19,13 +19,12 @@ class FitPlane
 	FitPlane();
 	virtual ~FitPlane();
 	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses);
+	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& t);
 
 	private:
-	bool isTrackInRange(const geometry_msgs::Pose pose);
 	// returns a,b,c fitted plan (z = a*x + b*y + c)
 	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
 	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses);
 
 
 	// Robot parameter
@@ -45,9 +44,6 @@ class FitPlane
 
 
 	// **** parameter for valide pose
-	double velocitiy_robot;
-	double delta_t;
-
 };
 
 #endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FITPLANE_H_ */

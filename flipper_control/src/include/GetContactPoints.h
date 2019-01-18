@@ -112,7 +112,7 @@ class GetContactPoints
 	double mapSizeY;
 	double TracksBaseLinkDist;
 	double FlipperTrackLength;
-
+	double cropeMapLength;
 };
 
 
