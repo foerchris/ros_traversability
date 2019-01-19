@@ -115,6 +115,26 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(
 	return markerArray;
 }
 
+cv::Mat GetContactPoints::getRobotRegions(cv::Mat mapImage)
+{
+	geometry_msgs::Pose pose;
+	pose.position.x =  0.0;
+	pose.position.y = 0.0;
+	pose.position.z = 0.0;
+	tf::Quaternion quat;
+	quat.setRPY( 0, 0, 0);
+
+	pose.orientation.x = quat.x();
+	pose.orientation.y = quat.y();
+	pose.orientation.z = quat.z();
+	pose.orientation.w = quat.w();
+
+	cv::Mat flipperMap;
+
+	geometry_msgs::Pose flipperPose = tfTransform(pose, MAP_FRAME,BASE_FRAME);
+	flipperMap = getcropedImage(flipperPose, mapImage);
+	return flipperMap;
+}
 
 std::vector<cv::Mat> GetContactPoints::getTrackedRegions(cv::Mat mapImage, const std::string& flipperFrame)
 {
@@ -146,7 +166,47 @@ std::vector<cv::Mat> GetContactPoints::getTrackedRegions(cv::Mat mapImage, const
 	return flipperMaps;
 }
 
+cv::Mat GetContactPoints::getcropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage)
+{
+    mapSizeX = mapImage.cols;
+    mapSizeY = mapImage.rows;
 
+   	int x = mapSizeX/2 - pose.position.y/resultion;
+   	int y = mapSizeY/2 - pose.position.x/resultion;
+
+	int widthX = 2*TracksBaseLinkDist/resultion;
+	//int widthY = FlipperTrackLength/resultion;
+
+	int widthY = cropeMapLength/resultion;
+
+	cv::Point2f point(x,y);
+	cv::Size2f size(widthX,widthY);
+	tf::Quaternion quat(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w);
+
+	float angle = -tf::getYaw(quat)/M_PI*180;
+    // rect is the RotatedRect
+
+	cv::RotatedRect rect(point, size,  angle);
+
+    // matrices we'll use
+    Mat M, rotated, cropped;
+    // get angle and size from the bounding box
+    Size rect_size = rect.size;
+
+    // get the rotation matrix
+    M = getRotationMatrix2D(rect.center, angle, 1.0);
+    // perform the affine transformation
+    warpAffine(mapImage, rotated, M, mapImage.size(), 2);
+    // crop the resulting image
+    getRectSubPix(rotated, rect_size, rect.center, cropped);
+
+    cv::Mat copy = mapImage.clone();
+
+    DrawRotatedRectangle(copy,rect );
+    imshow("wadw", copy);
+    waitKey(1);
+	return cropped;
+}
 cv::Mat GetContactPoints::getTracksImage(geometry_msgs::Pose& pose, cv::Mat mapImage)
 {
     mapSizeX = mapImage.cols;
@@ -246,6 +306,43 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 	return cropped;
 }
 
+std::vector<geometry_msgs::Pose> GetContactPoints::procGroundImage(cv::Mat flipperMaps)
+{
+	std::vector<geometry_msgs::Pose> poses;
+
+	geometry_msgs::Pose pose;
+	tf::Quaternion quat;
+	quat.setRPY( 0, 0, 0);
+	pose.orientation.x = quat.x();
+	pose.orientation.y = quat.y();
+	pose.orientation.z = quat.z();
+	pose.orientation.w = quat.w();
+
+	geometry_msgs::Pose flipperPose;
+	flipperPose.position.x = 0;
+	flipperPose.position.y = 0;
+	flipperPose.position.z = 0;
+	flipperPose.orientation.x = 0.0;
+	flipperPose.orientation.y = 0.0;
+	flipperPose.orientation.z = 0.0;
+	flipperPose.orientation.w = 1.0;
+
+	for(int i=0; i<flipperMaps.rows; i++)
+	{
+	    for(int j=0; j<flipperMaps.cols; j++)
+	    {
+	    	pose.position.x = (cropeMapLength/2  - cropeMapLength/(flipperMaps.rows*2)) - i*resultion;
+	    	pose.position.y = j*resultion - TracksBaseLinkDist;
+
+	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;
+			flipperPose.position.z = pose.position.z;
+			flipperPose = tfTransform(flipperPose, BASE_FRAME, MAP_FRAME);
+			pose.position.z = flipperPose.position.z;
+	    	poses.push_back(pose);
+	    }
+	}
+	return poses;
+}
 
 std::vector<geometry_msgs::Pose> GetContactPoints::procTrackMaps(cv::Mat flipperMaps, const int& flipperLeftRight, std::string flipperFrame)
 {
@@ -267,8 +364,6 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procTrackMaps(cv::Mat flipper
 	flipperPose.orientation.y = 0.0;
 	flipperPose.orientation.z = 0.0;
 	flipperPose.orientation.w = 1.0;
-
-    //std::cout<<"flipperMaps.size"<<flipperMaps.rows*flipperMaps.cols<<std::endl;
 
 	for(int i=0; i<flipperMaps.rows; i++)
 	{
@@ -292,9 +387,6 @@ geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pos
 {
 	// TF transformation of the Point which is nearest to the robot
 	const ros::Time& scanTimeStamp = ros::Time (0);
-
-    //std::cout<<"flipperToMapTransform"<<tfID<<std::endl;
-	//ROS_INFO("pose:  x = %lf, y = %lf, z = %lf\n", pose.position.x, pose.position.y, pose.position.z);
 
     try
 	{
@@ -343,7 +435,6 @@ geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pos
 	returnPose.orientation.y = quat.y();
 	returnPose.orientation.z = quat.z();
 	returnPose.orientation.w = quat.w();
-	//ROS_INFO("returnPose:  x = %lf, y = %lf, z = %lf\n", returnPose.position.x, returnPose.position.y, returnPose.position.z);
 
 	return returnPose;
 }

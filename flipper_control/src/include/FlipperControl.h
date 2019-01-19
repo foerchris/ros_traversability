@@ -49,7 +49,9 @@ class FlipperControl
 
 	void SequenceControl(cv::Mat mapImage);
 
-	void flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight);
+	tf2::Quaternion groundPlane(cv::Mat image);
+
+	void flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight, const tf2::Quaternion& quat);
 
 	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
 
@@ -75,7 +77,9 @@ class FlipperControl
 
 	geometry_msgs::Twist currentVelocity;
 
-	double t;
+	ros::Time start_time;
+	double delta_t;
+
 	// true if
 	bool mapImageSet;
 

@@ -41,12 +41,8 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	geometry_msgs::Pose meanPose;
 	std::vector<double> crossMeanPose;
 
-	for(auto pose:poses)
-	{
-		ROS_INFO (" <robotGroundPose:\t  x=[%7.3lf], y=[%7.3lf], z=[%7.3lf]\n", pose.position.x, pose.position.y, pose.position.z);
-	}
+
 	meanPose = clcMean(poses);
-	ROS_INFO (" <meanPose:\t  x=[%7.3lf], y=[%7.3lf], z=[%7.3lf]\n", meanPose.position.x, meanPose.position.y, meanPose.position.z);
 
 	crossMeanPose = clcCrossMean(poses);
 
@@ -144,10 +140,10 @@ std::vector<double> FitPlane::clcCrossMean(const std::vector<geometry_msgs::Pose
 	return crossMean;
 }
 
-std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& t)
+std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t)
 {
 	std::vector<geometry_msgs::Pose> robotGroundPose;
-	double delta_t = (ros::Time::now().nsec - t)/1000000000.0;
+
 
 	for(auto pose:poses)
 	{
@@ -156,6 +152,7 @@ std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geom
 		ROS_INFO (" FlipperTrackLength/2:\t  [%7.3lf]", FlipperTrackLength/2);
 		ROS_INFO (" >pose.position.x-velocitiy_robot*delta_t:\t  [%7.3lf]\n", pose.position.x-velocitiy_robot*delta_t);
 */
+
 		if(-FlipperTrackLength/2<pose.position.x-velocitiy_robot*delta_t && FlipperTrackLength/2>pose.position.x-velocitiy_robot*delta_t)
 		{
 			robotGroundPose.push_back(pose);

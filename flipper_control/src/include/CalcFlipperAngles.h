@@ -12,9 +12,34 @@
 // ROS
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
+
+// Tf
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
+
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/static_transform_broadcaster.h>
+/*
+struct minMaxFlipperVel {
+	double min;
+	double max;
+	cv::Point min_loc;
+	cv::Point max_loc;
+};*/
 
+struct flipperContactPointsAngles {
+	std::vector<geometry_msgs::Pose> pose;
+	std::vector<double> phi1;
+	std::vector<double> phi2;
+	std::vector<double> phiContact;
+	std::vector<double> flipperAngle;
+};
+
+
+struct flipperAngles {
+	double flipperAngleFront;
+	double flipperAngleRear;
+};
 
 class CalcFlipperAngles
 {
@@ -22,12 +47,13 @@ class CalcFlipperAngles
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
 	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses,tf2::Quaternion q);
+	flipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values, std::string flipperFrame);
+	//void clcFlipperAngles(const std::vector<minMaxFlipperVel>& minMaxVel, flipperAngles& robotFlipperAngles);
+	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
 
 	private:
-	void tfBoradcaster(const geometry_msgs::Pose poses);
-
-	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-
+	std::unique_ptr<tf::TransformListener> tfListener;
+	tf::StampedTransform transform;
 
 
 	// Robot parameter

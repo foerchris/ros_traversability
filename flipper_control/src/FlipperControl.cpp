@@ -35,7 +35,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	frontFlipperAngleDesiredPub = nodeHandle_.advertise < std_msgs::Float64 > ("flipper_front_controller/command", 1);
 	rearFlipperAngleDesiredPub 	= nodeHandle_.advertise < std_msgs::Float64 > ("flipper_rear_controller/command", 1);
 
-	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&FlipperControl::FlipperSequenzCallback, this, _1));
+	msg_timer = nodeHandle_.createTimer(ros::Duration(0.8), boost::bind (&FlipperControl::FlipperSequenzCallback, this, _1));
 
 
 	mapImageSet = false;
@@ -45,7 +45,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	tf_prefix = ros::this_node::getNamespace();
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
-	t = ros::Time::now().nsec;
+	start_time = ros::Time::now();
 }
 
 FlipperControl::~FlipperControl()
@@ -87,37 +87,54 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 {
 	cv::Point min_loc, max_loc;
 
-	std::vector<cv::Mat> TracksAndFlipperImage;
+	tf2::Quaternion quat= groundPlane(mapImage);
 
+	std::vector<cv::Mat> TracksAndFlipperImage;
 	TracksAndFlipperImage = getContactPoints.getTrackedRegions(mapImage, "/base_link");
 
+
+	delta_t = (ros::Time::now() - start_time).toSec();
+
 	//*********************** calculations for the the left flippers
-	flipperLeftRight("tacks_left",TracksAndFlipperImage[0], 1);
+	flipperLeftRight("tacks_left",TracksAndFlipperImage[0], 1, quat);
 
 
 	//*********************** calculations for the the right flippers
-	flipperLeftRight("tacks_right",TracksAndFlipperImage[1], -1);
-	t = ros::Time::now().nsec;
+	flipperLeftRight("tacks_right",TracksAndFlipperImage[1], -1, quat);
+	start_time = ros::Time::now();
 
 
 	//publishAngles(robotFlipperAngles);
 }
+tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
+{
+	cv::Mat robotGroundImage;
 
-void FlipperControl::flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight)
+	robotGroundImage = getContactPoints.getRobotRegions(image);
+
+	std::vector<geometry_msgs::Pose> groundContactPoints;
+
+	groundContactPoints = getContactPoints.procGroundImage(robotGroundImage);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, "/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
+
+	tf2::Quaternion quat;
+	groundContactPoints = fitPlane.isTrackInRange(groundContactPoints, currentVelocity.linear.x, delta_t);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, "/new_flipper_pose", "/base_link",  0.0, 1.0, 0.0));
+
+	quat = fitPlane.fitPlane(groundContactPoints);
+
+	return quat;
+}
+
+
+void FlipperControl::flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight,const tf2::Quaternion& quat)
 {
 	std::vector<geometry_msgs::Pose> tracksContactPoints;
 	tracksContactPoints = getContactPoints.procTrackMaps(image, flipperLeftRight, "/static_base_link");
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "/flipper_pose" + flipper, "/base_link",  1.0, 1.0, 0.0));
 
-	tf2::Quaternion quat;
-	tracksContactPoints = fitPlane.isTrackInRange(tracksContactPoints, currentVelocity.linear.x, t);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(tracksContactPoints, "/new_flipper_pose" + flipper, "/base_link",  0.0, 1.0, 0.0));
-
-	quat = fitPlane.fitPlane(tracksContactPoints);
-
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
 	newtracksContactPoints = calcFlipperAngles.clcNewPoses(tracksContactPoints,quat);
-
 }
 
 

@@ -19,7 +19,7 @@ class FitPlane
 	FitPlane();
 	virtual ~FitPlane();
 	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& t);
+	std::vector<geometry_msgs::Pose> isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t);
 
 	private:
 	// returns a,b,c fitted plan (z = a*x + b*y + c)
