@@ -24,6 +24,7 @@ FitPlane::FitPlane()
 	//	yLength = L+r;
 	xLength = L+r;
 	trackLength = 0.5;
+	flipperLength = xLength;
 	FlipperTrackLength = 2*(xLength + R) + trackLength;
 	TracksBaseLinkDist = 0.275;
 }
@@ -65,9 +66,9 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	double c = meanPose.position.z - meanPose.position.x*a - meanPose.position.y*b;
 	double theta_rot = acos(1/sqrt(a*a+b*b+1));
 
-	ROS_INFO (" a:\t  [%7.3lf]\n", a);
-	ROS_INFO (" b:\t  [%7.3lf]\n", b);
-	ROS_INFO (" c:\t  [%7.3lf]\n", c);
+	//ROS_INFO (" a:\t  [%7.3lf]\n", a);
+	//ROS_INFO (" b:\t  [%7.3lf]\n", b);
+	//ROS_INFO (" c:\t  [%7.3lf]\n", c);
 
 
 	tf2::Quaternion quat;
@@ -140,7 +141,7 @@ std::vector<double> FitPlane::clcCrossMean(const std::vector<geometry_msgs::Pose
 	return crossMean;
 }
 
-std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t)
+std::vector<geometry_msgs::Pose> FitPlane::isInRobotRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t)
 {
 	std::vector<geometry_msgs::Pose> robotGroundPose;
 
@@ -152,7 +153,6 @@ std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geom
 		ROS_INFO (" FlipperTrackLength/2:\t  [%7.3lf]", FlipperTrackLength/2);
 		ROS_INFO (" >pose.position.x-velocitiy_robot*delta_t:\t  [%7.3lf]\n", pose.position.x-velocitiy_robot*delta_t);
 */
-
 		if(-FlipperTrackLength/2<pose.position.x-velocitiy_robot*delta_t && FlipperTrackLength/2>pose.position.x-velocitiy_robot*delta_t)
 		{
 			robotGroundPose.push_back(pose);
@@ -163,6 +163,26 @@ std::vector<geometry_msgs::Pose> FitPlane::isTrackInRange(const std::vector<geom
 	return robotGroundPose;
 }
 
+std::vector<geometry_msgs::Pose> FitPlane::isInFlipperRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t)
+{
+	std::vector<geometry_msgs::Pose> robotGroundPose;
 
+
+	for(auto pose:poses)
+	{
+		/*ROS_INFO (" -FlipperTrackLength/2:\t  [%7.3lf]", -FlipperTrackLength/2);
+		ROS_INFO (" <pose.position.x-velocitiy_robot*delta_t:\t  [%7.3lf]\n", pose.position.x-velocitiy_robot*delta_t);
+		ROS_INFO (" FlipperTrackLength/2:\t  [%7.3lf]", FlipperTrackLength/2);
+		ROS_INFO (" >pose.position.x-velocitiy_robot*delta_t:\t  [%7.3lf]\n", pose.position.x-velocitiy_robot*delta_t);
+*/
+		if(pose.position.x >= velocitiy_robot*delta_t && pose.position.x<= flipperLength + velocitiy_robot*delta_t)
+		{
+			robotGroundPose.push_back(pose);
+		}
+
+	}
+
+	return robotGroundPose;
+}
 
 

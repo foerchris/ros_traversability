@@ -51,7 +51,7 @@ class FlipperControl
 
 	tf2::Quaternion groundPlane(cv::Mat image);
 
-	void flipperLeftRight(const std::string& flipper, cv::Mat image, const int& flipperLeftRight, const tf2::Quaternion& quat);
+	void flipperEval(const std::string& flipper, cv::Mat image, const tf2::Quaternion& quat, int frontRear);
 
 	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
 

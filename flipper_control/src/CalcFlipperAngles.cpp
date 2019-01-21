@@ -90,6 +90,7 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 
 	return newPoses;
 }
+
 /*
 
 flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values, std::string flipperFrame)
@@ -378,6 +379,3 @@ geometry_msgs::Pose clcFlipperAngles::tfTransform(const geometry_msgs::Pose& pos
 
 	return returnPose;
 }*/
-
-
-

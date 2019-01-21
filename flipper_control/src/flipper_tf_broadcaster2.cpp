@@ -27,6 +27,39 @@ std::string tf_prefix = "GETjag";
 geometry_msgs::TransformStamped static_transformStamped;
 
 double globalyaw = 0;
+void imuCallback (const sensor_msgs::Imu::ConstPtr& imu_ptr)
+{
+	/*static_transformStamped.transform.rotation.x = imu_ptr->orientation.x;
+	static_transformStamped.transform.rotation.y = imu_ptr->orientation.y;
+	static_transformStamped.transform.rotation.z = imu_ptr->orientation.z;
+	static_transformStamped.transform.rotation.w = imu_ptr->orientation.w;*/
+
+	double x = imu_ptr->orientation.x;
+	double y = imu_ptr->orientation.y;
+	double z = imu_ptr->orientation.z;
+	double w = imu_ptr->orientation.w;
+	double roll;
+	double pitch;
+	double yaw;
+
+	tf::Quaternion q (x, y, z, w);
+	tf::Matrix3x3 m (q);
+	m.getRPY (roll, pitch, yaw);
+	tf::Quaternion quat;
+	if(globalyaw==0)
+	{
+		quat.setRPY(-roll,-pitch, globalyaw);
+	}
+	else
+	{
+		quat.setRPY(roll,pitch, globalyaw);
+	}
+
+	static_transformStamped.transform.rotation.x = quat.x();
+	static_transformStamped.transform.rotation.y = quat.y();
+	static_transformStamped.transform.rotation.z = quat.z();
+	static_transformStamped.transform.rotation.w = quat.w();
+}
 
 
 int main(int argc, char **argv)
@@ -48,6 +81,8 @@ int main(int argc, char **argv)
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
+	ros::Subscriber imuSub;
+	imuSub = nodeHandle.subscribe < sensor_msgs::Imu > ("imu/data", 1, imuCallback);
 
 	destination_frame = tf_prefix + "/" + argv[1];
 	original_frame = tf_prefix + "/" + argv[2];

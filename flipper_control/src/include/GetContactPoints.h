@@ -38,7 +38,7 @@ class GetContactPoints
 	virtual ~GetContactPoints();
 
 	// return an vector of the segmented tracks and flipper regions
-	std::vector<cv::Mat> getTrackedRegions(cv::Mat mapImage, const std::string& flipperFrame);
+	std::vector<cv::Mat> getFlipperRegions(cv::Mat mapImage);
 
 	// returns the the robot ground region
 	cv::Mat getRobotRegions(cv::Mat mapImage);
@@ -46,10 +46,8 @@ class GetContactPoints
 	// tf transformation method
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
 
-	// gets the Image for the according track
-	cv::Mat getTracksImage(geometry_msgs::Pose& pose, cv::Mat mapImage);
-
-	cv::Mat getcropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage);
+	// cropes the image with an rotated rect according to the position and orientation of the robot inside the map
+	cv::Mat getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage,double rectSizeX, double rectSizeY);
 
 	std::vector<geometry_msgs::Pose> procGroundImage(cv::Mat flipperMaps);
 
@@ -57,12 +55,10 @@ class GetContactPoints
 	// draws the rotated rectangle for the flipper region into the image for debuging
 	void DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rotatedRectangle);
 
-	// cropes the image with an rotated rect according to the position and orientation of the robot inside the map
-	cv::Mat getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage);
 
 
 	// process from image to koordinates
-	std::vector<geometry_msgs::Pose> procTrackMaps(cv::Mat flipperMaps, const int& flipperLeftRight, std::string flipperFrame);
+	std::vector<geometry_msgs::Pose> procFlipperMaps(cv::Mat flipperMaps, std::string flipperFrame);
 
 	// display the each point through a marker array
 	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b);
