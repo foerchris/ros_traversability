@@ -27,7 +27,6 @@ class FitPlane
 	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
 	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
 
-
 	// Robot parameter
 	double R;		// Radius of the wheel of the robot body
 	double r;		// Radius of the wheel on the end of the flipper

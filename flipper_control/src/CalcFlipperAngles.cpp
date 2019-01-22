@@ -63,6 +63,7 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 	geometry_msgs::Pose pose_prime;
 	for(auto pose : poses)
 	{
+		//ROS_INFO (" pose:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", pose.position.x, pose.position.y, pose.position.z);
 		p.setY(pose.position.x);
 		p.setZ(pose.position.y);
 		p.setW(pose.position.z);
@@ -72,6 +73,8 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 		pose_prime.position.y = p_prime.getZ();
 		pose_prime.position.z = p_prime.getW();
 		newPoses.push_back(pose_prime);
+		//ROS_INFO (" pose_prime:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", pose_prime.position.x, pose_prime.position.y, pose_prime.position.z);
+
 	}
 
 	double maxZ = 0;
@@ -86,54 +89,41 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 	for(std::size_t i=0; i < newPoses.size(); i++)
 	{
 		newPoses[i].position.z = newPoses[i].position.z - maxZ;
+		//ROS_INFO (" newPoses[i]:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", newPoses[i].position.x, newPoses[i].position.y, newPoses[i].position.z);
+
 	}
 
 	return newPoses;
 }
+double CalcFlipperAngles::maxFlipperAngle(const flipperContactPointsAngles& flipperAngles)
+{
+	double maxFlipperAngle = 0;
 
-/*
+	auto iter = std::max_element(flipperAngles.phiContact.begin(), flipperAngles.phiContact.end());
 
-flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values, std::string flipperFrame)
+	maxFlipperAngle = std::distance(flipperAngles.phiContact.begin(), iter);
+	return maxFlipperAngle;
+}
+
+
+flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
 {
 	flipperContactPointsAngles robotFlipperAngles;
-
-	geometry_msgs::Pose flipperPose;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = 0;
-	tf2::Quaternion quat;
-	quat.setRPY(0,0, 0);
-	flipperPose.orientation.x = quat.x();
-	flipperPose.orientation.y = quat.y();
-	flipperPose.orientation.z = quat.z();
-	flipperPose.orientation.w = quat.w();
 
 	double z = 0;
 	double x = 0;
 	double d = 0;
-	for(std::size_t i = 0; i <values.size(); i++)
+
+	for(auto pose:values)
 	{
-		geometry_msgs::Pose point;
+		double phi1 = 0;
+		double phi2 = 0;
+		double phiContact = 0;
+		double flipperAngle = 0 ;
 
-		double phi1;
-		double phi2;
-		double phiContact;
-		double flipperAngle;
-
-		point = values[i];
-
-
-		z = values[i].position.z;
-		x = values[i].position.x;
-
-		flipperPose.position.z = z;
-		flipperPose = mapToFlipperTransform(flipperPose, tf_prefix + flipperFrame);
-		z = flipperPose.position.z;
-
-		point.position.z=z;
-
+		z = pose.position.z;
+		x = pose.position.x;
 		d= sqrt(pow(x, 2)+ pow(z, 2));
-
 
 		if(d<= dThreshold)
 		{
@@ -153,229 +143,14 @@ flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector
 			//********************************************************** nochmal nachrechnen **********************************************************
 			flipperAngle = phi1;
 		}
-		robotFlipperAngles.pose.push_back(point);
+		robotFlipperAngles.pose.push_back(pose);
 		robotFlipperAngles.phi1.push_back(phi1);
 		robotFlipperAngles.phi2.push_back(phi2);
 		robotFlipperAngles.phiContact.push_back(phiContact);
 		robotFlipperAngles.flipperAngle.push_back(flipperAngle);
-
 	}
 
 	return robotFlipperAngles;
 }
 
-void CalcFlipperAngles::clcFlipperAngles(const std::vector<minMaxFlipperVel>& minMaxVel, flipperAngles& robotFlipperAngles)
-{
-	geometry_msgs::Pose flipperPose;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = 0;
-	tf2::Quaternion quat;
-	quat.setRPY(0,0, 0);
-	flipperPose.orientation.x = quat.x();
-	flipperPose.orientation.y = quat.y();
-	flipperPose.orientation.z = quat.z();
-	flipperPose.orientation.w = quat.w();
 
-
-	double zFrontLeftMax = minMaxVel[0].max*0.0043;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = zFrontLeftMax;
-	flipperPose = mapToFlipperTransform(flipperPose, tf_prefix + "/static_flipper_front_left");
-	zFrontLeftMax = flipperPose.position.z;
-
-	double zFrontRightMax = minMaxVel[1].max*0.0043;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = zFrontRightMax;
-	flipperPose = mapToFlipperTransform(flipperPose, tf_prefix + "/static_flipper_front_right");
-	zFrontRightMax = flipperPose.position.z;
-
-	double zRearLeftMax = minMaxVel[2].max*0.0043;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = zRearLeftMax;
-	flipperPose = tfTransform(flipperPose, tf_prefix + "/static_flipper_rear_left");
-	zRearLeftMax = flipperPose.position.z;
-
-	double zRearRightMax = minMaxVel[3].max*0.0043;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = zRearRightMax;
-	flipperPose = tfTransform(flipperPose, tf_prefix + "/static_flipper_rear_right");
-	zRearRightMax = flipperPose.position.z;
-
-	double xFront = 0;
-	double zFront = 0;
-	double xRear  = 0;
-	double zRear  = 0;
-
-	if(zFrontRightMax > zFrontLeftMax)
-	{
-		xFront = yLength - minMaxVel[1].max_loc.y*resultion;
-		zFront = zFrontRightMax;
-	}
-	else
-	{
-		xFront = yLength - minMaxVel[0].max_loc.y*resultion;
-		zFront = zFrontLeftMax;
-	}
-
-	if(zRearRightMax > zRearLeftMax)
-	{
-		xRear = yLength - minMaxVel[3].max_loc.y*resultion;
-		zRear = zRearRightMax;
-
-	}
-	else
-	{
-		xRear = yLength - minMaxVel[2].max_loc.y*resultion;
-		zRear = zRearLeftMax;
-
-	}
-	ROS_INFO("xFront = %lf, zFront = %lf\n", xFront, zFront);
-	ROS_INFO("xRear = %lf, zRear = %lf\n", xRear, zRear);
-
-	double dFront;
-	double dRear;
-
-	dFront = sqrt( pow(zFront, 2) + pow(xFront, 2));
-	dRear = sqrt( pow(zRear, 2) + pow(xRear, 2));
-	//ROS_INFO("dFront = %lf, dRear = %lf\n", dFront, dRear);
-
-	// to do **********************************************************************************
-	/// nochmal genau die einzelnden zustände nachdenken gerade werden negative hindernisse nicht perfekt behandelt
-	if(zFront!=0)
-	{
-		if(xFront!=0)
-		{
-			double phi1 = 0;
-			double phi2 = 0;
-			double phiContact = 0;
-			if(dFront <= dThreshold)
-			{
-				phi1 = atan(zFront/xFront);
-				phi2 = asin(R/sqrt(pow(xFront, 2) + pow(zFront,2)));
-				phiContact = phi1 + phi2;
-				robotFlipperAngles.flipperAngleFront = phi1;
-			}
-			else
-			{
-				phi1 = asin((pow(dFront,2) + pow(L,2) - pow(R,2))/ (2*L*dFront)) - atan(xFront/zFront);
-				phi2 = asin((R-r)/L);
-				phiContact = phi1 + phi2;
-
-				robotFlipperAngles.flipperAngleFront = phi1;
-			}
-			ROS_INFO("phi1 = %lf, phi2 = %lf, phiContact = %lf\n", phi1, phi2, phiContact);
-			ROS_INFO("robotFlipperAngles.flipperAngleFront = %lf\n", robotFlipperAngles.flipperAngleFront);
-
-		}
-		else
-		{
-			robotFlipperAngles.flipperAngleFront = 85;
-		}
-	}
-	else
-	{
-		robotFlipperAngles.flipperAngleFront = 0;
-	}
-
-	if(zRear!=0)
-	{
-		if(xRear!=0)
-		{
-			double phi1 = 0;
-			double phi2 = 0;
-			double phiContact = 0;
-			if(dRear <= dThreshold)
-			{
-				phi1 = atan(zRear/xRear);
-				phi2 = asin(R/sqrt(pow(xRear, 2) + pow(zRear,2)));
-				phiContact = phi1 + phi2;
-
-				robotFlipperAngles.flipperAngleRear = phi1;
-			}
-			else
-			{
-				phi1 = asin((pow(dRear,2) + pow(L,2) - pow(R,2))/ (2*L*dRear)) - atan(xRear/zRear);
-				phi2 = asin((R-r)/L);
-				phiContact = phi1 + phi2;
-
-				robotFlipperAngles.flipperAngleRear = asin((pow(dRear,2) + pow(L,2) - pow(R,2))/ (2*L*dRear)) - atan(xRear/zRear) + asin((R-r)/L);
-			}
-			ROS_INFO("phi1 = %lf, phi2 = %lf, phiContact = %lf\n", phi1, phi2, phiContact);
-			ROS_INFO("robotFlipperAngles.flipperAngleFront = %lf\n", robotFlipperAngles.flipperAngleFront);
-		}
-		else
-		{
-			robotFlipperAngles.flipperAngleRear = 85;
-		}
-	}
-	else
-	{
-		robotFlipperAngles.flipperAngleRear = 0;
-	}
-}
-
-
-geometry_msgs::Pose clcFlipperAngles::tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame)
-{
-	// TF transformation of the Point which is nearest to the robot
-	const ros::Time& scanTimeStamp = ros::Time (0);
-
-    //std::cout<<"flipperToMapTransform"<<tfID<<std::endl;
-	//ROS_INFO("pose:  x = %lf, y = %lf, z = %lf\n", pose.position.x, pose.position.y, pose.position.z);
-
-    try
-	{
-		tfListener->waitForTransform (destination_frame, original_frame, scanTimeStamp, ros::Duration (3.0));
-	}
-	catch (tf::TransformException& ex)
-	{
-		ROS_ERROR("%s",ex.what());
-	}
-
-	tf::Quaternion quat;
-	quat.setX(pose.orientation.x);
-	quat.setY(pose.orientation.y);
-	quat.setZ(pose.orientation.z);
-	quat.setW(pose.orientation.w);
-
-
-	tf::Vector3 origin;
-
-	origin.setX(pose.position.x);
-	origin.setY(pose.position.y);
-	origin.setZ(pose.position.z);
-
-	tf::StampedTransform transform;
-
-	tf::Stamped<tf::Pose> transPose (tf::Pose( quat,origin), scanTimeStamp, original_frame);
-
-	tf::Stamped<tf::Pose> poseTransformed;
-
-	try
-	{
-		tfListener->transformPose(destination_frame, scanTimeStamp, transPose, original_frame, poseTransformed);
-	}
-	catch (tf::TransformException& ex)
-	{
-		ROS_ERROR(" Point xyz %s", ex.what ());
-	}
-	origin=poseTransformed.getOrigin();
-	quat=poseTransformed.getRotation();
-
-	geometry_msgs::Pose returnPose;
-	returnPose.position.x=origin.getX();
-	returnPose.position.y=origin.getY();
-	returnPose.position.z=origin.getZ();
-	returnPose.orientation.x = quat.x();
-	returnPose.orientation.y = quat.y();
-	returnPose.orientation.z = quat.z();
-	returnPose.orientation.w = quat.w();
-	//ROS_INFO("returnPose:  x = %lf, y = %lf, z = %lf\n", returnPose.position.x, returnPose.position.y, returnPose.position.z);
-
-	return returnPose;
-}*/

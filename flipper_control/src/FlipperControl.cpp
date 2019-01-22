@@ -8,6 +8,7 @@
 #include "FlipperControl.h"
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/Imu.h>
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -28,6 +29,8 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	static image_transport::ImageTransport it(nodeHandle_);
 	static image_transport::Subscriber it_sub;
 	it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&FlipperControl::MapImageCallback, this, _1));
+
+	desired_robot_pose_pub 	= nodeHandle_.advertise < sensor_msgs::Imu > ("desired_robot_pose", 1);
 
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
     odomSub = nodeHandle_.subscribe<nav_msgs::Odometry> ("odom", 1, &FlipperControl::odomCallback,this);
@@ -89,29 +92,53 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	tf2::Quaternion quat= groundPlane(mapImage);
 
+	publishDesiredRobotPose(quat);
+
 	std::vector<cv::Mat> flipperImage;
 	flipperImage = getContactPoints.getFlipperRegions(mapImage);
 
 
 	delta_t = (ros::Time::now() - start_time).toSec();
 
+	flipperAngles robotFlipperAngles;
+
 	//*********************** calculations for the the left flippers
-	flipperEval("/flipper_front_left",flipperImage[0], quat, 1);
+	double maxFlipperFrontLeft = flipperEval("/flipper_front_left",flipperImage[0], quat, 1);
 
 
-	flipperEval("/flipper_front_right",flipperImage[1], quat, 1);
+	double maxFlipperFrontRight= flipperEval("/flipper_front_right",flipperImage[1], quat, 1);
+
+
+	robotFlipperAngles.flipperAngleFront = returnBiggerVel(maxFlipperFrontLeft, maxFlipperFrontRight);
 
 	//*********************** calculations for the the right flippers
-	flipperEval("/flipper_rear_left",flipperImage[2], quat, -1);
+	double maxFlipperRearLeft = flipperEval("/flipper_rear_left",flipperImage[2], quat, -1);
 
-	flipperEval("/flipper_rear_right",flipperImage[3], quat, -1);
+	double maxFlipperRearRight= flipperEval("/flipper_rear_right",flipperImage[3], quat, -1);
+	robotFlipperAngles.flipperAngleRear = returnBiggerVel(maxFlipperRearLeft, maxFlipperRearRight);
+
 
 	start_time = ros::Time::now();
 
+	ROS_INFO (" maxFlipperFrontLeft = [%7.3f]", maxFlipperFrontLeft);
+	ROS_INFO (" maxFlipperFrontRight = [%7.3f]", maxFlipperFrontRight);
+	ROS_INFO (" maxFlipperRearLeft = [%7.3f]", maxFlipperRearLeft);
+	ROS_INFO (" maxFlipperRearRight = [%7.3f]", maxFlipperRearRight);
 
 	//publishAngles(robotFlipperAngles);
 }
 
+double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
+{
+	if(vel1>vel2)
+	{
+		return vel1;
+	}
+	else
+	{
+		return vel2;
+	}
+}
 
 tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 {
@@ -134,7 +161,7 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 }
 
 
-void FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,const tf2::Quaternion& quat, int frontRear)
+double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,const tf2::Quaternion& quat, int frontRear)
 {
 	std::vector<geometry_msgs::Pose> flipperContactPoints;
 	flipperContactPoints = getContactPoints.procFlipperMaps(image, flipper);
@@ -143,11 +170,32 @@ void FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,const
 	// Funktion in range for the flipper positions
 	flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
 
+	getContactPoints.transformPose(flipperContactPoints, tf_prefix + "/base_link", tf_prefix + flipper);
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
 	newtracksContactPoints = calcFlipperAngles.clcNewPoses(flipperContactPoints,quat);
+	getContactPoints.transformPose(flipperContactPoints, tf_prefix + flipper, tf_prefix + "/base_link");
+
+
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, "/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
 
+	flipperContactPointsAngles flipperAngles;
+	flipperAngles = calcFlipperAngles.clcContactAngles(newtracksContactPoints);
+
+	double maxFlipperAngle = 0;
+	maxFlipperAngle = calcFlipperAngles.maxFlipperAngle(flipperAngles);
+	return maxFlipperAngle;
 }
+
+void FlipperControl::publishDesiredRobotPose (tf2::Quaternion quat)
+{
+	sensor_msgs::Imu imu;
+	imu.orientation.x = quat.getX();
+	imu.orientation.y = quat.getY();
+	imu.orientation.z = quat.getZ();
+	imu.orientation.w = quat.getW();
+	desired_robot_pose_pub.publish(imu);
+}
+
 
 
 void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)

@@ -441,7 +441,6 @@ std::vector<cv::Mat> FlipperControl::getFlipperRegions(cv::Mat mapImage)
 	flipperMaps.push_back(flipperMap);
 
 	return flipperMaps;
-
 }
 
 cv::Mat FlipperControl::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage)

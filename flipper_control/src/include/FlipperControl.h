@@ -51,16 +51,19 @@ class FlipperControl
 
 	tf2::Quaternion groundPlane(cv::Mat image);
 
-	void flipperEval(const std::string& flipper, cv::Mat image, const tf2::Quaternion& quat, int frontRear);
+	double flipperEval(const std::string& flipper, cv::Mat image, const tf2::Quaternion& quat, int frontRear);
+	double returnBiggerVel(const double& vel1, const double& vel2);
 
 	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
+
+	void publishDesiredRobotPose (tf2::Quaternion quat);
 
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher rearFlipperAngleDesiredPub;
 	ros::Publisher markerPublisher;
+	ros::Publisher desired_robot_pose_pub;
 
 	ros::Subscriber	odomSub;
-
 	ros::NodeHandle nodeHandle_;
 
 

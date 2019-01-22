@@ -7,6 +7,9 @@
 		<node pkg="flipper_control" name="flipper_control_server" type="flipper_control_server" output="screen">
 		</node>
 
+		<node pkg="flipper_control" type="desired_pose_tf_broadcaster" name="desired_pose_tf_broadcaster" args="desired_robot_pose base_link" respawn="true" output="screen">
+		</node>
+
 		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_front_left" args="flipper_front_left base_link 0.244 0.275 0.102 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
 

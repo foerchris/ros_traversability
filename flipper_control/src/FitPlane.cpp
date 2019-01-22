@@ -7,7 +7,7 @@
 
 #include "FitPlane.h"
 #include "math.h"
-
+#include "tf/transform_datatypes.h"
 FitPlane::FitPlane()
 {
 	// Roboter paramter
@@ -64,19 +64,45 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	double a = (alpha_zx*alpha_yy - alpha_xy*alpha_yz)/(alpha_xx*alpha_yy - alpha_xy*alpha_xy);
 	double b = (alpha_yz*alpha_xx - alpha_xy*alpha_zx)/(alpha_xx*alpha_yy - alpha_xy*alpha_xy);
 	double c = meanPose.position.z - meanPose.position.x*a - meanPose.position.y*b;
+
+	ROS_INFO (" a:\t  [%7.3lf]\n", a);
+
 	double theta_rot = acos(1/sqrt(a*a+b*b+1));
 
-	//ROS_INFO (" a:\t  [%7.3lf]\n", a);
-	//ROS_INFO (" b:\t  [%7.3lf]\n", b);
-	//ROS_INFO (" c:\t  [%7.3lf]\n", c);
+	ROS_INFO (" a:\t  [%7.3lf]\n", a);
+	ROS_INFO (" b:\t  [%7.3lf]\n", b);
+	ROS_INFO (" c:\t  [%7.3lf]\n", c);
 
 
 	tf2::Quaternion quat;
+	double x = 0;
+	double y = b*sin(theta_rot/2);
+	double z = b*sin(theta_rot/2);
+	double w = cos(theta_rot/2);
+	tf::Quaternion q;
 
-	quat.setX(cos(theta_rot/2));
-	quat.setY(b*sin(theta_rot/2));
-	quat.setZ(-a*sin(theta_rot/2));
-	quat.setW(0);
+	if(x!=x || y!=y || z!=z || w!=w)
+	{
+		quat.setRPY(0, 0, 0);
+		q.setRPY(0, 0, 0);
+
+	}
+	else
+	{
+		quat.setX(x);
+		quat.setY(y);
+		quat.setZ(z);
+		quat.setW(w);
+		q.setX(x);
+		q.setY(y);
+		q.setZ(z);
+		q.setW(w);
+	}
+	double roll, pitch, yaw;
+	tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+	ROS_INFO (" quat:\t  x=[%7.3lf], y=[%7.3lf] , z=[%7.3lf], w=[%7.3lf]\n", quat.getX(), quat.getY(), quat.getZ(), quat.getW());
+	ROS_INFO (" angles:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
+
 	return quat;
 }
 
@@ -162,6 +188,7 @@ std::vector<geometry_msgs::Pose> FitPlane::isInRobotRange(const std::vector<geom
 
 	return robotGroundPose;
 }
+
 
 std::vector<geometry_msgs::Pose> FitPlane::isInFlipperRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t)
 {

@@ -19,13 +19,7 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-/*
-struct minMaxFlipperVel {
-	double min;
-	double max;
-	cv::Point min_loc;
-	cv::Point max_loc;
-};*/
+#include <opencv2/imgproc.hpp>
 
 struct flipperContactPointsAngles {
 	std::vector<geometry_msgs::Pose> pose;
@@ -47,9 +41,9 @@ class CalcFlipperAngles
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
 	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses,tf2::Quaternion q);
-	flipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values, std::string flipperFrame);
-	//void clcFlipperAngles(const std::vector<minMaxFlipperVel>& minMaxVel, flipperAngles& robotFlipperAngles);
+	flipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
+	double maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
 
 	private:
 	std::unique_ptr<tf::TransformListener> tfListener;

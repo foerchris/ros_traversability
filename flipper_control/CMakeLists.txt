@@ -82,6 +82,9 @@ add_executable(flipper_tf_broadcaster
 				src/flipper_tf_broadcaster.cpp
 				)
 
+add_executable(desired_pose_tf_broadcaster
+				src/desired_pose_tf_broadcaster.cpp
+				)
 
 target_link_libraries(flipper_control_server
   ${OpenCV_LIBRARIES}
@@ -91,7 +94,9 @@ target_link_libraries(flipper_control_server
 target_link_libraries(flipper_tf_broadcaster
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(desired_pose_tf_broadcaster
+  ${catkin_LIBRARIES}
+)
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencpp)
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencfg)
 

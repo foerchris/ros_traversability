@@ -43,6 +43,9 @@ class GetContactPoints
 	// returns the the robot ground region
 	cv::Mat getRobotRegions(cv::Mat mapImage);
 
+
+	std::vector<geometry_msgs::Pose> transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame);
+
 	// tf transformation method
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
 

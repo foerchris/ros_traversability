@@ -209,11 +209,11 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
 
-    cv::Mat copy = mapImage.clone();
+   /* cv::Mat copy = mapImage.clone();
 
     DrawRotatedRectangle(copy,rect );
     imshow("wadw", copy);
-    waitKey(1);
+    waitKey(1);*/
 	return cropped;
 }
 
@@ -323,6 +323,17 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procFlipperMaps(cv::Mat flipp
 	return poses;
 }
 
+std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame)
+{
+	std::vector<geometry_msgs::Pose> transformedPoses;
+	geometry_msgs::Pose transPose;
+	for(auto pose: poses)
+	{
+		transPose = tfTransform(pose, destination_frame, original_frame);
+		transformedPoses.push_back(transPose);
+	}
+	return transformedPoses;
+}
 
 geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame)
 {

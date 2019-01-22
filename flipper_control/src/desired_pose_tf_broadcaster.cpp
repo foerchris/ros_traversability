@@ -11,7 +11,6 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <cstdio>
 #include <tf2/LinearMath/Quaternion.h>
-#include <nav_msgs/Odometry.h>
 
 #include <sensor_msgs/Imu.h>
 
@@ -26,39 +25,12 @@ std::string tf_prefix = "GETjag";
 
 geometry_msgs::TransformStamped static_transformStamped;
 
-double globalyaw = 0;
-void planeCallback (const sensor_msgs::Imu::ConstPtr& imu_ptr)
+void desiredPoseCallback (const sensor_msgs::Imu::ConstPtr& imu_ptr)
 {
-	/*static_transformStamped.transform.rotation.x = imu_ptr->orientation.x;
+	static_transformStamped.transform.rotation.x = imu_ptr->orientation.x;
 	static_transformStamped.transform.rotation.y = imu_ptr->orientation.y;
 	static_transformStamped.transform.rotation.z = imu_ptr->orientation.z;
-	static_transformStamped.transform.rotation.w = imu_ptr->orientation.w;*/
-
-	double x = imu_ptr->orientation.x;
-	double y = imu_ptr->orientation.y;
-	double z = imu_ptr->orientation.z;
-	double w = imu_ptr->orientation.w;
-	double roll;
-	double pitch;
-	double yaw;
-
-	tf::Quaternion q (x, y, z, w);
-	tf::Matrix3x3 m (q);
-	m.getRPY (roll, pitch, yaw);
-	tf::Quaternion quat;
-	if(globalyaw==0)
-	{
-		quat.setRPY(-roll,-pitch, globalyaw);
-	}
-	else
-	{
-		quat.setRPY(roll,pitch, globalyaw);
-	}
-
-	static_transformStamped.transform.rotation.x = quat.x();
-	static_transformStamped.transform.rotation.y = quat.y();
-	static_transformStamped.transform.rotation.z = quat.z();
-	static_transformStamped.transform.rotation.w = quat.w();
+	static_transformStamped.transform.rotation.w = imu_ptr->orientation.w;
 }
 
 
@@ -82,7 +54,7 @@ int main(int argc, char **argv)
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	ros::Subscriber imuSub;
-	imuSub = nodeHandle.subscribe < sensor_msgs::Imu > ("imu/data", 1, imuCallback);
+	imuSub = nodeHandle.subscribe < sensor_msgs::Imu > ("desired_robot_pose", 1, desiredPoseCallback);
 
 	destination_frame = tf_prefix + "/" + argv[1];
 	original_frame = tf_prefix + "/" + argv[2];
@@ -91,12 +63,11 @@ int main(int argc, char **argv)
 	static_transformStamped.header.frame_id = original_frame;
 	static_transformStamped.child_frame_id = destination_frame;
 
-	static_transformStamped.transform.translation.x = atof(argv[3]);
-	static_transformStamped.transform.translation.y = atof(argv[4]);
-	static_transformStamped.transform.translation.z = atof(argv[5]);
-	globalyaw = atof(argv[8]);
+	static_transformStamped.transform.translation.x = 0;
+	static_transformStamped.transform.translation.y = 0;
+	static_transformStamped.transform.translation.z = 0;
 	tf2::Quaternion quat;
-	quat.setRPY(0,0, globalyaw);
+	quat.setRPY(0,0, 0);
 	static_transformStamped.transform.rotation.x = quat.x();
 	static_transformStamped.transform.rotation.y = quat.y();
 	static_transformStamped.transform.rotation.z = quat.z();
