@@ -26,7 +26,7 @@ CalcFlipperAngles::CalcFlipperAngles()
 	//	yLength = L+r;
 	xLength = L+r;
 	trackLength = 0.5;
-	FlipperTrackLength = 2*(xLength + R) + trackLength;
+	FlipperTrackLength = 2*(xLength - R) + trackLength;
 	TracksBaseLinkDist = 0.275;
 }
 

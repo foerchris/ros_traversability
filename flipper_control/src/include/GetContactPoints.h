@@ -38,10 +38,10 @@ class GetContactPoints
 	virtual ~GetContactPoints();
 
 	// return an vector of the segmented tracks and flipper regions
-	std::vector<cv::Mat> getFlipperRegions(cv::Mat mapImage);
+	std::vector<cv::Mat> getFlipperRegions(cv::Mat mapImage, const geometry_msgs::Twist& velocitiy_robot, const double& delta_t);
 
 	// returns the the robot ground region
-	cv::Mat getRobotRegions(cv::Mat mapImage);
+	cv::Mat getRobotRegions(cv::Mat mapImage, const geometry_msgs::Twist& velocitiy_robot, const double& delta_t);
 
 
 	std::vector<geometry_msgs::Pose> transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame);
@@ -58,14 +58,14 @@ class GetContactPoints
 	// draws the rotated rectangle for the flipper region into the image for debuging
 	void DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rotatedRectangle);
 
+	geometry_msgs::Pose clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, const double& delta_t);
 
 
 	// process from image to koordinates
 	std::vector<geometry_msgs::Pose> procFlipperMaps(cv::Mat flipperMaps, std::string flipperFrame);
 
 	// display the each point through a marker array
-	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b);
-
+	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const int& sign, const std::string& name, const std::string& frame, float r, float g, float b);
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a);
 
 
@@ -93,12 +93,17 @@ class GetContactPoints
 	// *********** the image variables
 	double resultion;
 	double xLength  ;
+	double flipperWidth;
 	double yLength  ;
+	double flipperLength;
 	double mapSizeX;
 	double mapSizeY;
 	double TracksBaseLinkDist;
 	double FlipperTrackLength;
 	double cropeMapLength;
+
+	geometry_msgs::Pose deltaPose;
+
 };
 
 

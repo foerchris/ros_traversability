@@ -66,9 +66,6 @@ class CalcFlipperAngles
 	double FlipperTrackLength;
 
 
-	// **** parameter for valide pose
-	double velocitiy_robot;
-	double delta_t;
 
 };
 

@@ -90,15 +90,16 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 {
 	cv::Point min_loc, max_loc;
 
-	tf2::Quaternion quat= groundPlane(mapImage);
-
-	publishDesiredRobotPose(quat);
-
-	std::vector<cv::Mat> flipperImage;
-	flipperImage = getContactPoints.getFlipperRegions(mapImage);
 
 
 	delta_t = (ros::Time::now() - start_time).toSec();
+	tf2::Quaternion quat= groundPlane(mapImage, currentVelocity, delta_t);
+	publishDesiredRobotPose(quat);
+
+	std::vector<cv::Mat> flipperImage;
+	flipperImage = getContactPoints.getFlipperRegions(mapImage, currentVelocity, delta_t);
+
+
 
 	flipperAngles robotFlipperAngles;
 
@@ -140,20 +141,20 @@ double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
 	}
 }
 
-tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
+tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
 {
 	cv::Mat robotGroundImage;
 
-	robotGroundImage = getContactPoints.getRobotRegions(image);
+	robotGroundImage = getContactPoints.getRobotRegions(image, velocitiy_robot, delta_t);
 
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
 	groundContactPoints = getContactPoints.procGroundImage(robotGroundImage);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, "/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat;
-	groundContactPoints = fitPlane.isInRobotRange(groundContactPoints, currentVelocity.linear.x, delta_t);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, "/new_flipper_pose", "/base_link",  1.0, 1.0, 0.0));
+	//groundContactPoints = fitPlane.isInRobotRange(groundContactPoints, currentVelocity.linear.x, delta_t);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/new_flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
 	quat = fitPlane.fitPlane(groundContactPoints);
 
@@ -165,10 +166,10 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 {
 	std::vector<geometry_msgs::Pose> flipperContactPoints;
 	flipperContactPoints = getContactPoints.procFlipperMaps(image, flipper);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, "/flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, frontRear,"/flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
 
 	// Funktion in range for the flipper positions
-	flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
+	//flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
 
 	getContactPoints.transformPose(flipperContactPoints, tf_prefix + "/base_link", tf_prefix + flipper);
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
@@ -176,7 +177,7 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 	getContactPoints.transformPose(flipperContactPoints, tf_prefix + flipper, tf_prefix + "/base_link");
 
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, "/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, frontRear,"/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
 
 	flipperContactPointsAngles flipperAngles;
 	flipperAngles = calcFlipperAngles.clcContactAngles(newtracksContactPoints);

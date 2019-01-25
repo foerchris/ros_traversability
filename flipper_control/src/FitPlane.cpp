@@ -25,7 +25,7 @@ FitPlane::FitPlane()
 	xLength = L+r;
 	trackLength = 0.5;
 	flipperLength = xLength;
-	FlipperTrackLength = 2*(xLength + R) + trackLength;
+	FlipperTrackLength = 2*(xLength - R) + trackLength;
 	TracksBaseLinkDist = 0.275;
 }
 

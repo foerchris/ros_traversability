@@ -49,7 +49,7 @@ class FlipperControl
 
 	void SequenceControl(cv::Mat mapImage);
 
-	tf2::Quaternion groundPlane(cv::Mat image);
+	tf2::Quaternion groundPlane(cv::Mat image,const geometry_msgs::Twist& velocitiy_robot, const double& delta_t);
 
 	double flipperEval(const std::string& flipper, cv::Mat image, const tf2::Quaternion& quat, int frontRear);
 	double returnBiggerVel(const double& vel1, const double& vel2);
