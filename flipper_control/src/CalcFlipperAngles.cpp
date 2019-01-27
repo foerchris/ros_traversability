@@ -66,9 +66,10 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 	{
 		if(pose.position.z > maxZ)
 		{
-			pose.position.z = maxZ;
+			maxZ = pose.position.z;
 		}
 	}
+	//ROS_INFO (" newPoses[i]:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", newPoses[i].position.x, newPoses[i].position.y, newPoses[i].position.z);
 
 	for(std::size_t i=0; i < newPoses.size(); i++)
 	{

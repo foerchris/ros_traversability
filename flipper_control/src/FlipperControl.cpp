@@ -94,7 +94,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	delta_t = (ros::Time::now() - start_time).toSec();
 	tf2::Quaternion quat= groundPlane(mapImage, currentVelocity, delta_t);
-	publishDesiredRobotPose(quat);
+	//publishDesiredRobotPose(quat);
 
 	std::vector<cv::Mat> flipperImage;
 	flipperImage = getContactPoints.getFlipperRegions(mapImage, currentVelocity, delta_t);
@@ -121,10 +121,10 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	start_time = ros::Time::now();
 
-	ROS_INFO (" maxFlipperFrontLeft = [%7.3f]", maxFlipperFrontLeft);
-	ROS_INFO (" maxFlipperFrontRight = [%7.3f]", maxFlipperFrontRight);
-	ROS_INFO (" maxFlipperRearLeft = [%7.3f]", maxFlipperRearLeft);
-	ROS_INFO (" maxFlipperRearRight = [%7.3f]", maxFlipperRearRight);
+//	ROS_INFO (" maxFlipperFrontLeft = [%7.3f]", maxFlipperFrontLeft);
+//	ROS_INFO (" maxFlipperFrontRight = [%7.3f]", maxFlipperFrontRight);
+//	ROS_INFO (" maxFlipperRearLeft = [%7.3f]", maxFlipperRearLeft);
+//	ROS_INFO (" maxFlipperRearRight = [%7.3f]", maxFlipperRearRight);
 
 	publishAngles(robotFlipperAngles);
 }
@@ -150,6 +150,11 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, const geometry_msgs::
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
 	groundContactPoints = getContactPoints.procGroundImage(robotGroundImage);
+
+	for(auto groundContactPoint : groundContactPoints)
+	{
+	//	ROS_INFO("groundContactPoints: x=%7.3lf, y=%7.3lf, z=%7.3lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
+	}
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat;
@@ -170,14 +175,21 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 
 	// Funktion in range for the flipper positions
 	//flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
+	ROS_INFO("%s",flipper.c_str());
 
-
+	for(auto flipperContactPoint : flipperContactPoints)
+	{
+		ROS_INFO("flipperContactPoint: x=%7.3lf, y=%7.3lf, z=%7.3lf", flipperContactPoint.position.x, flipperContactPoint.position.y, flipperContactPoint.position.z);
+	}
 	// Tranfrom back to baselink since the fitted plan has it's origin there
 	getContactPoints.transformPose(flipperContactPoints, tf_prefix + "/base_link", tf_prefix + flipper);
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
 	newtracksContactPoints = calcFlipperAngles.clcNewPoses(flipperContactPoints,quat);
 	getContactPoints.transformPose(flipperContactPoints, tf_prefix + flipper, tf_prefix + "/base_link");
-
+	for(auto newtracksContactPoint : newtracksContactPoints)
+	{
+		ROS_INFO("newtracksContactPoint: x=%7.3lf, y=%7.3lf, z=%7.3lf", newtracksContactPoint.position.x, newtracksContactPoint.position.y, newtracksContactPoint.position.z);
+	}
 
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, frontRear,"/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
 

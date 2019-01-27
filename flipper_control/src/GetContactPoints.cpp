@@ -122,10 +122,12 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(
 
 geometry_msgs::Pose GetContactPoints::clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
 {
-	double theta = velocitiy_robot.angular.z*delta_t;
-
-	deltaPose.position.x = velocitiy_robot.linear.x * delta_t * cos(theta);
-	deltaPose.position.y = velocitiy_robot.linear.x * delta_t * sin(theta);
+	//double theta = velocitiy_robot.angular.z*delta_t;
+	double theta = 0;
+	//double v_dot = velocitiy_robot.linear.x * delta_t;
+	double v_dot = 0.08;
+	deltaPose.position.x = v_dot * cos(theta);
+	deltaPose.position.y = v_dot * sin(theta);
 
 	deltaPose.position.z = 0;
 
@@ -285,7 +287,8 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procGroundImage(cv::Mat flipp
 	    	pose.position.y = cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion;
 
 	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;
-			flipperPose.position.z = pose.position.z;
+
+			flipperPose = pose;
 			flipperPose = tfTransform(flipperPose, BASE_FRAME, MAP_FRAME);
 			pose.position.z = flipperPose.position.z;
 	    	poses.push_back(pose);
