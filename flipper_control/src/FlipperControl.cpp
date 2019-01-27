@@ -126,7 +126,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 	ROS_INFO (" maxFlipperRearLeft = [%7.3f]", maxFlipperRearLeft);
 	ROS_INFO (" maxFlipperRearRight = [%7.3f]", maxFlipperRearRight);
 
-	//publishAngles(robotFlipperAngles);
+	publishAngles(robotFlipperAngles);
 }
 
 double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
@@ -171,6 +171,8 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 	// Funktion in range for the flipper positions
 	//flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
 
+
+	// Tranfrom back to baselink since the fitted plan has it's origin there
 	getContactPoints.transformPose(flipperContactPoints, tf_prefix + "/base_link", tf_prefix + flipper);
 	std::vector<geometry_msgs::Pose> newtracksContactPoints;
 	newtracksContactPoints = calcFlipperAngles.clcNewPoses(flipperContactPoints,quat);

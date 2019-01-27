@@ -36,22 +36,6 @@ CalcFlipperAngles::~CalcFlipperAngles()
 
 }
 
-/*
-void rotate_vector_by_quaternion(const tf2::Vector3& v, const tf2::Quaternion& q, tf2::Vector3& vprime)
-{
-    // Extract the vector part of the quaternion
-	tf2::Vector3 u(q.x, q.y, q.z);
-
-    // Extract the scalar part of the quaternion
-    float s = q.w;
-
-    // Do the math
-    vprime = 2.0f * dot(u, v) * u
-          + (s*s - dot(u, u)) * v
-          + 2.0f * s * cross(u, v);
-}
-*/
-
 std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
 {
 	tf2::Quaternion q_prime = q.inverse();
@@ -92,16 +76,17 @@ std::vector<geometry_msgs::Pose> CalcFlipperAngles::clcNewPoses(const std::vecto
 		//ROS_INFO (" newPoses[i]:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", newPoses[i].position.x, newPoses[i].position.y, newPoses[i].position.z);
 
 	}
-
 	return newPoses;
 }
+
 double CalcFlipperAngles::maxFlipperAngle(const flipperContactPointsAngles& flipperAngles)
 {
 	double maxFlipperAngle = 0;
 
 	auto iter = std::max_element(flipperAngles.phiContact.begin(), flipperAngles.phiContact.end());
 
-	maxFlipperAngle = std::distance(flipperAngles.phiContact.begin(), iter);
+	maxFlipperAngle =*iter;
+
 	return maxFlipperAngle;
 }
 
