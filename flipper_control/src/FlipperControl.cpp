@@ -137,13 +137,14 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 
 	robotGroundImage = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
+	ROS_INFO("robotGroundImage: cols = %i , rows = %i",robotGroundImage.cols, robotGroundImage.rows);
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
 	//groundContactPoints = getContactPoints.procGroundImage(robotGroundImage, BASE_FRAME, MAP_FRAME);
 
 	//markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
-	//tf2::Quaternion quat;
+	tf2::Quaternion quat;
 
 
 	return quat;

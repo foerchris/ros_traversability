@@ -28,29 +28,6 @@ geometry_msgs::TransformStamped static_transformStamped;
 
 double globalyaw = 0;
 
-/*
-geometry_msgs::Pose clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
-{
-	//double theta = velocitiy_robot.angular.z*delta_t;
-	double theta = 0;
-	//double v_dot = velocitiy_robot.linear.x * delta_t;
-	double v_dot = 2*0.08;
-	deltaPose.position.x = v_dot * cos(theta);
-	deltaPose.position.y = v_dot * sin(theta);
-
-	deltaPose.position.z = 0;
-
-	tf2::Quaternion quat;
-
-	quat.setRPY(0,0,theta);
-	deltaPose.orientation.x = quat.getX();
-	deltaPose.orientation.y = quat.getY();
-	deltaPose.orientation.z = quat.getZ();
-	deltaPose.orientation.w = quat.getW();
-
-	return deltaPose;
-}*/
-
 geometry_msgs::Twist currentVelocity;
 double delta_t = 0.8;
 geometry_msgs::Pose deltaPose;
@@ -66,13 +43,20 @@ void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 
 	static_transformStamped.transform.translation.x = initPose.position.x +  v_dot * cos(theta) ;
 	static_transformStamped.transform.translation.y = initPose.position.y + v_dot * sin(theta);
-	static_transformStamped.transform.translation.z = initPose.position.y + 0;
+	static_transformStamped.transform.translation.z = initPose.position.z + 0;
 
 	tf2::Quaternion quat;
-	if(globalyaw == 0)
+
+	if(globalyaw==0)
 	{
 		quat.setRPY(0,0,theta);
 	}
+	else
+	{
+		quat.setRPY(0,0,theta-globalyaw);
+	}
+
+
 	static_transformStamped.transform.rotation.x = quat.getX();
 	static_transformStamped.transform.rotation.y = quat.getY();
 	static_transformStamped.transform.rotation.z = quat.getZ();
