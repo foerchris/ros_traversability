@@ -104,7 +104,7 @@ cv::Mat GetContactPoints::getRegions(cv::Mat mapImage, const double& regionLengt
 	ROS_INFO("regionWidth: %7.3lf, regionLength: %7.3lf", regionWidth, regionLength);
 
 	//flipperMap = getCropedImage(next_Pose, mapImage, regionLength, regionWidth);
-	flipperMap = getCropedImage(next_Pose, mapImage, regionLength , regionWidth);
+	flipperMap = getCropedImage(next_Pose, mapImage, regionWidth, regionLength);
 
 	return flipperMap;
 }
