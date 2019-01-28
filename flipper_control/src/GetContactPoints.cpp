@@ -145,11 +145,14 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
     getRectSubPix(rotated, rect_size, rect.center, cropped);
 
     cv::Mat copy = mapImage.clone();
+
     DrawRotatedRectangle(copy,rect );
     imshow("wadw", copy);
-    waitKey(1);
+    waitKey(3);
+
 	return cropped;
 }
+
 
 
 // Include center point of your rectangle, size of your rectangle and the degrees of rotation
