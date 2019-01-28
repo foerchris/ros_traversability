@@ -27,41 +27,29 @@ std::string tf_prefix = "GETjag";
 geometry_msgs::TransformStamped static_transformStamped;
 
 double globalyaw = 0;
-void planeCallback (const sensor_msgs::Imu::ConstPtr& imu_ptr)
+
+/*
+geometry_msgs::Pose clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
 {
-	/*static_transformStamped.transform.rotation.x = imu_ptr->orientation.x;
-	static_transformStamped.transform.rotation.y = imu_ptr->orientation.y;
-	static_transformStamped.transform.rotation.z = imu_ptr->orientation.z;
-	static_transformStamped.transform.rotation.w = imu_ptr->orientation.w;*/
+	//double theta = velocitiy_robot.angular.z*delta_t;
+	double theta = 0;
+	//double v_dot = velocitiy_robot.linear.x * delta_t;
+	double v_dot = 2*0.08;
+	deltaPose.position.x = v_dot * cos(theta);
+	deltaPose.position.y = v_dot * sin(theta);
 
-	double x = imu_ptr->orientation.x;
-	double y = imu_ptr->orientation.y;
-	double z = imu_ptr->orientation.z;
-	double w = imu_ptr->orientation.w;
-	double roll;
-	double pitch;
-	double yaw;
+	deltaPose.position.z = 0;
 
-	tf::Quaternion q (x, y, z, w);
-	tf::Matrix3x3 m (q);
-	m.getRPY (roll, pitch, yaw);
-	tf::Quaternion quat;
-	if(globalyaw==0)
-	{
-		quat.setRPY(-roll,-pitch, globalyaw);
-	}
-	else
-	{
-		quat.setRPY(roll,pitch, globalyaw);
-	}
+	tf2::Quaternion quat;
 
-	static_transformStamped.transform.rotation.x = quat.x();
-	static_transformStamped.transform.rotation.y = quat.y();
-	static_transformStamped.transform.rotation.z = quat.z();
-	static_transformStamped.transform.rotation.w = quat.w();
-}
+	quat.setRPY(0,0,theta);
+	deltaPose.orientation.x = quat.getX();
+	deltaPose.orientation.y = quat.getY();
+	deltaPose.orientation.z = quat.getZ();
+	deltaPose.orientation.w = quat.getW();
 
-
+	return deltaPose;
+}*/
 int main(int argc, char **argv)
 {
 	ros::init(argc,argv, "flipper_tf_broadcaster");
@@ -81,8 +69,6 @@ int main(int argc, char **argv)
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
-	ros::Subscriber imuSub;
-	imuSub = nodeHandle.subscribe < sensor_msgs::Imu > ("imu/data", 1, imuCallback);
 
 	destination_frame = tf_prefix + "/" + argv[1];
 	original_frame = tf_prefix + "/" + argv[2];

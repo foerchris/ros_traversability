@@ -25,46 +25,22 @@ GetContactPoints::GetContactPoints()
 {
 
 	tfListener = std::unique_ptr<tf::TransformListener> (new tf::TransformListener);
-
 	// get namespace for tf
 	tf_prefix = "//GETjag";
 	tf_prefix = ros::this_node::getNamespace();
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
-	BASE_FRAME = tf_prefix + "/base_link";
-	ODOM_FRAME = tf_prefix + "/odom";
-	MAP_FRAME = tf_prefix + "/map";
-
-	// init mapsize
-	mapSizeX = 200;
-	mapSizeY = 200;
-
-	// Roboter paramter
-	R = 0.082;
-	r = 0.0375;
-	//L = 0.22;
-	L = 0.2325;
-	//d = std::hypot (r, L);
-	theta = atan (r / L);
-	dThreshold = sqrt(pow(R,2) + pow(L,2) - pow(R-r,2));
 	resultion = 0.06;
-	//xLength  = 0.1;
-	yLength  = 0.1;
-	flipperWidth = yLength;
-	//yLength  = 0.2575;
-	//	yLength = L+r;
-	xLength = L+r;
-	flipperLength = xLength;
-	trackLength = 0.6;
-	FlipperTrackLength = 2*(xLength - R) + trackLength;
-	TracksBaseLinkDist = 0.275;
-	cropeMapLength = 2;
 }
 
 GetContactPoints::~GetContactPoints()
 {
 
+}
+void GetContactPoints::setConstants(const double& imageResultion)
+{
+	resultion = imageResultion;
 }
 
 
@@ -110,95 +86,37 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(
 
 	for(std::size_t i=0; i<pose.size();i++)
 	{
-		displayPose.position.x = pose[i].position.x + sign*deltaPose.position.x;
-		displayPose.position.y = pose[i].position.y + sign*deltaPose.position.y;
-
-		//displayPose = tfTransform(displayPose, MAP_FRAME, tf_prefix + frame);
-
-		markerArray.markers.push_back (createMarker(tf_prefix + frame, tf_prefix + name, i, displayPose.position.x, displayPose.position.y, 1.0, 1.0, 0.0, 1.0));
+		markerArray.markers.push_back (createMarker(frame, name, i, displayPose.position.x, displayPose.position.y, 1.0, 1.0, 0.0, 1.0));
 	}
 	return markerArray;
 }
 
-geometry_msgs::Pose GetContactPoints::clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
-{
-	//double theta = velocitiy_robot.angular.z*delta_t;
-	double theta = 0;
-	//double v_dot = velocitiy_robot.linear.x * delta_t;
-	double v_dot = 2*0.08;
-	deltaPose.position.x = v_dot * cos(theta);
-	deltaPose.position.y = v_dot * sin(theta);
 
-	deltaPose.position.z = 0;
-
-	tf2::Quaternion quat;
-
-	quat.setRPY(0,0,theta);
-	deltaPose.orientation.x = quat.getX();
-	deltaPose.orientation.y = quat.getY();
-	deltaPose.orientation.z = quat.getZ();
-	deltaPose.orientation.w = quat.getW();
-
-	return deltaPose;
-}
-cv::Mat GetContactPoints::getRobotRegions(cv::Mat mapImage, const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
+cv::Mat GetContactPoints::getRegions(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
 {
 	geometry_msgs::Pose pose;
 
-	pose = clcDeltaPose(velocitiy_robot, delta_t);
-
-	geometry_msgs::Pose flipperPose = tfTransform(pose, MAP_FRAME,BASE_FRAME);
+	geometry_msgs::Pose flipperPose = tfTransform(pose, destination_frame,original_frame);
 
 	cv::Mat flipperMap;
 
-	flipperMap = getCropedImage(flipperPose, mapImage, 2*TracksBaseLinkDist, FlipperTrackLength);
+	flipperMap = getCropedImage(flipperPose, mapImage, regionWidth, regionLength);
 
 	return flipperMap;
 }
 
-std::vector<cv::Mat> GetContactPoints::getFlipperRegions(cv::Mat mapImage, const geometry_msgs::Twist& velocitiy_robot, const double& delta_t)
-{
-	geometry_msgs::Pose pose;
 
-	pose = clcDeltaPose(velocitiy_robot, delta_t);
-
-	pose.position.x += flipperLength/2;
-
-	std::vector<cv::Mat> flipperMaps;
-	cv::Mat flipperMap;
-
-	geometry_msgs::Pose flipperPose = tfTransform(pose, MAP_FRAME, tf_prefix + "/flipper_front_left");
-
-	flipperMap = getCropedImage(flipperPose, mapImage, yLength, flipperLength);
-	flipperMaps.push_back(flipperMap);
-
-	flipperPose = tfTransform(pose, MAP_FRAME, tf_prefix + "/flipper_front_right");
-	flipperMap = getCropedImage(flipperPose, mapImage,  yLength, flipperLength);
-	flipperMaps.push_back(flipperMap);
-
-	flipperPose = tfTransform(pose ,MAP_FRAME, tf_prefix + "/flipper_rear_left");
-	flipperMap = getCropedImage( flipperPose, mapImage,  yLength, flipperLength);
-	flipperMaps.push_back(flipperMap);
-
-	flipperPose = tfTransform(pose,MAP_FRAME, tf_prefix + "/flipper_rear_right");
-	flipperMap = getCropedImage( flipperPose, mapImage, yLength, flipperLength);
-	flipperMaps.push_back(flipperMap);
-
-	return flipperMaps;
-}
 
 cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
 {
-    mapSizeX = mapImage.cols;
-    mapSizeY = mapImage.rows;
+    double mapSizeX = mapImage.cols;
+    double mapSizeY = mapImage.rows;
 
    	int x = mapSizeX/2 - pose.position.y/resultion;
    	int y = mapSizeY/2 - pose.position.x/resultion;
 
 
 	int widthX = rectSizeX/resultion;
-	//int widthY = FlipperTrackLength/resultion;
-
 	int widthY = rectSizeY/resultion;
 
 
@@ -223,11 +141,11 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
 
-   /* cv::Mat copy = mapImage.clone();
+    cv::Mat copy = mapImage.clone();
 
     DrawRotatedRectangle(copy,rect );
     imshow("wadw", copy);
-    waitKey(1);*/
+    waitKey(1);
 	return cropped;
 }
 
@@ -256,7 +174,7 @@ void GetContactPoints::DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rota
 }
 
 
-std::vector<geometry_msgs::Pose> GetContactPoints::procGroundImage(cv::Mat flipperMaps)
+std::vector<geometry_msgs::Pose> GetContactPoints::procGroundImage(cv::Mat flipperMaps, const std::string& destination_frame,const std::string& original_frame)
 {
 	std::vector<geometry_msgs::Pose> poses;
 
@@ -289,54 +207,9 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procGroundImage(cv::Mat flipp
 	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;
 
 			flipperPose = pose;
-			flipperPose = tfTransform(flipperPose, BASE_FRAME, MAP_FRAME);
+			flipperPose = tfTransform(flipperPose, destination_frame, original_frame);
 			pose.position.z = flipperPose.position.z;
 	    	poses.push_back(pose);
-	    }
-	}
-	return poses;
-}
-
-std::vector<geometry_msgs::Pose> GetContactPoints::procFlipperMaps(cv::Mat flipperMaps, std::string flipperFrame)
-{
-	std::vector<geometry_msgs::Pose> poses;
-
-	geometry_msgs::Pose pose;
-	tf::Quaternion quat;
-	quat.setRPY( 0, 0, 0);
-	pose.orientation.x = quat.x();
-	pose.orientation.y = quat.y();
-	pose.orientation.z = quat.z();
-	pose.orientation.w = quat.w();
-
-	geometry_msgs::Pose flipperPose;
-	flipperPose.position.x = 0;
-	flipperPose.position.y = 0;
-	flipperPose.position.z = 0;
-	flipperPose.orientation.x = 0.0;
-	flipperPose.orientation.y = 0.0;
-	flipperPose.orientation.z = 0.0;
-	flipperPose.orientation.w = 1.0;
-	ROS_INFO("%s", flipperFrame.c_str());
-
-	double cropLengthX = flipperMaps.rows*resultion;
-	//double cropLengthY = flipperMaps.cols*resultion;
-	for(int i=0; i<flipperMaps.rows; i++)
-	{
-	    for(int j=0; j<flipperMaps.cols; j++)
-	    {
-	    	pose.position.x = cropLengthX - cropLengthX/(flipperMaps.rows*2) - i * resultion ;
-	    	pose.position.y = j*resultion;
-
-	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;
-			ROS_INFO("pose before: x =%7.3lf, y=%7.3lf, z=%7.3lf", pose.position.x, pose.position.y, pose.position.z);
-
-			flipperPose.position.z = pose.position.z;
-			flipperPose = tfTransform(flipperPose, tf_prefix + flipperFrame, MAP_FRAME);
-			pose.position.z = flipperPose.position.z;
-	    	poses.push_back(pose);
-			ROS_INFO("pose after: x =%7.3lf, y=%7.3lf, z=%7.3lf", pose.position.x, pose.position.y, pose.position.z);
-
 	    }
 	}
 	return poses;

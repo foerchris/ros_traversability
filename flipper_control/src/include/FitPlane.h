@@ -18,15 +18,8 @@ class FitPlane
 	public:
 	FitPlane();
 	virtual ~FitPlane();
-	tf2::Quaternion fitPlane(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<geometry_msgs::Pose> isInRobotRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t);
-	std::vector<geometry_msgs::Pose> isInFlipperRange(const std::vector<geometry_msgs::Pose>& poses, const double& velocitiy_robot, const double& delta_t);
 
 	private:
-	// returns a,b,c fitted plan (z = a*x + b*y + c)
-	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
-	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
-
 	// Robot parameter
 	double R;		// Radius of the wheel of the robot body
 	double r;		// Radius of the wheel on the end of the flipper

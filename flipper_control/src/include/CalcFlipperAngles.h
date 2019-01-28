@@ -40,15 +40,9 @@ class CalcFlipperAngles
 	public:
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
-	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses,tf2::Quaternion q);
-	flipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
-	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
-	double maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
+
 
 	private:
-	std::unique_ptr<tf::TransformListener> tfListener;
-	tf::StampedTransform transform;
-
 
 	// Robot parameter
 	double R;		// Radius of the wheel of the robot body

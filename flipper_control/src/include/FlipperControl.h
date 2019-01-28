@@ -45,31 +45,27 @@ class FlipperControl
 
 	void FlipperSequenzCallback(const ros::TimerEvent& event);
 
-	void publishAngles (flipperAngles robotFlipperAngles);
-
 	void SequenceControl(cv::Mat mapImage);
 
-	tf2::Quaternion groundPlane(cv::Mat image,const geometry_msgs::Twist& velocitiy_robot, const double& delta_t);
+	tf2::Quaternion groundPlane(cv::Mat image);
 
-	double flipperEval(const std::string& flipper, cv::Mat image, const tf2::Quaternion& quat, int frontRear);
-	double returnBiggerVel(const double& vel1, const double& vel2);
 
-	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
-
-	void publishDesiredRobotPose (tf2::Quaternion quat);
-
-	ros::Publisher frontFlipperAngleDesiredPub;
-	ros::Publisher rearFlipperAngleDesiredPub;
 	ros::Publisher markerPublisher;
-	ros::Publisher desired_robot_pose_pub;
 
-	ros::Subscriber	odomSub;
 	ros::NodeHandle nodeHandle_;
-
 
 	ros::Timer msg_timer ;
 
 	std::string tf_prefix;
+	//**************** tf frames
+	std::string BASE_FRAME;
+	std::string NEXT_BASE_FRAME;
+	std::string MAP_FRAME;
+	std::string ODOM_FRAME;
+	std::string FLIPPER_FRONT_LEFT_FRAME;
+	std::string FLIPPER_FRONT_RIGHT_FRAME;
+	std::string FLIPPER_REAR_LEFT_FRAME;
+	std::string FLIPPER_REAR_RIGHT_FRAME;
 
 	// Obeject declarations
 	GetContactPoints getContactPoints;
@@ -78,13 +74,31 @@ class FlipperControl
 
 	cv::Mat globalMapImage;
 
-	geometry_msgs::Twist currentVelocity;
-
-	ros::Time start_time;
-	double delta_t;
-
 	// true if
 	bool mapImageSet;
+
+
+
+	// Robot parameter
+	double R;		// Radius of the wheel of the robot body
+	double r;		// Radius of the wheel on the end of the flipper
+	double L;		// Wheel distance between the robot wheel axis and the wheel axis on the end of the flipper
+	//double d;		// Distance between body wheel axis and "downside of flipper wheel"
+	double theta;	// Angle of distance (see above) and flipper wheel radius
+	double dThreshold;
+	double trackLength;
+
+	// *********** the image variables
+	double resultion;
+	double xLength  ;
+	double flipperWidth;
+	double yLength  ;
+	double flipperLength;
+	double mapSizeX;
+	double mapSizeY;
+	double TracksBaseLinkDist;
+	double FlipperTrackLength;
+	double cropeMapLength;
 
 
 
