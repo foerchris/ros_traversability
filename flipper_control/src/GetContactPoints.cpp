@@ -103,7 +103,8 @@ cv::Mat GetContactPoints::getRegions(cv::Mat mapImage, const double& regionLengt
 	cv::Mat flipperMap;
 	ROS_INFO("regionWidth: %7.3lf, regionLength: %7.3lf", regionWidth, regionLength);
 
-	flipperMap = getCropedImage(next_Pose, mapImage, regionLength, regionWidth);
+	//flipperMap = getCropedImage(next_Pose, mapImage, regionLength, regionWidth);
+	flipperMap = getCropedImage(next_Pose, mapImage, regionLength , regionWidth);
 
 	return flipperMap;
 }
@@ -122,6 +123,9 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 	int widthX = rectSizeX/resultion;
 	int widthY = rectSizeY/resultion;
 
+	ROS_INFO("x: %7.3i, y: %7.3i", x, y);
+
+	ROS_INFO("widthX: %7.3i, widthY: %7.3i", widthX, widthY);
 
 	cv::Point2f point(x,y);
 	cv::Size2f size(widthX,widthY);
@@ -148,8 +152,10 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 
     DrawRotatedRectangle(copy,rect );
     imshow("wadw", copy);
-    waitKey(3);
+    waitKey(1);
 
+    imshow("awdawd", cropped);
+    waitKey(1);
 	return cropped;
 }
 
