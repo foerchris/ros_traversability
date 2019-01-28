@@ -52,13 +52,33 @@ geometry_msgs::Pose clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, co
 }*/
 
 geometry_msgs::Twist currentVelocity;
+double delta_t = 0.8;
+geometry_msgs::Pose deltaPose;
+geometry_msgs::Pose initPose;
 
 void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 {
-
 	currentVelocity = odomMsg->twist.twist;
-	//std::cout<<"currentVelocity: "<< currentVelocity.linear.x<<std::endl;
+	double theta = currentVelocity.angular.z * delta_t;
+	double v_dot = currentVelocity.linear.x * delta_t;
+
+	static_transformStamped.header.stamp = ros::Time::now();
+
+	static_transformStamped.transform.translation.x = initPose.position.x +  v_dot * cos(theta) ;
+	static_transformStamped.transform.translation.y = initPose.position.y + v_dot * sin(theta);
+	static_transformStamped.transform.translation.z = initPose.position.y + 0;
+
+	tf2::Quaternion quat;
+	if(globalyaw == 0)
+	{
+		quat.setRPY(0,0,theta);
+	}
+	static_transformStamped.transform.rotation.x = quat.getX();
+	static_transformStamped.transform.rotation.y = quat.getY();
+	static_transformStamped.transform.rotation.z = quat.getZ();
+	static_transformStamped.transform.rotation.w = quat.getW();
 }
+
 int main(int argc, char **argv)
 {
 	ros::init(argc,argv, "flipper_tf_broadcaster");
@@ -69,12 +89,13 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	ros::Subscriber odomSub =
+
 
 	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
 
 	ros::NodeHandle nodeHandle;
 	ros::Rate rate=100;
+	ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 1, odomCallback);
 
 	tf_prefix = "//GETjag";
 	tf_prefix = ros::this_node::getNamespace();
@@ -92,6 +113,10 @@ int main(int argc, char **argv)
 	static_transformStamped.transform.translation.x = atof(argv[3]);
 	static_transformStamped.transform.translation.y = atof(argv[4]);
 	static_transformStamped.transform.translation.z = atof(argv[5]);
+	initPose.position.x = atof(argv[3]);
+	initPose.position.y = atof(argv[4]);
+	initPose.position.z = atof(argv[5]);
+
 	globalyaw = atof(argv[8]);
 	tf2::Quaternion quat;
 	quat.setRPY(0,0, globalyaw);
@@ -99,6 +124,8 @@ int main(int argc, char **argv)
 	static_transformStamped.transform.rotation.y = quat.y();
 	static_transformStamped.transform.rotation.z = quat.z();
 	static_transformStamped.transform.rotation.w = quat.w();
+
+
 	ROS_INFO("Spinning until killed publishing %s to world", new_frame.c_str());
 	while(ros::ok())
 	{
