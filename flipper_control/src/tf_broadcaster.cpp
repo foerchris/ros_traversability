@@ -50,6 +50,15 @@ geometry_msgs::Pose clcDeltaPose(const geometry_msgs::Twist& velocitiy_robot, co
 
 	return deltaPose;
 }*/
+
+geometry_msgs::Twist currentVelocity;
+
+void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
+{
+
+	currentVelocity = odomMsg->twist.twist;
+	//std::cout<<"currentVelocity: "<< currentVelocity.linear.x<<std::endl;
+}
 int main(int argc, char **argv)
 {
 	ros::init(argc,argv, "flipper_tf_broadcaster");
@@ -59,6 +68,9 @@ int main(int argc, char **argv)
 		ROS_ERROR("Your static turtle name cannot be 'world'");
 		return -1;
 	}
+
+	ros::Subscriber odomSub =
+
 	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
 
 	ros::NodeHandle nodeHandle;
