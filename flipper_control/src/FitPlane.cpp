@@ -72,6 +72,12 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	ROS_INFO (" b:\t  [%7.3lf]\n", b);
 	ROS_INFO (" c:\t  [%7.3lf]\n", c);
 
+	double roll, pitch, yaw;
+
+	roll = atan(b);
+	pitch = atan(a);
+	yaw = 0;
+	ROS_INFO (" angles:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
 
 	tf2::Quaternion quat;
 	/*double x = b*sin(theta_rot/2);
@@ -79,10 +85,10 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 	double z = 0;
 	double w = cos(theta_rot/2);*/
 
-	double x = b*sin(theta_rot/2);
+	/*double x = b*sin(theta_rot/2);
 	double y = -a*sin(theta_rot/2);
 	double z = 0;
-	double w = cos(theta_rot/2);
+	double w = cos(theta_rot/2);*
 	tf::Quaternion q;
 
 	if(x!=x || y!=y || z!=z || w!=w)
@@ -101,7 +107,9 @@ tf2::Quaternion FitPlane::fitPlane(const std::vector<geometry_msgs::Pose>& poses
 		q.setY(x);
 		q.setZ(y);
 		q.setW(7);
-	}
+	}*/
+	quat.setRPY(roll,pitch,yaw);
+
 	/*double roll, pitch, yaw;
 	tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
 

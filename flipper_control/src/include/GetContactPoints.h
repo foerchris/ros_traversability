@@ -66,7 +66,7 @@ class GetContactPoints
 
 	// display the each point through a marker array
 	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const int& sign, const std::string& name, const std::string& frame, float r, float g, float b);
-	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a);
+	visualization_msgs::Marker createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y,const  double& r,const double& g,const double& b,const double& a);
 
 
 	private:

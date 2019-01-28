@@ -26,7 +26,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
     : nodeHandle_(nodeHandle)
 {
 
-	static image_transport::ImageTransport it(nodeHandle_);
+	//static image_transport::ImageTransport it(nodeHandle_);
 	static image_transport::Subscriber it_sub;
 	it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&FlipperControl::MapImageCallback, this, _1));
 
@@ -94,7 +94,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	delta_t = (ros::Time::now() - start_time).toSec();
 	tf2::Quaternion quat= groundPlane(mapImage, currentVelocity, delta_t);
-	//publishDesiredRobotPose(quat);
+	publishDesiredRobotPose(quat);
 
 	std::vector<cv::Mat> flipperImage;
 	flipperImage = getContactPoints.getFlipperRegions(mapImage, currentVelocity, delta_t);
@@ -155,11 +155,10 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, const geometry_msgs::
 	{
 	//	ROS_INFO("groundContactPoints: x=%7.3lf, y=%7.3lf, z=%7.3lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
 	}
+
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat;
-	//groundContactPoints = fitPlane.isInRobotRange(groundContactPoints, currentVelocity.linear.x, delta_t);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/new_flipper_pose", "/base_link",  1.0, 1.0, 0.0));
 
 	quat = fitPlane.fitPlane(groundContactPoints);
 
@@ -175,7 +174,7 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 
 	// Funktion in range for the flipper positions
 	//flipperContactPoints = fitPlane.isInFlipperRange(flipperContactPoints, frontRear*currentVelocity.linear.x, delta_t);
-	ROS_INFO("%s",flipper.c_str());
+	//ROS_INFO("%s",flipper.c_str());
 
 	for(auto flipperContactPoint : flipperContactPoints)
 	{
@@ -191,7 +190,7 @@ double FlipperControl::flipperEval(const std::string& flipper, cv::Mat image,con
 		ROS_INFO("newtracksContactPoint: x=%7.3lf, y=%7.3lf, z=%7.3lf", newtracksContactPoint.position.x, newtracksContactPoint.position.y, newtracksContactPoint.position.z);
 	}
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, frontRear,"/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
+	//markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(flipperContactPoints, frontRear,"/new_flipper_pose" + flipper, flipper,  1.0, 1.0, 0.0));
 
 	flipperContactPointsAngles flipperAngles;
 	flipperAngles = calcFlipperAngles.clcContactAngles(newtracksContactPoints);

@@ -68,11 +68,11 @@ GetContactPoints::~GetContactPoints()
 }
 
 
-visualization_msgs::Marker GetContactPoints::createMarker (std::string ns, int id, double x, double y,  double r, double g, double b, double a)
+visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y,const  double& r,const double& g,const double& b,const double& a)
 {
 	visualization_msgs::Marker marker;
 
-	marker.header.frame_id = MAP_FRAME;
+	marker.header.frame_id = tfFrame;
 	marker.header.stamp = ros::Time();
 	marker.ns = ns;
 
@@ -113,9 +113,9 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(
 		displayPose.position.x = pose[i].position.x + sign*deltaPose.position.x;
 		displayPose.position.y = pose[i].position.y + sign*deltaPose.position.y;
 
-		displayPose = tfTransform(displayPose, MAP_FRAME, tf_prefix + frame);
+		//displayPose = tfTransform(displayPose, MAP_FRAME, tf_prefix + frame);
 
-		markerArray.markers.push_back (createMarker(tf_prefix + name, i, displayPose.position.x, displayPose.position.y, 1.0, 1.0, 0.0, 1.0));
+		markerArray.markers.push_back (createMarker(tf_prefix + frame, tf_prefix + name, i, displayPose.position.x, displayPose.position.y, 1.0, 1.0, 0.0, 1.0));
 	}
 	return markerArray;
 }
@@ -125,7 +125,7 @@ geometry_msgs::Pose GetContactPoints::clcDeltaPose(const geometry_msgs::Twist& v
 	//double theta = velocitiy_robot.angular.z*delta_t;
 	double theta = 0;
 	//double v_dot = velocitiy_robot.linear.x * delta_t;
-	double v_dot = 0.08;
+	double v_dot = 2*0.08;
 	deltaPose.position.x = v_dot * cos(theta);
 	deltaPose.position.y = v_dot * sin(theta);
 
@@ -317,6 +317,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procFlipperMaps(cv::Mat flipp
 	flipperPose.orientation.y = 0.0;
 	flipperPose.orientation.z = 0.0;
 	flipperPose.orientation.w = 1.0;
+	ROS_INFO("%s", flipperFrame.c_str());
 
 	double cropLengthX = flipperMaps.rows*resultion;
 	//double cropLengthY = flipperMaps.cols*resultion;
@@ -324,15 +325,18 @@ std::vector<geometry_msgs::Pose> GetContactPoints::procFlipperMaps(cv::Mat flipp
 	{
 	    for(int j=0; j<flipperMaps.cols; j++)
 	    {
-
 	    	pose.position.x = cropLengthX - cropLengthX/(flipperMaps.rows*2) - i * resultion ;
 	    	pose.position.y = j*resultion;
 
 	    	pose.position.z = flipperMaps.at<cv::Vec2b>(i, j)[0]*0.0043;
+			ROS_INFO("pose before: x =%7.3lf, y=%7.3lf, z=%7.3lf", pose.position.x, pose.position.y, pose.position.z);
+
 			flipperPose.position.z = pose.position.z;
 			flipperPose = tfTransform(flipperPose, tf_prefix + flipperFrame, MAP_FRAME);
 			pose.position.z = flipperPose.position.z;
 	    	poses.push_back(pose);
+			ROS_INFO("pose after: x =%7.3lf, y=%7.3lf, z=%7.3lf", pose.position.x, pose.position.y, pose.position.z);
+
 	    }
 	}
 	return poses;
@@ -406,4 +410,5 @@ geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pos
 
 	return returnPose;
 }
+
 
