@@ -144,9 +144,7 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(planePoints, 1,"fitted plane points", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 
 
-	tf2::Quaternion quat;
-
-
+	tf2::Quaternion quat = fitPlane.getRotations(fittedPlane);
 
 	return quat;
 }
