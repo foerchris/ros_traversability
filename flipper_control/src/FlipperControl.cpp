@@ -133,18 +133,19 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 {
-	cv::Mat robotGroundImage;
-
-	robotGroundImage = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
-
-	ROS_INFO("robotGroundImage: cols = %i , rows = %i",robotGroundImage.cols, robotGroundImage.rows);
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
-	//groundContactPoints = getContactPoints.procGroundImage(robotGroundImage, BASE_FRAME, MAP_FRAME);
+	groundContactPoints = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
-	//markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"/flipper_pose", "/base_link",  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+	FittedPlane fittedPlane = fitPlane.fitPlane(groundContactPoints);
+
+	std::vector<geometry_msgs::Pose> planePoints = fitPlane.samplePlane(fittedPlane, FlipperTrackLength, 2*TracksBaseLinkDist, resultion);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(planePoints, 1,"fitted plane points", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+
 
 	tf2::Quaternion quat;
+
 
 
 	return quat;

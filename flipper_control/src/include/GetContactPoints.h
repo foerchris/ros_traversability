@@ -39,13 +39,13 @@ class GetContactPoints
 
 
 	// returns the a region according to the  width and length from the map given its coordinat frame
-	cv::Mat getRegions(cv::Mat mapImage,const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame);
+	std::vector<geometry_msgs::Pose> getRegions(cv::Mat mapImage,const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame);
 
 
 	// cropes the image with an rotated rect according to the position and orientation of the robot inside the map
 	cv::Mat getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage,double rectSizeX, double rectSizeY);
 
-	std::vector<geometry_msgs::Pose> procGroundImage(cv::Mat flipperMaps, const std::string& destination_frame,const std::string& original_frame);
+	std::vector<geometry_msgs::Pose> getPosesFromImage(cv::Mat flipperMaps, const geometry_msgs::Pose& nextPose, const std::string& destination_frame,const std::string& original_frame);
 
 
 
@@ -64,11 +64,13 @@ class GetContactPoints
 
 	// display the each point through a marker array
 	visualization_msgs::MarkerArray creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const int& sign, const std::string& name, const std::string& frame, float r, float g, float b);
-	visualization_msgs::Marker createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y,const  double& r,const double& g,const double& b,const double& a);
+	visualization_msgs::Marker createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y,const double& z,const  double& r,const double& g,const double& b,const double& a);
 
 
 	private:
 	// *********** definitions for tf tranform
+	double clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2);
+	geometry_msgs::Pose rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose);
 
 
 	std::unique_ptr<tf::TransformListener> tfListener;
@@ -78,6 +80,10 @@ class GetContactPoints
 
 	//*****
 	double resultion;
+
+	double mapSizeX;
+	double mapSizeY;
+
 
 };
 

@@ -13,31 +13,25 @@
 #include <nav_msgs/Odometry.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+struct FittedPlane {
+	double a;
+	double b;
+	double c;
+};
+
 class FitPlane
 {
 	public:
 	FitPlane();
 	virtual ~FitPlane();
+	std::vector<geometry_msgs::Pose> samplePlane(const FittedPlane& fittedPlane,const double& xLength,const double& yLength,const double& resulution);
 
+	FittedPlane fitPlane(const std::vector<geometry_msgs::Pose>& poses);
+	tf2::Quaternion getRotations(FittedPlane fittedPlane);
 	private:
-	// Robot parameter
-	double R;		// Radius of the wheel of the robot body
-	double r;		// Radius of the wheel on the end of the flipper
-	double L;		// Wheel distance between the robot wheel axis and the wheel axis on the end of the flipper
-	//double d;		// Distance between body wheel axis and "downside of flipper wheel"
-	double theta;	// Angle of distance (see above) and flipper wheel radius
-	double dThreshold;
-	double trackLength;
+	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
+	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
 
-	// *********** the image variables
-	double xLength  ;
-	double yLength  ;
-	double flipperLength;
-	double TracksBaseLinkDist;
-	double FlipperTrackLength;
-
-
-	// **** parameter for valide pose
 };
 
 #endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FITPLANE_H_ */
