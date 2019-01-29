@@ -83,6 +83,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	cropeMapLength = 2;
 
 	getContactPoints.setConstants(resultion);
+	calcFlipperAngles.setParameter(dThreshold, R, r, L);
 }
 
 FlipperControl::~FlipperControl()
@@ -166,6 +167,7 @@ double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, 
 
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", flipperFrame,  1.0, 1.0, 0.0));
 
+	flipperAngle = calcFlipperAngles.clcContactAngles(newGroundContactPoints);
 
 	return flipperAngle;
 }

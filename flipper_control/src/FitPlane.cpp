@@ -81,9 +81,7 @@ std::vector<geometry_msgs::Pose> FitPlane::samplePlane(const FittedPlane& fitted
 tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 {
 
-	ROS_INFO (" a:\t  [%7.3lf]\n", fittedPlane.a);
-	ROS_INFO (" b:\t  [%7.3lf]\n", fittedPlane.b);
-	ROS_INFO (" c:\t  [%7.3lf]\n", fittedPlane.c);
+
 
 
 	double roll, pitch, yaw;
@@ -91,9 +89,6 @@ tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 	roll = atan(fittedPlane.b);
 	pitch = atan(fittedPlane.a);
 	yaw = 0;
-	ROS_INFO (" roll: [%7.3lf]\n", roll);
-	ROS_INFO (" pitch: [%7.3lf]\n", pitch);
-	ROS_INFO (" yaw: [%7.3lf]\n", yaw);
 
 
 	tf2::Quaternion q;

@@ -10,6 +10,10 @@
 
 CalcFlipperAngles::CalcFlipperAngles()
 {
+	dThreshold=0;
+	R=0;
+	L=0;
+	r=0;
 
 }
 
@@ -18,8 +22,16 @@ CalcFlipperAngles::~CalcFlipperAngles()
 {
 
 }
+void CalcFlipperAngles::setParameter(double p1, double p2, double p3, double p4)
+{
+	dThreshold = p1;
+	R = p2;
+	r = p3;
+	L = p4;
 
-flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
+}
+
+double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
 {
 	flipperContactPointsAngles robotFlipperAngles;
 
@@ -63,8 +75,17 @@ flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector
 		robotFlipperAngles.flipperAngle.push_back(flipperAngle);
 	}
 
-	return robotFlipperAngles;
+	return maxFlipperAngle(robotFlipperAngles);
 }
 
 
+double CalcFlipperAngles::maxFlipperAngle(const flipperContactPointsAngles& flipperAngles)
+{
+	double maxFlipperAngle = 0;
 
+	auto iter = std::max_element(flipperAngles.phiContact.begin(), flipperAngles.phiContact.end());
+
+	maxFlipperAngle =*iter;
+
+	return maxFlipperAngle;
+}

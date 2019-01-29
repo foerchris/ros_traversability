@@ -40,11 +40,19 @@ class CalcFlipperAngles
 	public:
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
-	flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
+	double clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
+
+	void setParameter(double p1, double p2, double p3, double p4);
 
 
 	private:
 
+	double maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
+
+	double dThreshold;
+	double R;
+	double L;
+	double r;
 
 
 
