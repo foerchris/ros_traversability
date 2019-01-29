@@ -69,21 +69,16 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	// Roboter paramter
 	R = 0.082;
 	r = 0.0375;
-	//L = 0.22;
 	L = 0.2325;
 	//d = std::hypot (r, L);
 	theta = atan (r / L);
 	dThreshold = sqrt(pow(R,2) + pow(L,2) - pow(R-r,2));
 	resultion = 0.06;
-	//xLength  = 0.1;
-	yLength  = 0.1;
-	flipperWidth = yLength;
-	//yLength  = 0.2575;
-	//	yLength = L+r;
-	xLength = L+r;
-	flipperLength = xLength;
+
+	flipperWidth = 	 0.1;
+	flipperLength =  L+r;
 	trackLength = 0.6;
-	FlipperTrackLength = 2*(xLength - R) + trackLength;
+	FlipperTrackLength = 2*(flipperLength - R) + trackLength;
 	TracksBaseLinkDist = 0.275;
 	cropeMapLength = 2;
 
@@ -126,7 +121,16 @@ void FlipperControl::FlipperSequenzCallback(const ros::TimerEvent& event)
 
 void FlipperControl::SequenceControl(cv::Mat mapImage)
 {
-	tf2::Quaternion quat= groundPlane(mapImage);
+	tf2::Quaternion quat = groundPlane(mapImage);
+
+	flipperRegion(mapImage, quat, FLIPPER_FRONT_LEFT_FRAME);
+
+	flipperRegion(mapImage, quat, FLIPPER_FRONT_RIGHT_FRAME);
+
+	flipperRegion(mapImage, quat, FLIPPER_REAR_LEFT_FRAME);
+
+	flipperRegion(mapImage, quat, FLIPPER_REAR_RIGHT_FRAME);
+
 }
 
 
@@ -137,18 +141,34 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 
 	groundContactPoints = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints, 1,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 	FittedPlane fittedPlane = fitPlane.fitPlane(groundContactPoints);
 
 	std::vector<geometry_msgs::Pose> planePoints = fitPlane.samplePlane(fittedPlane, FlipperTrackLength, 2*TracksBaseLinkDist, resultion);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(planePoints, 1,"fitted plane points", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
-
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(planePoints,"fitted plane points", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat = fitPlane.getRotations(fittedPlane);
 
 	return quat;
 }
 
+double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const std::string& flipperFrame)
+{
+	std::vector<geometry_msgs::Pose> groundContactPoints;
+	double flipperAngle = 0;
+	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperFrame);
+
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperFrame, flipperFrame,  1.0, 1.0, 0.0));
+
+	std::vector<geometry_msgs::Pose> newGroundContactPoints;
+
+	newGroundContactPoints = getContactPoints.clcNewPoses(groundContactPoints,quat, NEXT_BASE_FRAME, flipperFrame);
+
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", flipperFrame,  1.0, 1.0, 0.0));
+
+
+	return flipperAngle;
+}
 
 
 

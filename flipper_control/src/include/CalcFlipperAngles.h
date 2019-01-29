@@ -40,24 +40,11 @@ class CalcFlipperAngles
 	public:
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
+	flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
 
 
 	private:
 
-	// Robot parameter
-	double R;		// Radius of the wheel of the robot body
-	double r;		// Radius of the wheel on the end of the flipper
-	double L;		// Wheel distance between the robot wheel axis and the wheel axis on the end of the flipper
-	//double d;		// Distance between body wheel axis and "downside of flipper wheel"
-	double theta;	// Angle of distance (see above) and flipper wheel radius
-	double dThreshold;
-	double trackLength;
-
-	// *********** the image variables
-	double xLength  ;
-	double yLength  ;
-	double TracksBaseLinkDist;
-	double FlipperTrackLength;
 
 
 

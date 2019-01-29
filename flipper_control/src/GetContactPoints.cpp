@@ -79,7 +79,7 @@ visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tf
 }
 
 
-visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const int& sign, const std::string& name, const std::string& frame, float r, float g, float b)
+visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;
 
@@ -280,6 +280,53 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	}
 	return poses;
 }
+
+
+std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const std::string& baseFrame, const std::string& flipperFrame)
+{
+	std::vector<geometry_msgs::Pose> transformedPose = transformPose(poses, baseFrame, flipperFrame);
+
+	tf2::Quaternion q_prime = q.inverse();
+	tf2::Quaternion p;
+	p.setX(0);
+	tf2::Quaternion p_prime;
+
+	std::vector<geometry_msgs::Pose> newPoses;
+	geometry_msgs::Pose pose_prime;
+	for(auto pose : transformedPose)
+	{
+		//ROS_INFO (" pose:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", pose.position.x, pose.position.y, pose.position.z);
+		p.setY(pose.position.x);
+		p.setZ(pose.position.y);
+		p.setW(pose.position.z);
+
+		p_prime=q*p*q_prime;
+		pose_prime.position.x = p_prime.getY();
+		pose_prime.position.y = p_prime.getZ();
+		pose_prime.position.z = p_prime.getW();
+		newPoses.push_back(pose_prime);
+		//ROS_INFO (" pose_prime:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", pose_prime.position.x, pose_prime.position.y, pose_prime.position.z);
+	}
+
+	double maxZ = 0;
+	for(auto pose : newPoses)
+	{
+		if(pose.position.z > maxZ)
+		{
+			maxZ = pose.position.z;
+		}
+	}
+	//ROS_INFO (" newPoses[i]:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", newPoses[i].position.x, newPoses[i].position.y, newPoses[i].position.z);
+
+	for(std::size_t i=0; i < newPoses.size(); i++)
+	{
+		newPoses[i].position.z = newPoses[i].position.z - maxZ;
+		//ROS_INFO (" newPoses[i]:\t x = [%7.3lf], y = [%7.3lf], z = [%7.3lf]", newPoses[i].position.x, newPoses[i].position.y, newPoses[i].position.z);
+	}
+	newPoses = transformPose(newPoses, flipperFrame,baseFrame);
+
+	return newPoses;
+}
 geometry_msgs::Pose GetContactPoints::rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose)
 {
 	geometry_msgs::Pose newPose = pPose;
@@ -287,6 +334,8 @@ geometry_msgs::Pose GetContactPoints::rotate_point(geometry_msgs::Pose pPose ,co
 	newPose.position.y = sin(theta) * (pPose.position.x-oPose.position.x) + cos(theta) * (pPose.position.y-oPose.position.y) + oPose.position.y;
 	return newPose;
 }
+
+
 
 std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame)
 {

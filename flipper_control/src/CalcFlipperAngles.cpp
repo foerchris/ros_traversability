@@ -10,28 +10,60 @@
 
 CalcFlipperAngles::CalcFlipperAngles()
 {
-	// Roboter paramter
-	R = 0.082;
-	r = 0.0375;
-	//L = 0.22;
-	L = 0.2325;
-	//d = std::hypot (r, L);
-	theta = atan (r / L);
-	dThreshold = sqrt(pow(R,2) + pow(L,2) - pow(R-r,2));
-	//xLength  = 0.1;
-	yLength  = 0.1;
-	//yLength  = 0.2575;
-	//	yLength = L+r;
-	xLength = L+r;
-	trackLength = 0.5;
-	FlipperTrackLength = 2*(xLength - R) + trackLength;
-	TracksBaseLinkDist = 0.275;
+
 }
 
 
 CalcFlipperAngles::~CalcFlipperAngles()
 {
 
+}
+
+flipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
+{
+	flipperContactPointsAngles robotFlipperAngles;
+
+	double z = 0;
+	double x = 0;
+	double d = 0;
+
+	for(auto pose:values)
+	{
+		double phi1 = 0;
+		double phi2 = 0;
+		double phiContact = 0;
+		double flipperAngle = 0 ;
+
+		z = pose.position.z;
+		x = pose.position.x;
+		d= sqrt(pow(x, 2)+ pow(z, 2));
+
+		if(d<= dThreshold)
+		{
+			phi1 = atan(z/x);
+			phi2 = asin(R/sqrt(pow(x, 2) + pow(z,2)));
+			phiContact = phi1 + phi2;
+
+			//********************************************************** nochmal nachrechnen **********************************************************
+			flipperAngle = phi1 - asin((R-r)/L);
+		}
+		else
+		{
+			phi1 = asin((pow(d,2) + pow(L,2) - pow(R,2))/ (2*L*d)) - atan(x/z);
+			phi2 = asin((R-r)/L);
+			phiContact = phi1 + phi2;
+
+			//********************************************************** nochmal nachrechnen **********************************************************
+			flipperAngle = phi1;
+		}
+		robotFlipperAngles.pose.push_back(pose);
+		robotFlipperAngles.phi1.push_back(phi1);
+		robotFlipperAngles.phi2.push_back(phi2);
+		robotFlipperAngles.phiContact.push_back(phiContact);
+		robotFlipperAngles.flipperAngle.push_back(flipperAngle);
+	}
+
+	return robotFlipperAngles;
 }
 
 

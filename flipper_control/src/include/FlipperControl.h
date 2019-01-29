@@ -49,6 +49,7 @@ class FlipperControl
 
 	tf2::Quaternion groundPlane(cv::Mat image);
 
+	double flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const std::string& flipperFrame);
 
 	ros::Publisher markerPublisher;
 
