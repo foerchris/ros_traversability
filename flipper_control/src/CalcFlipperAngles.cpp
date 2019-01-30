@@ -48,6 +48,8 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 
 		z = pose.position.z;
 		x = pose.position.x;
+		ROS_INFO("x = %7.3lf", x);
+		ROS_INFO("z = %7.3lf", z);
 		d= sqrt(pow(x, 2)+ pow(z, 2));
 
 		if(d<= dThreshold)
@@ -73,6 +75,7 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 		robotFlipperAngles.phi2.push_back(phi2);
 		robotFlipperAngles.phiContact.push_back(phiContact);
 		robotFlipperAngles.flipperAngle.push_back(flipperAngle);
+		ROS_INFO("Contact angle = %7.3lf", phiContact);
 	}
 
 	return maxFlipperAngle(robotFlipperAngles);

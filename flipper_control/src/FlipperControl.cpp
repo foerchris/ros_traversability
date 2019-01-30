@@ -155,6 +155,8 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 
 double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const std::string& flipperFrame)
 {
+	ROS_INFO("flipperFrame= %s", flipperFrame.c_str());
+
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 	double flipperAngle = 0;
 	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperFrame);
