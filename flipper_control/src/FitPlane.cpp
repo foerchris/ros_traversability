@@ -78,6 +78,27 @@ std::vector<geometry_msgs::Pose> FitPlane::samplePlane(const FittedPlane& fitted
 }
 
 
+std::vector<geometry_msgs::Pose> FitPlane::sampleLine(const double& angle ,const double& xLength,const double& resulution)
+{
+	std::vector<geometry_msgs::Pose> planePoints;
+	geometry_msgs::Pose point;
+	double x = 0;
+	double deltax = xLength*resulution;
+
+	double a= atan(angle-M_PI/12);
+
+	while(x <= xLength)
+	{
+
+			point.position.x = x;
+			point.position.y = 0;
+			point.position.z = a * x;
+			planePoints.push_back(point);
+		x += deltax;
+	}
+	return planePoints;
+}
+
 tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 {
 

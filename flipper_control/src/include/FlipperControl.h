@@ -47,11 +47,17 @@ class FlipperControl
 
 	void SequenceControl(cv::Mat mapImage);
 
-	tf2::Quaternion groundPlane(cv::Mat image);
+	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue);
 
-	double flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const std::string& flipperFrame);
+	double flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
+
+	double returnBiggerVel(const double& vel1, const double& vel2);
+
+	void publishAngles (flipperAngles robotFlipperAngles);
 
 	ros::Publisher markerPublisher;
+	ros::Publisher frontFlipperAngleDesiredPub;
+	ros::Publisher  rearFlipperAngleDesiredPub;
 
 	ros::NodeHandle nodeHandle_;
 
@@ -68,6 +74,10 @@ class FlipperControl
 	std::string FLIPPER_REAR_LEFT_FRAME;
 	std::string FLIPPER_REAR_RIGHT_FRAME;
 
+	std::string FLIPPER_REGION_FRONT_LEFT_FRAME;
+	std::string FLIPPER_REGION_FRONT_RIGHT_FRAME;
+	std::string FLIPPER_REGION_REAR_LEFT_FRAME;
+	std::string FLIPPER_REGION_REAR_RIGHT_FRAME;
 	// Obeject declarations
 	GetContactPoints getContactPoints;
 	FitPlane fitPlane;

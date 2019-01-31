@@ -280,11 +280,47 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	}
 	return poses;
 }
-
-
-std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const std::string& baseFrame, const std::string& flipperFrame)
+double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
 {
-	std::vector<geometry_msgs::Pose> transformedPose = transformPose(poses, baseFrame, flipperFrame);
+	double maxZ = -1000;
+
+	std::vector<geometry_msgs::Pose> newPoses = clcNewPoses(poses, q);
+
+	for(auto pose : newPoses)
+	{
+		if(pose.position.z > maxZ)
+		{
+			maxZ = pose.position.z;
+		}
+		//ROS_INFO("pose.position.z %7.3lf",pose.position.z);
+	}
+
+	return maxZ;
+}
+
+std::vector<geometry_msgs::Pose> GetContactPoints::clcNewFlipperPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double maxZ, const std::string& baseFrame, const std::string& flipperFrame, const std::string& flipperRegionFrame)
+{
+	std::vector<geometry_msgs::Pose> newPoses = transformPose(poses, baseFrame, flipperRegionFrame);
+
+
+	newPoses = clcNewPoses(newPoses, q);
+
+	for(std::size_t i=0; i < newPoses.size(); i++)
+	{
+
+		newPoses[i].position.z = newPoses[i].position.z - maxZ;
+
+	}
+
+	newPoses = transformPose(newPoses, flipperFrame, baseFrame);
+
+	return newPoses;
+
+}
+
+
+std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
+{
 
 	tf2::Quaternion q_prime = q.inverse();
 	tf2::Quaternion p;
@@ -293,7 +329,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 
 	std::vector<geometry_msgs::Pose> newPoses;
 	geometry_msgs::Pose pose_prime;
-	for(auto pose : transformedPose)
+	for(auto pose : poses)
 	{
 		p.setY(pose.position.x);
 		p.setZ(pose.position.y);
@@ -305,21 +341,6 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 		pose_prime.position.z = p_prime.getW();
 		newPoses.push_back(pose_prime);
 	}
-
-	double maxZ = 0;
-	for(auto pose : newPoses)
-	{
-		if(pose.position.z > maxZ)
-		{
-			maxZ = pose.position.z;
-		}
-	}
-
-	for(std::size_t i=0; i < newPoses.size(); i++)
-	{
-		newPoses[i].position.z = newPoses[i].position.z - maxZ;
-	}
-	newPoses = transformPose(newPoses, flipperFrame,baseFrame);
 
 	return newPoses;
 }

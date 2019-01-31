@@ -35,6 +35,8 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 
 	msg_timer = nodeHandle_.createTimer(ros::Duration(0.8), boost::bind (&FlipperControl::FlipperSequenzCallback, this, _1));
 
+	frontFlipperAngleDesiredPub = nodeHandle_.advertise < std_msgs::Float64 > ("flipper_front_controller/command", 1);
+	rearFlipperAngleDesiredPub 	= nodeHandle_.advertise < std_msgs::Float64 > ("flipper_rear_controller/command", 1);
 
 	mapImageSet = false;
 
@@ -47,10 +49,17 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	BASE_FRAME = "base_link";
 	MAP_FRAME = "map";
 	ODOM_FRAME = "odom";
-	FLIPPER_FRONT_LEFT_FRAME = "flipper_region_front_left";
-	FLIPPER_FRONT_RIGHT_FRAME = "flipper_region_front_right";
-	FLIPPER_REAR_LEFT_FRAME = "flipper_region_rear_left";
-	FLIPPER_REAR_RIGHT_FRAME = "flipper_region_rear_right";
+
+	FLIPPER_FRONT_LEFT_FRAME = "flipper_front_left";
+	FLIPPER_FRONT_RIGHT_FRAME = "flipper_front_right";
+	FLIPPER_REAR_LEFT_FRAME = "flipper_rear_left";
+	FLIPPER_REAR_RIGHT_FRAME = "flipper_rear_right";
+
+	FLIPPER_REGION_FRONT_LEFT_FRAME = "flipper_region_front_left";
+	FLIPPER_REGION_FRONT_RIGHT_FRAME = "flipper_region_front_right";
+	FLIPPER_REGION_REAR_LEFT_FRAME = "flipper_region_rear_left";
+	FLIPPER_REGION_REAR_RIGHT_FRAME = "flipper_region_rear_right";
+
 
 	NEXT_BASE_FRAME = tf_prefix + "/next_" + BASE_FRAME;
 	BASE_FRAME = tf_prefix + "/" +BASE_FRAME;
@@ -61,6 +70,11 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	FLIPPER_FRONT_RIGHT_FRAME = tf_prefix + "/" + FLIPPER_FRONT_RIGHT_FRAME;
 	FLIPPER_REAR_LEFT_FRAME = tf_prefix + "/" + FLIPPER_REAR_LEFT_FRAME;
 	FLIPPER_REAR_RIGHT_FRAME = tf_prefix + "/" + FLIPPER_REAR_RIGHT_FRAME;
+
+	FLIPPER_REGION_FRONT_LEFT_FRAME = tf_prefix + "/" + FLIPPER_REGION_FRONT_LEFT_FRAME;
+	FLIPPER_REGION_FRONT_RIGHT_FRAME = tf_prefix + "/" + FLIPPER_REGION_FRONT_RIGHT_FRAME;
+	FLIPPER_REGION_REAR_LEFT_FRAME = tf_prefix + "/" + FLIPPER_REGION_REAR_LEFT_FRAME;
+	FLIPPER_REGION_REAR_RIGHT_FRAME = tf_prefix + "/" + FLIPPER_REGION_REAR_RIGHT_FRAME;
 
 	// init mapsize
 	mapSizeX = 200;
@@ -122,21 +136,31 @@ void FlipperControl::FlipperSequenzCallback(const ros::TimerEvent& event)
 
 void FlipperControl::SequenceControl(cv::Mat mapImage)
 {
-	tf2::Quaternion quat = groundPlane(mapImage);
+	double maxZ;
+	tf2::Quaternion quat = groundPlane(mapImage, &maxZ);
 
-	flipperRegion(mapImage, quat, FLIPPER_FRONT_LEFT_FRAME);
+	double angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
+/*
+	double angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
 
-	flipperRegion(mapImage, quat, FLIPPER_FRONT_RIGHT_FRAME);
+	double angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
 
-	flipperRegion(mapImage, quat, FLIPPER_REAR_LEFT_FRAME);
+	double angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
 
-	flipperRegion(mapImage, quat, FLIPPER_REAR_RIGHT_FRAME);
+	flipperAngles robotflipperAngles;
+	robotflipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft, angleFrontRight);
+	robotflipperAngles.flipperAngleRear = returnBiggerVel(angleRearLeft, angleRearRight);
+*/
+	flipperAngles robotflipperAngles;
+	robotflipperAngles.flipperAngleFront = angleFrontLeft;
+	robotflipperAngles.flipperAngleRear = 1;
+	publishAngles(robotflipperAngles);
 
 }
 
 
 
-tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
+tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue)
 {
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
@@ -150,28 +174,76 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image)
 
 	tf2::Quaternion quat = fitPlane.getRotations(fittedPlane);
 
+
+	*maxZValue = getContactPoints.clcMaxZ(groundContactPoints,quat);
+
 	return quat;
 }
 
-double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const std::string& flipperFrame)
+double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame)
 {
-	ROS_INFO("flipperFrame= %s", flipperFrame.c_str());
+	//ROS_INFO("flipperFrame= %s", flipperFrame.c_str());
 
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 	double flipperAngle = 0;
-	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperFrame);
+	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperRegionFrame);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperFrame, flipperFrame,  1.0, 1.0, 0.0));
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperRegionFrame, flipperRegionFrame,  1.0, 1.0, 0.0));
 
 	std::vector<geometry_msgs::Pose> newGroundContactPoints;
 
-	newGroundContactPoints = getContactPoints.clcNewPoses(groundContactPoints,quat, NEXT_BASE_FRAME, flipperFrame);
+	newGroundContactPoints = getContactPoints.clcNewFlipperPoses(groundContactPoints,quat, maxZ, NEXT_BASE_FRAME, flipperFrame, flipperRegionFrame);
 
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", flipperFrame,  1.0, 1.0, 0.0));
 
 	flipperAngle = calcFlipperAngles.clcContactAngles(newGroundContactPoints);
 
+	std::vector<geometry_msgs::Pose> linePoints = fitPlane.sampleLine(flipperAngle, flipperLength,resultion);
+
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(linePoints ,flipperFrame +"_line", flipperFrame,  1.0, 1.0, 0.0));
+
 	return flipperAngle;
+}
+double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
+{
+	if(vel1>vel2)
+	{
+		return vel1;
+	}
+	else
+	{
+		return vel2;
+	}
+}
+
+void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
+{
+	static std_msgs::Float64 frontFlipperAngleDesiredMsg;
+	static std_msgs::Float64 rearFlipperAngleDesiredMsg;
+	if (robotFlipperAngles.flipperAngleFront != NAN)
+	{
+		frontFlipperAngleDesiredMsg.data = -robotFlipperAngles.flipperAngleFront;
+	}
+	else
+		ROS_INFO (" Front angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleFront);
+	if (robotFlipperAngles.flipperAngleRear != NAN)
+	{
+		rearFlipperAngleDesiredMsg.data = -robotFlipperAngles.flipperAngleRear;
+	}
+	else
+		ROS_INFO (" Rear angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleRear);
+
+
+	if(frontFlipperAngleDesiredMsg.data<=M_PI/2 && frontFlipperAngleDesiredMsg.data>=-M_PI/2)
+	{
+		frontFlipperAngleDesiredPub.publish (frontFlipperAngleDesiredMsg);
+	}
+
+	if(rearFlipperAngleDesiredMsg.data<=M_PI/2 && rearFlipperAngleDesiredMsg.data>=-M_PI/2)
+	{
+		rearFlipperAngleDesiredPub.publish (rearFlipperAngleDesiredMsg);
+
+	}
 }
 
 

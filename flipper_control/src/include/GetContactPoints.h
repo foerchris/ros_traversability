@@ -47,8 +47,9 @@ class GetContactPoints
 
 	std::vector<geometry_msgs::Pose> getPosesFromImage(cv::Mat flipperMaps, const geometry_msgs::Pose& nextPose, const std::string& destination_frame,const std::string& original_frame);
 
-	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const std::string& baseFrame, const std::string& flipperFrame);
 
+	double clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
+	std::vector<geometry_msgs::Pose> clcNewFlipperPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double maxZ, const std::string& baseFrame, const std::string& flipperFrame, const std::string& flipperRegionFrame);
 
 
 	//****************************************** helper functions
@@ -68,10 +69,13 @@ class GetContactPoints
 	visualization_msgs::Marker createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y,const double& z,const  double& r,const double& g,const double& b,const double& a);
 
 
+
 	private:
 	// *********** definitions for tf tranform
 	double clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2);
 	geometry_msgs::Pose rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose);
+
+	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
 
 
 	std::unique_ptr<tf::TransformListener> tfListener;

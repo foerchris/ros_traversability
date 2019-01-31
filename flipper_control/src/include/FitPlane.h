@@ -24,10 +24,13 @@ class FitPlane
 	public:
 	FitPlane();
 	virtual ~FitPlane();
-	std::vector<geometry_msgs::Pose> samplePlane(const FittedPlane& fittedPlane,const double& xLength,const double& yLength,const double& resulution);
 
 	FittedPlane fitPlane(const std::vector<geometry_msgs::Pose>& poses);
 	tf2::Quaternion getRotations(FittedPlane fittedPlane);
+
+	std::vector<geometry_msgs::Pose> samplePlane(const FittedPlane& fittedPlane,const double& xLength,const double& yLength,const double& resulution);
+	std::vector<geometry_msgs::Pose> sampleLine(const double& angle ,const double& xLength,const double& resulution);
+
 	private:
 	geometry_msgs::Pose clcMean(const std::vector<geometry_msgs::Pose>& poses);
 	std::vector<double> clcCrossMean(const std::vector<geometry_msgs::Pose>& poses);
