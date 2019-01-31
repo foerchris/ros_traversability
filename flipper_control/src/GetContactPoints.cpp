@@ -253,6 +253,9 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 
 	float theta= 0;
 	double value = 0;
+	ROS_INFO("destination_frame %s",destination_frame.c_str());
+	ROS_INFO("original_frame %s",original_frame.c_str());
+
 	for(int i=0; i<flipperMaps.rows; i++)
 	{
 	    for(int j=0; j<flipperMaps.cols; j++)
@@ -268,11 +271,15 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<char >(i,j);
 
+			ROS_INFO("value*0.0043 %7.3lf",value*0.0043);
+
 	    	pose.position.z = value*0.0043;
+
 
 	    	pose = rotate_point(pose, theta, nextPose);
 
 	    	tranformedPose = tfTransform(pose, destination_frame, original_frame);
+			ROS_INFO("tranformedPose.position.z %7.3lf",tranformedPose.position.z);
 
 	    	poses.push_back(tranformedPose);
 
@@ -308,19 +315,37 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewFlipperPoses(const std:
 	for(std::size_t i=0; i < newPoses.size(); i++)
 	{
 
-		newPoses[i].position.z = newPoses[i].position.z - maxZ;
+		//newPoses[i].position.z = newPoses[i].position.z - maxZ;
 
 	}
 
 	newPoses = transformPose(newPoses, flipperFrame, baseFrame);
 
 	return newPoses;
-
 }
 
 
 std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
 {
+
+
+	//tf2::Quaternion q_prime = q.inverse();
+	//tf2::Quaternion p;
+	//p.setX(0);
+	//tf2::Quaternion p_prime;
+
+	std::vector<geometry_msgs::Pose> newPoses;
+	geometry_msgs::Pose pose_prime;
+	for(auto pose : poses)
+	{
+		pose_prime = clcQuternion(pose,q);
+		newPoses.push_back(pose_prime);
+	}
+
+	return newPoses;
+}
+/*{
+
 
 	tf2::Quaternion q_prime = q.inverse();
 	tf2::Quaternion p;
@@ -343,7 +368,27 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 	}
 
 	return newPoses;
+}*/
+
+geometry_msgs::Pose GetContactPoints::clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q)
+{
+	geometry_msgs::Pose pose_prime;
+	cv::Vec3d v(pose.position.x,pose.position.y,pose.position.z);
+
+    // Extract the vector part of the quaternion
+
+	cv::Vec3d u(q.getX(), q.getY(), q.getZ());
+    // Extract the scalar part of the quaternion
+    float s = q.getW();
+
+    // Do the math
+    cv::Vec3d   vprime = 2.0f * u.dot(v) * u + (s*s - u.dot(u)) * v + 2.0f * s * u.cross(v);
+	pose_prime.position.x = vprime[0];
+	pose_prime.position.y = vprime[1];
+	pose_prime.position.z = vprime[2];
+	return pose_prime;
 }
+
 geometry_msgs::Pose GetContactPoints::rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose)
 {
 	geometry_msgs::Pose newPose = pPose;

@@ -22,7 +22,10 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-
+struct Vector3
+{
+    float x, y, z;
+};
 class GetContactPoints
 {
 	public:
@@ -77,6 +80,7 @@ class GetContactPoints
 
 	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
 
+	geometry_msgs::Pose clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q);
 
 	std::unique_ptr<tf::TransformListener> tfListener;
 	tf::StampedTransform transform;

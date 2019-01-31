@@ -101,27 +101,29 @@ std::vector<geometry_msgs::Pose> FitPlane::sampleLine(const double& angle ,const
 
 tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 {
+	double theta_rot = acos(1/sqrt(fittedPlane.a*fittedPlane.a+fittedPlane.b*fittedPlane.b+1));
 
-
-
-
-	double roll, pitch, yaw;
-
-	roll = atan(fittedPlane.b);
-	pitch = atan(fittedPlane.a);
-	yaw = 0;
-
-
+	double x = fittedPlane.b*sin(theta_rot/2);
+	double y = -fittedPlane.a*sin(theta_rot/2);
+	double z = 0;
+	double w = cos(theta_rot/2);
 	tf2::Quaternion q;
 
-	if(roll!=roll || pitch!=pitch|| yaw!=yaw)
+	if(x!=x || y!=y || z!=z || w!=w)
 	{
 		q.setRPY(0, 0, 0);
 
 	}
 	else
 	{
-		q.setRPY(roll,pitch,yaw);
+		/*q.setX(w);
+		q.setY(x);
+		q.setZ(y);
+		q.setW(z);*/
+		q.setX(x);
+		q.setY(y);
+		q.setZ(z);
+		q.setW(w);
 	}
 	return q;
 }

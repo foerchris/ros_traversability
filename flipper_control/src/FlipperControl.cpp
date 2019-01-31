@@ -140,7 +140,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 	tf2::Quaternion quat = groundPlane(mapImage, &maxZ);
 
 	double angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
-/*
+
 	double angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
 
 	double angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
@@ -150,10 +150,10 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 	flipperAngles robotflipperAngles;
 	robotflipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft, angleFrontRight);
 	robotflipperAngles.flipperAngleRear = returnBiggerVel(angleRearLeft, angleRearRight);
-*/
-	flipperAngles robotflipperAngles;
+
+	/*flipperAngles robotflipperAngles;
 	robotflipperAngles.flipperAngleFront = angleFrontLeft;
-	robotflipperAngles.flipperAngleRear = 1;
+	robotflipperAngles.flipperAngleRear = 1;*/
 	publishAngles(robotflipperAngles);
 
 }
@@ -188,12 +188,20 @@ double FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, 
 	double flipperAngle = 0;
 	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperRegionFrame);
 
+	for(auto groundContactPoint: groundContactPoints)
+	{
+		ROS_INFO("groundContactPoint: x = %7.3lf, y = %7.3lf, z = %7.3lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
+	}
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperRegionFrame, flipperRegionFrame,  1.0, 1.0, 0.0));
 
 	std::vector<geometry_msgs::Pose> newGroundContactPoints;
 
 	newGroundContactPoints = getContactPoints.clcNewFlipperPoses(groundContactPoints,quat, maxZ, NEXT_BASE_FRAME, flipperFrame, flipperRegionFrame);
 
+	for(auto newGroundContactPoint: newGroundContactPoints)
+	{
+		ROS_INFO("newGroundContactPoint: x = %7.3lf, y = %7.3lf, z = %7.3lf", newGroundContactPoint.position.x, newGroundContactPoint.position.y, newGroundContactPoint.position.z);
+	}
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", flipperFrame,  1.0, 1.0, 0.0));
 
 	flipperAngle = calcFlipperAngles.clcContactAngles(newGroundContactPoints);

@@ -7,7 +7,7 @@
 		<node pkg="flipper_control" name="flipper_control_server" type="flipper_control_server" output="screen">
 		</node>
 
-		<node pkg="flipper_control" type="tf_broadcaster" name="desired_pose_tf_broadcaster" args="next_base_link base_link 0.0 0.0 0.0 0.0 0.0 0.0" respawn="true" output="screen">
+		<node pkg="flipper_control" type="tf_broadcaster" name="desired_pose_tf_broadcaster" args="next_base_link base_link 0.0 0.0 0.02 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
 
 
@@ -23,16 +23,16 @@
 		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_rear_right" args="flipper_rear_right next_base_link -0.244 -0.275 0.082 0.0 0.0 3.141" respawn="true" output="screen">
 		</node>
 
-		<node pkg="flipper_control" type="tf_broadcaster" name="flipper_region_tf_broadcaster_front_left" args="flipper_region_front_left base_link 0.379 0.275 0.082 0.0 0.0 0.0" respawn="true" output="screen">
+		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_region_tf_broadcaster_front_left" args="flipper_region_front_left next_base_link 0.379 0.275 0.082 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
 
-		<node pkg="flipper_control" type="tf_broadcaster" name="flipper_region_tf_broadcaster_front_right" args="flipper_region_front_right base_link 0.379 -0.275 0.082 0.0 0.0 0.0" respawn="true" output="screen">
+		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_region_tf_broadcaster_front_right" args="flipper_region_front_right next_base_link 0.379 -0.275 0.082 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
 
-		<node pkg="flipper_control" type="tf_broadcaster" name="flipper_region_tf_broadcaster_rear_left" args="flipper_region_rear_left base_link -0.379 0.275 0.082 0.0 0.0 3.141" respawn="true" output="screen">
+		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_region_tf_broadcaster_rear_left" args="flipper_region_rear_left next_base_link -0.379 0.275 0.082 0.0 0.0 3.141" respawn="true" output="screen">
 		</node>
 
-		<node pkg="flipper_control" type="tf_broadcaster" name="flipper_region_tf_broadcaster_rear_right" args="flipper_region_rear_right base_link -0.379 -0.275 0.082 0.0 0.0 3.141" respawn="true" output="screen">
+		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_region_tf_broadcaster_rear_right" args="flipper_region_rear_right next_base_link -0.379 -0.275 0.082 0.0 0.0 3.141" respawn="true" output="screen">
 		</node>
 
 	</group>

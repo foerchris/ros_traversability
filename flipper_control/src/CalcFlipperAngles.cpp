@@ -34,13 +34,14 @@ void CalcFlipperAngles::setParameter(double p1, double p2, double p3, double p4)
 double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
 {
 	flipperContactPointsAngles robotFlipperAngles;
+	static flipperContactPointsAngles lastrobotFlipperAngles;
 
 	double z = 0;
 	double x = 0;
 	double d = 0;
 	for(auto pose:values)
 	{
-		ROS_INFO("pose: x = %7.3lf, y = %7.3lf, z = %7.3lf", pose.position.x, pose.position.y, pose.position.z);
+		//ROS_INFO("pose: x = %7.3lf, y = %7.3lf, z = %7.3lf", pose.position.x, pose.position.y, pose.position.z);
 
 	}
 	for(auto pose:values)
@@ -53,13 +54,15 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 		z = pose.position.z;
 		x = pose.position.x;
 		if(x >= 0)
-			{
-			ROS_INFO("x = %7.3lf", x);
-			ROS_INFO("z = %7.3lf", z);
+		{
 			d= sqrt(pow(x, 2)+ pow(z, 2));
+
+			/*ROS_INFO("x = %7.3lf", x);
+			ROS_INFO("z = %7.3lf", z);
+
 			ROS_INFO("d = %7.3lf", d);
 			ROS_INFO("dThreshold = %7.3lf", dThreshold);
-
+*/
 
 			//if(d<= dThreshold)
 			//{
@@ -87,13 +90,25 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 			robotFlipperAngles.phi2.push_back(phi2);
 			robotFlipperAngles.phiContact.push_back(phiContact);
 			robotFlipperAngles.flipperAngle.push_back(flipperAngle);
-			ROS_INFO("phi1 = %7.3lf", phi1/M_PI*180);
+			/*ROS_INFO("phi1 = %7.3lf", phi1/M_PI*180);
 			ROS_INFO("phi2 = %7.3lf", phi2/M_PI*180);
 			ROS_INFO("phiContact = %7.3lf", phiContact/M_PI*180);
 			ROS_INFO("flipperAngle = %7.3lf", flipperAngle/M_PI*180);
-
-			}
+*/
+		}
 	}
+	if(robotFlipperAngles.phiContact.size() == 0)
+	{
+		robotFlipperAngles = lastrobotFlipperAngles;
+	}
+	else
+	{
+		lastrobotFlipperAngles = robotFlipperAngles;
+	}
+
+
+	//ROS_INFO("maxFlipperAngle(robotFlipperAngles) = %7.3lf", maxFlipperAngle(robotFlipperAngles)/M_PI*180);
+
 	return maxFlipperAngle(robotFlipperAngles);
 }
 
