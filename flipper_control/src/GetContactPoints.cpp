@@ -271,15 +271,12 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<char >(i,j);
 
-			ROS_INFO("value*0.0043 %7.3lf",value*0.0043);
-
 	    	pose.position.z = value*0.0043;
 
 
 	    	pose = rotate_point(pose, theta, nextPose);
 
 	    	tranformedPose = tfTransform(pose, destination_frame, original_frame);
-			ROS_INFO("tranformedPose.position.z %7.3lf",tranformedPose.position.z);
 
 	    	poses.push_back(tranformedPose);
 
@@ -329,11 +326,6 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 {
 
 
-	//tf2::Quaternion q_prime = q.inverse();
-	//tf2::Quaternion p;
-	//p.setX(0);
-	//tf2::Quaternion p_prime;
-
 	std::vector<geometry_msgs::Pose> newPoses;
 	geometry_msgs::Pose pose_prime;
 	for(auto pose : poses)
@@ -344,31 +336,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 
 	return newPoses;
 }
-/*{
 
-
-	tf2::Quaternion q_prime = q.inverse();
-	tf2::Quaternion p;
-	p.setX(0);
-	tf2::Quaternion p_prime;
-
-	std::vector<geometry_msgs::Pose> newPoses;
-	geometry_msgs::Pose pose_prime;
-	for(auto pose : poses)
-	{
-		p.setY(pose.position.x);
-		p.setZ(pose.position.y);
-		p.setW(pose.position.z);
-
-		p_prime=q*p*q_prime;
-		pose_prime.position.x = p_prime.getY();
-		pose_prime.position.y = p_prime.getZ();
-		pose_prime.position.z = p_prime.getW();
-		newPoses.push_back(pose_prime);
-	}
-
-	return newPoses;
-}*/
 
 geometry_msgs::Pose GetContactPoints::clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q)
 {

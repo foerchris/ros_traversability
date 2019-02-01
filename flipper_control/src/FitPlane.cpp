@@ -101,17 +101,26 @@ std::vector<geometry_msgs::Pose> FitPlane::sampleLine(const double& angle ,const
 
 tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 {
-	double theta_rot = acos(1/sqrt(fittedPlane.a*fittedPlane.a+fittedPlane.b*fittedPlane.b+1));
+	double theta_rot = acos(1/sqrt(pow(fittedPlane.a,2)+pow(fittedPlane.b,2)+1));
 
 	double x = fittedPlane.b*sin(theta_rot/2);
 	double y = -fittedPlane.a*sin(theta_rot/2);
 	double z = 0;
 	double w = cos(theta_rot/2);
+
+	double roll = tan(fittedPlane.b);
+	double pitch = tan(fittedPlane.a);
+	double yaw = 0;
+
 	tf2::Quaternion q;
 
+
+	tf::Quaternion quat;
 	if(x!=x || y!=y || z!=z || w!=w)
 	{
 		q.setRPY(0, 0, 0);
+		quat.setRPY(0, 0, 0);
+
 
 	}
 	else
@@ -120,11 +129,25 @@ tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 		q.setY(x);
 		q.setZ(y);
 		q.setW(z);*/
-		q.setX(x);
+		/*q.setX(x);
 		q.setY(y);
 		q.setZ(z);
 		q.setW(w);
+*/
+		q.setRPY(roll, pitch, yaw);
+
+		quat.setX(x);
+		quat.setY(y);
+		quat.setZ(z);
+		quat.setW(w);
+
 	}
+	ROS_INFO (" angles tan clc:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
+
+	tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+	ROS_INFO (" quat:\t  x=[%7.3lf], y=[%7.3lf] , z=[%7.3lf], w=[%7.3lf]\n", quat.getX(), quat.getY(), quat.getZ(), quat.getW());
+	ROS_INFO (" angles:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
+
 	return q;
 }
 

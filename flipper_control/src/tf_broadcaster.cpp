@@ -29,7 +29,7 @@ geometry_msgs::TransformStamped static_transformStamped;
 double globalyaw = 0;
 
 geometry_msgs::Twist currentVelocity;
-double delta_t = 1.6;
+double delta_t = 0.8;
 geometry_msgs::Pose deltaPose;
 geometry_msgs::Pose initPose;
 

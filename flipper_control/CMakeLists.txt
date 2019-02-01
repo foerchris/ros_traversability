@@ -76,6 +76,7 @@ add_executable(flipper_control_server
 				src/GetContactPoints.cpp
 				src/CalcFlipperAngles.cpp
 				src/FitPlane.cpp
+				src/clcNESM.cpp
 				)
 
 add_executable(tf_broadcaster
