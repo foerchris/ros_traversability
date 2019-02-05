@@ -55,6 +55,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
    cfg/FlipperControl.cfg
+   cfg/broadcaster.cfg
+
 )
 include_directories(
 	${OpenCV_INCLUDE_DIRS}
@@ -76,13 +78,20 @@ add_executable(flipper_control_server
 				src/GetContactPoints.cpp
 				src/CalcFlipperAngles.cpp
 				src/FitPlane.cpp
-				src/clcNESM.cpp
+				src/ClcNESM.cpp
 				)
 
 add_executable(tf_broadcaster
 				src/tf_broadcaster.cpp
 				)
 
+add_executable(flipper_tf_broadcaster
+				src/flipper_tf_broadcaster.cpp
+				)
+
+add_executable(plane_tf_broadcaster
+				src/plane_tf_broadcaster.cpp
+				)
 
 target_link_libraries(flipper_control_server
   ${OpenCV_LIBRARIES}
@@ -93,8 +102,18 @@ target_link_libraries(tf_broadcaster
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(flipper_tf_broadcaster
+  ${catkin_LIBRARIES}
+)
+
+
+target_link_libraries(plane_tf_broadcaster
+  ${catkin_LIBRARIES}
+)
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencpp)
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencfg)
 
+add_dependencies(tf_broadcaster ${PROJECT_NAME}_gencpp)
+add_dependencies(tf_broadcaster ${PROJECT_NAME}_gencfg)
 
 

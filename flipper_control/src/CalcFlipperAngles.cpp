@@ -31,7 +31,7 @@ void CalcFlipperAngles::setParameter(double p1, double p2, double p3, double p4)
 
 }
 
-double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
+maxflipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose>& values)
 {
 	flipperContactPointsAngles robotFlipperAngles;
 	static flipperContactPointsAngles lastrobotFlipperAngles;
@@ -39,11 +39,8 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 	double z = 0;
 	double x = 0;
 	double d = 0;
-	for(auto pose:values)
-	{
-		//ROS_INFO("pose: x = %7.3lf, y = %7.3lf, z = %7.3lf", pose.position.x, pose.position.y, pose.position.z);
 
-	}
+
 	for(auto pose:values)
 	{
 		double phi1 = 0;
@@ -52,17 +49,12 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 		double flipperAngle = 0 ;
 
 		z = pose.position.z;
+
 		x = pose.position.x;
 		if(x >= 0)
 		{
 			d= sqrt(pow(x, 2)+ pow(z, 2));
-
-			/*ROS_INFO("x = %7.3lf", x);
-			ROS_INFO("z = %7.3lf", z);
-
-			ROS_INFO("d = %7.3lf", d);
-			ROS_INFO("dThreshold = %7.3lf", dThreshold);
-*/
+			//ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", x, pose.position.y, z);
 
 			//if(d<= dThreshold)
 			//{
@@ -90,11 +82,7 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 			robotFlipperAngles.phi2.push_back(phi2);
 			robotFlipperAngles.phiContact.push_back(phiContact);
 			robotFlipperAngles.flipperAngle.push_back(flipperAngle);
-			/*ROS_INFO("phi1 = %7.3lf", phi1/M_PI*180);
-			ROS_INFO("phi2 = %7.3lf", phi2/M_PI*180);
-			ROS_INFO("phiContact = %7.3lf", phiContact/M_PI*180);
-			ROS_INFO("flipperAngle = %7.3lf", flipperAngle/M_PI*180);
-*/
+
 		}
 	}
 	if(robotFlipperAngles.phiContact.size() == 0)
@@ -113,13 +101,19 @@ double CalcFlipperAngles::clcContactAngles(const std::vector<geometry_msgs::Pose
 }
 
 
-double CalcFlipperAngles::maxFlipperAngle(const flipperContactPointsAngles& flipperAngles)
+maxflipperContactPointsAngles CalcFlipperAngles::maxFlipperAngle(const flipperContactPointsAngles& flipperAngles)
 {
-	double maxFlipperAngle = 0;
+	maxflipperContactPointsAngles flippeContactPoint;
 
 	auto iter = std::max_element(flipperAngles.phiContact.begin(), flipperAngles.phiContact.end());
 
-	maxFlipperAngle =*iter;
-
-	return maxFlipperAngle;
+	flippeContactPoint.maxFlipperAngle =*iter;
+	int idx = iter - flipperAngles.phiContact.begin();
+	flippeContactPoint.pose = flipperAngles.pose[idx];
+	if(flippeContactPoint.maxFlipperAngle != flipperAngles.phiContact[idx])
+	{
+		ROS_ERROR("This should not happen");
+	}
+	return flippeContactPoint;
 }
+

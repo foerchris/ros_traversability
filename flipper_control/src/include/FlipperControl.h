@@ -23,6 +23,7 @@
 #include <tf/transform_datatypes.h>
 #include "GetContactPoints.h"
 #include "CalcFlipperAngles.h"
+#include "ClcNESM.h"
 #include "FitPlane.h"
 
 class FlipperControl
@@ -49,15 +50,22 @@ class FlipperControl
 
 	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue);
 
-	double flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
+	maxflipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
+
+	void stabilityAnalysis(const maxflipperContactPointsAngles& front,const maxflipperContactPointsAngles& rear,const std::string& frameFront, const std::string& frameRear);
 
 	double returnBiggerVel(const double& vel1, const double& vel2);
 
 	void publishAngles (flipperAngles robotFlipperAngles);
 
+	geometry_msgs::Pose addPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
+	geometry_msgs::Pose subPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
+
 	ros::Publisher markerPublisher;
 	ros::Publisher frontFlipperAngleDesiredPub;
 	ros::Publisher  rearFlipperAngleDesiredPub;
+
+	ros::Publisher planeRotationPub;
 
 	ros::NodeHandle nodeHandle_;
 
@@ -67,6 +75,8 @@ class FlipperControl
 	//**************** tf frames
 	std::string BASE_FRAME;
 	std::string NEXT_BASE_FRAME;
+	std::string ROTATED_NEXT_BASE_FRAME;
+
 	std::string MAP_FRAME;
 	std::string ODOM_FRAME;
 	std::string FLIPPER_FRONT_LEFT_FRAME;
@@ -81,6 +91,7 @@ class FlipperControl
 	// Obeject declarations
 	GetContactPoints getContactPoints;
 	FitPlane fitPlane;
+	ClcNESM clcNESM;
 	CalcFlipperAngles calcFlipperAngles;
 
 	cv::Mat globalMapImage;

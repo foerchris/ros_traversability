@@ -14,6 +14,8 @@
 #include <nav_msgs/Odometry.h>
 
 #include <sensor_msgs/Imu.h>
+#include <dynamic_reconfigure/server.h>
+#include <flipper_control/broadcasterConfig.h>
 
 
 std::string destination_frame = "/base_link";
@@ -28,6 +30,7 @@ geometry_msgs::TransformStamped static_transformStamped;
 
 double globalyaw = 0;
 
+double fixed_velocity = 0;
 geometry_msgs::Twist currentVelocity;
 double delta_t = 0.8;
 geometry_msgs::Pose deltaPose;
@@ -38,6 +41,7 @@ void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 	currentVelocity = odomMsg->twist.twist;
 	double theta = currentVelocity.angular.z * delta_t;
 	double v_dot = currentVelocity.linear.x * delta_t;
+	//double v_dot = fixed_velocity* delta_t;
 
 	static_transformStamped.header.stamp = ros::Time::now();
 
@@ -62,10 +66,14 @@ void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 	static_transformStamped.transform.rotation.z = quat.getZ();
 	static_transformStamped.transform.rotation.w = quat.getW();
 }
+void reconfigureCallback(flipper_control::broadcasterConfig &config, uint32_t level)
+{
+		  fixed_velocity =config.fixed_velocity;
+}
 
 int main(int argc, char **argv)
 {
-	ros::init(argc,argv, "flipper_tf_broadcaster");
+	ros::init(argc,argv, "tf_broadcaster");
 
 	if(strcmp(argv[1],"world")==0)
 	{
@@ -80,6 +88,11 @@ int main(int argc, char **argv)
 	ros::NodeHandle nodeHandle;
 	ros::Rate rate=100;
 	ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 1, odomCallback);
+	// setting up reconfigure servers
+	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig> server;
+	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig>::CallbackType f;
+	f = boost::bind(&reconfigureCallback,_1, _2);
+	server.setCallback(f);
 
 	tf_prefix = "//GETjag";
 	tf_prefix = ros::this_node::getNamespace();

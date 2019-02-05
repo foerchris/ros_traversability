@@ -129,6 +129,8 @@ tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 		q.setY(x);
 		q.setZ(y);
 		q.setW(z);*/
+
+
 		/*q.setX(x);
 		q.setY(y);
 		q.setZ(z);
@@ -142,11 +144,11 @@ tf2::Quaternion FitPlane::getRotations(FittedPlane fittedPlane)
 		quat.setW(w);
 
 	}
-	ROS_INFO (" angles tan clc:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
+	//ROS_INFO (" angles tan clc:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
 
 	tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-	ROS_INFO (" quat:\t  x=[%7.3lf], y=[%7.3lf] , z=[%7.3lf], w=[%7.3lf]\n", quat.getX(), quat.getY(), quat.getZ(), quat.getW());
-	ROS_INFO (" angles:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
+	//ROS_INFO (" quat:\t  x=[%7.3lf], y=[%7.3lf] , z=[%7.3lf], w=[%7.3lf]\n", quat.getX(), quat.getY(), quat.getZ(), quat.getW());
+	//ROS_INFO (" angles:\t  roll=[%7.3lf], pitch=[%7.3lf] , yaw=[%7.3lf]", roll, pitch, yaw);
 
 	return q;
 }
@@ -194,6 +196,7 @@ std::vector<double> FitPlane::clcCrossMean(const std::vector<geometry_msgs::Pose
 		meanZX = meanZX + pose.position.z*pose.position.x;
 		N += 1;
 	}
+
 	meanXX = meanXX/N;
 	meanXY = meanXY/N;
 	meanYY = meanYY/N;

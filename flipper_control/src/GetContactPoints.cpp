@@ -43,7 +43,16 @@ void GetContactPoints::setConstants(const double& imageResultion)
 {
 	resultion = imageResultion;
 }
+visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+{
+	visualization_msgs::MarkerArray markerArray;
 
+	for(std::size_t i=0; i<pose.size();i++)
+	{
+		markerArray.markers.push_back (createMarker(frame, name, i, pose[i].position.x, pose[i].position.y, pose[i].position.z, r, g, b, 1.0));
+	}
+	return markerArray;
+}
 
 visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y, const double& z,const  double& r,const double& g,const double& b,const double& a)
 {
@@ -78,17 +87,48 @@ visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tf
 	return marker;
 }
 
-
-visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+visualization_msgs::MarkerArray GetContactPoints::creatCubeMarkerArrayFlipperPoints(const geometry_msgs::Pose& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;
 
-	for(std::size_t i=0; i<pose.size();i++)
-	{
-		markerArray.markers.push_back (createMarker(frame, name, i, pose[i].position.x, pose[i].position.y, pose[i].position.z, 1.0, 1.0, 0.0, 1.0));
-	}
+	markerArray.markers.push_back (createCubeMarker(frame, name, 0, pose, r, g, b, 1.0));
+
 	return markerArray;
 }
+visualization_msgs::Marker GetContactPoints::createCubeMarker (const std::string& tfFrame, const std::string& ns,const int& id,const geometry_msgs::Pose& pose,const  double& r,const double& g,const double& b,const double& a)
+{
+	visualization_msgs::Marker marker;
+
+	marker.header.frame_id = tfFrame;
+	marker.header.stamp = ros::Time();
+	marker.ns = ns;
+
+	marker.type = visualization_msgs::Marker::CUBE;
+	marker.action = visualization_msgs::Marker::ADD;
+	marker.lifetime = ros::Duration(0);
+
+	marker.scale.x = 0.6;
+	marker.scale.y = 2*0.275;
+	marker.scale.z = 0.005;
+	marker.color.r = r;
+	marker.color.g = g;
+	marker.color.b = b;
+	marker.color.a = a; // Don't forget to set the alpha!
+
+    marker.id = id;
+
+	marker.pose.position.x = pose.position.x;
+	marker.pose.position.y = pose.position.y;
+	marker.pose.position.z = pose.position.z;
+	marker.pose.orientation.x = pose.orientation.x;
+	marker.pose.orientation.y = pose.orientation.y;
+	marker.pose.orientation.z = pose.orientation.z;
+	marker.pose.orientation.w = pose.orientation.w;
+
+	return marker;
+}
+
+
 
 
 std::vector<geometry_msgs::Pose> GetContactPoints::getRegions(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
@@ -253,8 +293,6 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 
 	float theta= 0;
 	double value = 0;
-	ROS_INFO("destination_frame %s",destination_frame.c_str());
-	ROS_INFO("original_frame %s",original_frame.c_str());
 
 	for(int i=0; i<flipperMaps.rows; i++)
 	{
@@ -284,7 +322,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	}
 	return poses;
 }
-double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
+double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double& trackLength)
 {
 	double maxZ = -1000;
 
@@ -292,9 +330,12 @@ double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, 
 
 	for(auto pose : newPoses)
 	{
-		if(pose.position.z > maxZ)
+		if(pose.position.x <= trackLength/2 && pose.position.x >= -trackLength/2)
 		{
-			maxZ = pose.position.z;
+			if(pose.position.z > maxZ)
+			{
+				maxZ = pose.position.z;
+			}
 		}
 		//ROS_INFO("pose.position.z %7.3lf",pose.position.z);
 	}
@@ -312,7 +353,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewFlipperPoses(const std:
 	for(std::size_t i=0; i < newPoses.size(); i++)
 	{
 
-		//newPoses[i].position.z = newPoses[i].position.z - maxZ;
+		newPoses[i].position.z = newPoses[i].position.z - maxZ;
 
 	}
 

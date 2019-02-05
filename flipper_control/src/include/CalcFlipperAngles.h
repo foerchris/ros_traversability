@@ -27,6 +27,12 @@ struct flipperContactPointsAngles {
 	std::vector<double> phi2;
 	std::vector<double> phiContact;
 	std::vector<double> flipperAngle;
+
+};
+
+struct maxflipperContactPointsAngles {
+	geometry_msgs::Pose pose;
+	double maxFlipperAngle;
 };
 
 
@@ -40,14 +46,14 @@ class CalcFlipperAngles
 	public:
 	CalcFlipperAngles();
 	virtual ~CalcFlipperAngles();
-	double clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
+	maxflipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
 
 	void setParameter(double p1, double p2, double p3, double p4);
 
 
 	private:
 
-	double maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
+	maxflipperContactPointsAngles maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
 
 	double dThreshold;
 	double R;

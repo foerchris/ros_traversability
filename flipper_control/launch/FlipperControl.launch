@@ -10,6 +10,8 @@
 		<node pkg="flipper_control" type="tf_broadcaster" name="desired_pose_tf_broadcaster" args="next_base_link base_link 0.0 0.0 0.02 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
 
+		<node pkg="flipper_control" type="plane_tf_broadcaster" name="rotated_desired_pose_tf_broadcaster" args="rotated_next_base_link next_base_link 0.0 0.0 0.0 0.0 0.0 0.0" respawn="true" output="screen">
+		</node>
 
 		<node pkg="flipper_control" type="flipper_tf_broadcaster" name="flipper_tf_broadcaster_front_left" args="flipper_front_left next_base_link 0.244 0.275 0.082 0.0 0.0 0.0" respawn="true" output="screen">
 		</node>
