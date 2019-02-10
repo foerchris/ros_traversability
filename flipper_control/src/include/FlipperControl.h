@@ -26,6 +26,13 @@
 #include "ClcNESM.h"
 #include "FitPlane.h"
 
+
+struct NESMValues {
+	double S_NE_front;
+	double S_NE_rear;
+};
+
+
 class FlipperControl
 {
 	public:
@@ -48,11 +55,14 @@ class FlipperControl
 
 	void SequenceControl(cv::Mat mapImage);
 
-	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue);
+	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue, FittedPlane* fittedPlane);
+
+	tf2::Quaternion newPlane(const cv::Mat& image, double* maxZValue, FittedPlane* fittedPlane, const bool& setRoll, const bool& setPitch);
+
 
 	maxflipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
 
-	void stabilityAnalysis(const maxflipperContactPointsAngles& front,const maxflipperContactPointsAngles& rear,const std::string& frameFront, const std::string& frameRear);
+	NESMValues stabilityAnalysis(const maxflipperContactPointsAngles& front,const maxflipperContactPointsAngles& rear,const std::string& frameFront, const std::string& frameRear, const int& leftRight);
 
 	double returnBiggerVel(const double& vel1, const double& vel2);
 
@@ -122,7 +132,7 @@ class FlipperControl
 	double FlipperTrackLength;
 	double cropeMapLength;
 
-
+	double S_NE_thresshold;
 
 };
 

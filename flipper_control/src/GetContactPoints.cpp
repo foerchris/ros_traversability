@@ -420,6 +420,49 @@ std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vect
 	return transformedPoses;
 }
 
+tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const bool& setRoll, const bool& setPitch)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = 0;
+	pose.position.y = 0;
+	pose.position.z = 0;
+
+	pose.orientation.x = 0;
+	pose.orientation.y = 0;
+	pose.orientation.z = 0;
+	pose.orientation.w = 1.0;
+
+	pose = tfTransform(pose, destination_frame, original_frame);
+	tf::Quaternion q_map(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+
+	ROS_INFO("orientation: x = %4.4lf, y = %4.4lf, z = %4.4lf,  w = %4.4lf", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+
+	double rollMap, pitchMap, yawMap;
+	tf::Matrix3x3(q_map).getRPY(rollMap, pitchMap, yawMap);
+	ROS_INFO("map: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollMap, pitchMap, yawMap);
+
+	tf::Quaternion q_robot(q.getX(), q.getY(), q.getZ(), q.getW());
+
+	double rollRobot, pitchRobot, yawRobot;
+	tf::Matrix3x3(q_robot).getRPY(rollRobot, pitchRobot, yawRobot);
+
+	tf2::Quaternion q_new;
+	if(setRoll)
+	{
+		rollRobot = rollMap;
+	}
+
+	if(setPitch)
+	{
+		pitchRobot = pitchMap;
+	}
+	ROS_INFO("robot: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollRobot, pitchRobot, yawRobot);
+
+	q_new.setRPY(rollRobot, pitchRobot, yawRobot);
+	return q_new;
+}
+
 geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame)
 {
 	// TF transformation of the Point which is nearest to the robot

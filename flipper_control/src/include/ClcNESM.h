@@ -29,6 +29,14 @@ class ClcNESM
 	cv::Vec3d g2_public;
 	cv::Vec3d c_public;
 	cv::Vec3d p_highest_public;
+
+
+	cv::Vec3d ug_public;
+	cv::Vec3d uc_public;
+	cv::Vec3d p_foot_public;
+
+	cv::Vec3d u_highest_public;
+
 	private:
 	cv::Vec3d clcQuaternion(const cv::Vec3d& v,const tf2::Quaternion& q);
 	double magnitude(const cv::Vec3d& v);

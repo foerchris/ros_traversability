@@ -75,6 +75,7 @@ class GetContactPoints
 	visualization_msgs::Marker createCubeMarker (const std::string& tfFrame, const std::string& ns,const int& id,const geometry_msgs::Pose& pose,const  double& r,const double& g,const double& b,const double& a);
 
 
+	tf2::Quaternion getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const bool& setRoll, const bool& setPitch);
 
 	private:
 	// *********** definitions for tf tranform
@@ -82,6 +83,7 @@ class GetContactPoints
 	geometry_msgs::Pose rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose);
 
 	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
+
 
 	geometry_msgs::Pose clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q);
 
