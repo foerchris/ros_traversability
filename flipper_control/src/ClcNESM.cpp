@@ -19,7 +19,7 @@ ClcNESM::~ClcNESM()
 }
 
 
-double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointFront, const geometry_msgs::Pose& contactPointRear, const geometry_msgs::Pose& centerOfGravity)
+double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointFront, const geometry_msgs::Pose& contactPointRear, const geometry_msgs::Pose& centerOfGravity, const bool& rotatePitch,const int& rotationDirection)
 {
 	cv::Vec3d g1(contactPointFront.position.x, contactPointFront.position.y, contactPointFront.position.z);
 	cv::Vec3d g2(contactPointRear.position.x, contactPointRear.position.y, contactPointRear.position.z);
@@ -33,7 +33,14 @@ double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointF
 	//c = c - offset;
 
 	tf2::Quaternion quat;
-	quat.setRPY(0,M_PI/2,0);
+	if(rotatePitch)
+	{
+		quat.setRPY(0,rotationDirection*M_PI/2,0);
+	}
+	else
+	{
+		quat.setRPY(rotationDirection*M_PI/2,0,0);
+	}
 
 	cv::Vec3d g1_prime = clcQuaternion(g1,quat) + offset;
 

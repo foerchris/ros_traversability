@@ -77,6 +77,9 @@ class GetContactPoints
 
 	tf2::Quaternion getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const bool& setRoll, const bool& setPitch);
 
+
+	visualization_msgs::MarkerArray creatMarkerArrayFlipperLine(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b);
+
 	private:
 	// *********** definitions for tf tranform
 	double clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2);
@@ -87,6 +90,8 @@ class GetContactPoints
 
 	geometry_msgs::Pose clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q);
 
+
+	visualization_msgs::Marker createLineMarker (const std::string& tfFrame, const std::string& ns,const int& id, const std::vector<geometry_msgs::Pose>& poses,const  double& r,const double& g,const double& b,const double& a);
 	std::unique_ptr<tf::TransformListener> tfListener;
 	tf::StampedTransform transform;
 

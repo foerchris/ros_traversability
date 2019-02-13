@@ -25,11 +25,21 @@
 #include "CalcFlipperAngles.h"
 #include "ClcNESM.h"
 #include "FitPlane.h"
-
+#include <dynamic_reconfigure/server.h>
+#include <flipper_control/FlipperControlConfig.h>
 
 struct NESMValues {
-	double S_NE_front;
-	double S_NE_rear;
+	double S_NE_frontRearLeft;
+	double S_NE_rearFrontLeft;
+
+	double S_NE_frontRearRight;
+	double S_NE_rearFrontRight;
+
+	double S_NE_leftRightFront;
+	double S_NE_rightLeftFront;
+
+	double S_NE_leftRightRear;
+	double S_NE_rightLeftRear;
 };
 
 
@@ -62,7 +72,12 @@ class FlipperControl
 
 	maxflipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
 
-	NESMValues stabilityAnalysis(const maxflipperContactPointsAngles& front,const maxflipperContactPointsAngles& rear,const std::string& frameFront, const std::string& frameRear, const int& leftRight);
+	///*********************** stability analysis for all possibility's
+	double stabilityAnalysis(const geometry_msgs::Pose& g1,const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const std::string& frame1, const std::string& frame2,  const bool& rotatePitch, const int& rotationDirection);
+	NESMValues getNESMValues(maxflipperContactPointsAngles frontLeft, maxflipperContactPointsAngles frontRight, maxflipperContactPointsAngles rearLeft, maxflipperContactPointsAngles rearRight);
+	void displayAllRotatedPoints(const std::string& position, const std::string& frame);
+	void displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b);
+
 
 	double returnBiggerVel(const double& vel1, const double& vel2);
 
@@ -70,6 +85,8 @@ class FlipperControl
 
 	geometry_msgs::Pose addPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
 	geometry_msgs::Pose subPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
+
+	void reconfigureCallback(flipper_control::FlipperControlConfig&config, uint32_t level);
 
 	ros::Publisher markerPublisher;
 	ros::Publisher frontFlipperAngleDesiredPub;
@@ -131,7 +148,7 @@ class FlipperControl
 	double TracksBaseLinkDist;
 	double FlipperTrackLength;
 	double cropeMapLength;
-
+	double fitPlaneLength;
 	double S_NE_thresshold;
 
 };

@@ -17,6 +17,7 @@
 
 #include <std_msgs/Float64.h>
 
+
 using namespace cv;
 
 constexpr double D2R = M_PI / 180.0;
@@ -42,6 +43,13 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 
 
 	mapImageSet = false;
+
+
+    // dynamic reconfigure
+	static dynamic_reconfigure::Server<flipper_control::FlipperControlConfig> serverTrackCon (ros::NodeHandle ("~/FlipperControl"));
+	static dynamic_reconfigure::Server<flipper_control::FlipperControlConfig>::CallbackType f2;
+	f2 = boost::bind(&FlipperControl::reconfigureCallback,this,_1,_2);
+	serverTrackCon.setCallback(f2);
 
 	// get namespace for tf and init all frames plus tf_prefix
 	tf_prefix = "//GETjag";
@@ -90,7 +98,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	// Roboter paramter
 	R = 0.082;
 	r = 0.0375;
-	L = 0.2325;
+	L = 0.23;
 	//d = std::hypot (r, L);
 	theta = atan (r / L);
 	dThreshold = sqrt(pow(R,2) + pow(L,2) - pow(R-r,2));
@@ -100,13 +108,14 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	flipperLength =  L+r;
 	trackLength = 0.6;
 	FlipperTrackLength = 2*(flipperLength - R) + trackLength;
+	fitPlaneLength = FlipperTrackLength;
 	TracksBaseLinkDist = 0.275;
 	cropeMapLength = 2;
 
 	getContactPoints.setConstants(resultion);
 	calcFlipperAngles.setParameter(dThreshold, R, r, L);
 
-	S_NE_thresshold = 0.5;
+	S_NE_thresshold = 0.6;
 }
 
 FlipperControl::~FlipperControl()
@@ -157,18 +166,30 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	maxflipperContactPointsAngles angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
 
-	NESMValues leftNESM = stabilityAnalysis(angleFrontLeft, angleRearLeft,FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REAR_LEFT_FRAME, 1);
-	NESMValues rightNESM = stabilityAnalysis(angleFrontRight, angleRearRight,FLIPPER_FRONT_RIGHT_FRAME,FLIPPER_REAR_RIGHT_FRAME, -1);
+	NESMValues nESMValues = getNESMValues(angleFrontLeft, angleFrontRight, angleRearLeft, angleRearRight);
 
-	ROS_INFO("leftNESM: S_NE_front = %4.4lf, S_NE_rear = %4.4lf",leftNESM.S_NE_front, leftNESM.S_NE_rear);
+	bool setPitchZero = false;
 
-	ROS_INFO("rightNESM: S_NE_front = %4.4lf, S_NE_rear = %4.4lf",rightNESM.S_NE_front, rightNESM.S_NE_rear);
-
-	if(leftNESM.S_NE_front > 0.04 || leftNESM.S_NE_rear > 0.04 || rightNESM.S_NE_front > 0.04 || rightNESM.S_NE_rear > 0.04)
+	if(nESMValues.S_NE_frontRearLeft > S_NE_thresshold || nESMValues.S_NE_rearFrontLeft> S_NE_thresshold || nESMValues.S_NE_frontRearRight > S_NE_thresshold || nESMValues.S_NE_rearFrontRight> S_NE_thresshold)
 	{
-		fittedPlane.b=0;
+		//fittedPlane.b=0;
 
-		quat = newPlane(mapImage, &maxZ, &fittedPlane, false, true);
+		//setPitchZero = true;
+
+	}
+
+	bool setRollZero = false;
+
+	if(nESMValues.S_NE_leftRightFront > S_NE_thresshold || nESMValues.S_NE_rightLeftFront> S_NE_thresshold || nESMValues.S_NE_leftRightRear > S_NE_thresshold || nESMValues.S_NE_rightLeftRear> S_NE_thresshold)
+	{
+		//fittedPlane.b=0;
+	//	setRollZero = true;
+	}
+
+	if( setRollZero || setPitchZero)
+	{
+
+		quat = newPlane(mapImage, &maxZ, &fittedPlane, setRollZero, setPitchZero);
 
 		angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
 
@@ -178,7 +199,6 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 		angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
 	}
-
 
 	flipperAngles robotflipperAngles;
 	robotflipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft.maxFlipperAngle, angleFrontRight.maxFlipperAngle);
@@ -194,7 +214,7 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue, Fi
 {
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
-	groundContactPoints = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
+	groundContactPoints = getContactPoints.getRegions(image,fitPlaneLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 	*fittedPlane = fitPlane.fitPlane(groundContactPoints);
@@ -281,6 +301,10 @@ maxflipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const 
 
 	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperRegionFrame, flipperRegionFrame,  1.0, 1.0, 0.0));
 
+	for(auto groundContactPoint:groundContactPoints)
+	{
+		ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
+	}
 
 	std::vector<geometry_msgs::Pose> newGroundContactPoints;
 
@@ -297,107 +321,97 @@ maxflipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const 
 
 	flipperAngle = calcFlipperAngles.clcContactAngles(newGroundContactPoints);
 
+	std::vector<geometry_msgs::Pose> linePoints = fitPlane.sampleLine(flipperAngle.maxFlipperAngle, sqrt(pow(flipperAngle.pose.position.x,2) + pow(flipperAngle.pose.position.y,2)), 0.06);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperLine(linePoints,flipperFrame +"_line", flipperFrame,  0.0, 1.0, 0.0));
 
 	return flipperAngle;
 }
 
-NESMValues FlipperControl::stabilityAnalysis(const maxflipperContactPointsAngles& front,const maxflipperContactPointsAngles& rear,const std::string& frameFront, const std::string& frameRear, const int& leftRight)
+double FlipperControl::stabilityAnalysis(const geometry_msgs::Pose& g1,const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const std::string& frame1, const std::string& frame2,  const bool& rotatePitch, const int& rotationDirection)
 {
-	std::vector<geometry_msgs::Pose> pubvels;
-	geometry_msgs::Pose pubvel;
+	double nESMValue = 0;
+	geometry_msgs::Pose frontTransfromed = getContactPoints.tfTransform(g1, frame1, frame1);
+
+	geometry_msgs::Pose rearTransfromed = getContactPoints.tfTransform(g2, frame1, frame2);
+
+	geometry_msgs::Pose centerOfGravityTransfromed = getContactPoints.tfTransform(c, frame1, NEXT_BASE_FRAME);
+
+	nESMValue = clcNESM.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed, rotatePitch, rotationDirection);
+	return nESMValue;
+}
+
+NESMValues FlipperControl::getNESMValues(maxflipperContactPointsAngles frontLeft, maxflipperContactPointsAngles frontRight, maxflipperContactPointsAngles rearLeft, maxflipperContactPointsAngles rearRight)
+{
 	NESMValues nESMValues;
 
 	geometry_msgs::Pose centerOfGravity;
 	centerOfGravity.position.x = 0;
-	centerOfGravity.position.y = leftRight*0.275;
-	centerOfGravity.position.z = 0.082;
+	centerOfGravity.position.y = TracksBaseLinkDist;
+	centerOfGravity.position.z = R;
 	centerOfGravity.orientation.x = 0;
 	centerOfGravity.orientation.y = 0;
 	centerOfGravity.orientation.z = 0;
 	centerOfGravity.orientation.w = 1;
 
-	geometry_msgs::Pose frontTransfromed = getContactPoints.tfTransform(front.pose, frameFront, frameFront);
+	nESMValues.S_NE_frontRearLeft = stabilityAnalysis(frontLeft.pose, rearLeft.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_REAR_LEFT_FRAME, true, 1);
+	//displayAllRotatedPoints("S_NE_frontRearLeft", FLIPPER_FRONT_LEFT_FRAME);
 
-	geometry_msgs::Pose rearTransfromed = getContactPoints.tfTransform(rear.pose, frameFront, frameRear);
-
-	geometry_msgs::Pose centerOfGravityTransfromed = getContactPoints.tfTransform(centerOfGravity, frameFront, NEXT_BASE_FRAME);
-
-	nESMValues.S_NE_front = clcNESM.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed);
+	nESMValues.S_NE_rearFrontLeft = stabilityAnalysis(rearLeft.pose, frontLeft.pose, centerOfGravity, FLIPPER_REAR_LEFT_FRAME, FLIPPER_FRONT_LEFT_FRAME, true, 1);
+	//displayAllRotatedPoints("S_NE_rearFrontLeft", FLIPPER_REAR_LEFT_FRAME);
 
 
-	pubvels.clear();
-	pubvel.position.x = clcNESM.g1_public[0];
-	pubvel.position.y = clcNESM.g1_public[1];
-	pubvel.position.z = clcNESM.g1_public[2];
+	centerOfGravity.position.y = -TracksBaseLinkDist;
 
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"g1", frameFront,  1.0, 0.0, 1.0));
+	nESMValues.S_NE_frontRearRight = stabilityAnalysis(frontRight.pose, rearRight.pose, centerOfGravity, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REAR_RIGHT_FRAME, true, 1);
+	//displayAllRotatedPoints("S_NE_frontRearRight", FLIPPER_FRONT_RIGHT_FRAME);
 
+	nESMValues.S_NE_rearFrontRight = stabilityAnalysis(rearRight.pose, frontRight.pose, centerOfGravity, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_FRONT_RIGHT_FRAME, true, 1);
+	//displayAllRotatedPoints("S_NE_rearFrontRight", FLIPPER_REAR_RIGHT_FRAME);
 
-	pubvels.clear();
-	pubvel.position.x = clcNESM.g2_public[0];
-	pubvel.position.y = clcNESM.g2_public[1];
-	pubvel.position.z = clcNESM.g2_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"g2", frameFront,  1.0, 0.0, 1.0));
+	centerOfGravity.position.x = 0.244;
+	centerOfGravity.position.y = 0;
+	frontLeft.pose.position.x = 0;
+	frontRight.pose.position.x = 0;
+	rearLeft.pose.position.x = 0;
+	rearRight.pose.position.x = 0;
 
-	pubvels.clear();
-	pubvel.position.x = clcNESM.c_public[0];
-	pubvel.position.y = clcNESM.c_public[1];
-	pubvel.position.z = clcNESM.c_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"c", frameFront,  1.0, 0.0, 1.0));
+	nESMValues.S_NE_leftRightFront = stabilityAnalysis(frontLeft.pose, frontRight.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_FRONT_RIGHT_FRAME, false, -1);
+	nESMValues.S_NE_rightLeftFront = stabilityAnalysis(frontRight.pose, frontLeft.pose, centerOfGravity, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_FRONT_LEFT_FRAME, false, 1);
 
-	pubvels.clear();
-	pubvel.position.x = clcNESM.ug_public[0];
-	pubvel.position.y = clcNESM.ug_public[1];
-	pubvel.position.z = clcNESM.ug_public[2];
+	centerOfGravity.position.x = -0.244;
 
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"ug", frameFront,  0.0, 0.0, 1.0));
+	nESMValues.S_NE_leftRightRear = stabilityAnalysis(rearLeft.pose, rearRight.pose, centerOfGravity, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REAR_RIGHT_FRAME, false, 1);
+	//displayAllRotatedPoints("S_NE_leftRightRear", FLIPPER_REAR_LEFT_FRAME);
 
+	nESMValues.S_NE_rightLeftRear = stabilityAnalysis(rearRight.pose, rearLeft.pose, centerOfGravity, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REAR_LEFT_FRAME, false, -1);
+	//displayAllRotatedPoints("S_NE_rightLeftRear", FLIPPER_REAR_RIGHT_FRAME);
 
-	pubvels.clear();
-	pubvel.position.x = clcNESM.uc_public[0];
-	pubvel.position.y = clcNESM.uc_public[1];
-	pubvel.position.z = clcNESM.uc_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"uc", frameFront,  0.0, 0.0, 1.0));
-
-	pubvels.clear();
-	pubvel.position.x = clcNESM.p_foot_public[0];
-	pubvel.position.y = clcNESM.p_foot_public[1];
-	pubvel.position.z = clcNESM.p_foot_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"u_foot", frameFront,  0.0, 0.0, 1.0));
-
-
-	pubvels.clear();
-	pubvel.position.x = clcNESM.u_highest_public[0];
-	pubvel.position.y = clcNESM.u_highest_public[1];
-	pubvel.position.z = clcNESM.u_highest_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"u_highest", frameFront,  0.0, 0.0, 1.0));
-
-
-	pubvels.clear();
-	pubvel.position.x = clcNESM.p_highest_public[0];
-	pubvel.position.y = clcNESM.p_highest_public[1];
-	pubvel.position.z = clcNESM.p_highest_public[2];
-	pubvels.push_back(pubvel);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(pubvels ,"p_highest", frameFront,  0.0, 0.0, 1.0));
-
-	rearTransfromed = getContactPoints.tfTransform(rear.pose, frameRear, frameRear);
-
-	frontTransfromed = getContactPoints.tfTransform(front.pose, frameRear,frameFront);
-
-	centerOfGravityTransfromed = getContactPoints.tfTransform(centerOfGravity, frameRear, NEXT_BASE_FRAME);
-
-	nESMValues.S_NE_rear = clcNESM.clcNESMStabilityMeasure(rearTransfromed , frontTransfromed, centerOfGravityTransfromed);
 
 	return nESMValues;
 }
 
+void FlipperControl::displayAllRotatedPoints(const std::string& position, const std::string& frame)
+{
+	displayRotatedPoints(clcNESM.g1_public, position + "g1", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(clcNESM.g2_public, position + "g2", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(clcNESM.c_public, position + "c", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(clcNESM.g1_prime_public, position + "g1_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(clcNESM.g2_prime_public, position + "g2_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(clcNESM.c_prime_public, position + "c_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(clcNESM.p_highest_public, position + "p_highest_public", frame, 0.0, 1.0, 0.0);
+
+}
+void FlipperControl::displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b)
+{
+	std::vector<geometry_msgs::Pose> poses;
+	geometry_msgs::Pose pose;
+	poses.clear();
+	pose.position.x = point[0];
+	pose.position.y = point[1];
+	pose.position.z = point[2];
+	poses.push_back(pose);
+	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(poses , name, frame,  0.0, 0.0, 1.0));
+}
 double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
 {
 	if(vel1>vel2)
@@ -456,6 +470,17 @@ geometry_msgs::Pose FlipperControl::addPose(const geometry_msgs::Pose& pose1, co
 	pose.position.y = pose1.position.y + pose2.position.y;
 	pose.position.z = pose1.position.z + pose2.position.z;
 	return pose;
+}
+
+void FlipperControl::reconfigureCallback(flipper_control::FlipperControlConfig&config, uint32_t level)
+{
+	R = config.R;
+	r = config.r;
+	L = config.L;
+	trackLength = config.trackLength;
+	TracksBaseLinkDist = config.TracksBaseLinkDist;
+	cropeMapLength = config.cropeMapLength;
+	fitPlaneLength = config.fitPlaneLength;
 }
 
 

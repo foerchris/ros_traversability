@@ -87,6 +87,56 @@ visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tf
 	return marker;
 }
 
+visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperLine(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+{
+	visualization_msgs::MarkerArray markerArray;
+
+
+	markerArray.markers.push_back (createLineMarker(frame, name, 0, pose, r, g, b, 1.0));
+
+	return markerArray;
+}
+visualization_msgs::Marker GetContactPoints::createLineMarker (const std::string& tfFrame, const std::string& ns,const int& id, const std::vector<geometry_msgs::Pose>& poses,const  double& r,const double& g,const double& b,const double& a)
+{
+
+    visualization_msgs::Marker line_strip;
+    line_strip.header.frame_id = tfFrame;
+    line_strip.header.stamp = ros::Time::now();
+    line_strip.ns = ns;
+    line_strip.action = visualization_msgs::Marker::ADD;
+    line_strip.pose.orientation.w = 1.0;
+
+    line_strip.id = id;
+
+    line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+
+
+    // LINE_STRIP/LINE_LIST markers use only the x component of scale, for the line width
+    line_strip.scale.x = 0.01;
+
+
+    // Points are green
+
+    // Line strip is blue
+    line_strip.color.r = r;
+    line_strip.color.g = g;
+    line_strip.color.b = b;
+    line_strip.color.a = a;
+
+
+    // Create the vertices for the points and lines
+    for (auto pose:poses)
+    {
+      geometry_msgs::Point p;
+      p.x = pose.position.x;
+      p.y = pose.position.y;
+      p.z = pose.position.z-0.082;
+
+      line_strip.points.push_back(p);
+    }
+	return line_strip;
+}
+
 visualization_msgs::MarkerArray GetContactPoints::creatCubeMarkerArrayFlipperPoints(const geometry_msgs::Pose& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;

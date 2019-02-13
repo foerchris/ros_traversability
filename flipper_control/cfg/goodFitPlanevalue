@@ -1,0 +1,33 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  L: 0.23
+  R: 0.082
+  TracksBaseLinkDist: 0.275
+  cropeMapLength: 2.0
+  fitPlaneLength: 0.83
+  flipperWidth: 0.1
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      L: 0.23
+      R: 0.082
+      TracksBaseLinkDist: 0.275
+      cropeMapLength: 2.0
+      fitPlaneLength: 0.83
+      flipperWidth: 0.1
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      r: 0.0375
+      resolution: 0.06
+      state: true
+      trackLength: 0.6
+      type: ''
+    state: []
+  r: 0.0375
+  resolution: 0.06
+  trackLength: 0.6
+state: []

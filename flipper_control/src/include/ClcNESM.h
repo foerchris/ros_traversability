@@ -19,7 +19,7 @@ class ClcNESM
 	ClcNESM();
 	virtual ~ClcNESM();
 
-	double clcNESMStabilityMeasure(const geometry_msgs::Pose& g1, const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c);
+	double clcNESMStabilityMeasure(const geometry_msgs::Pose& g1, const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const bool& rotatePitch, const int& rotationDirection);
 
 
 	cv::Vec3d g1_prime_public;
