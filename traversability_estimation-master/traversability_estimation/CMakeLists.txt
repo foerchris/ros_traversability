@@ -111,8 +111,14 @@ add_executable(
 
 add_executable(robot_positioning_node
     src/robot_positioning_node.cpp
+    src/MazeReader.cpp
 )
 
+add_executable(get_text_file_data
+    src/get_text_file_data.cpp
+    src/MazeReader.cpp
+
+)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
@@ -127,6 +133,9 @@ target_link_libraries(robot_positioning_node
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(get_text_file_data
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############

@@ -27,6 +27,9 @@
 #include <random>
 #include <iostream>
 
+#include "traversability_estimation/MazeReader.h"
+
+
 ros::Publisher goalPosePublischer;
 ros::Publisher markerPublisher;
 
@@ -37,21 +40,28 @@ void setObjectPose(const std::string& name, geometry_msgs::Pose startPose, gazeb
 geometry_msgs::Pose mapToBaseLinkTransform(geometry_msgs::Pose pose);
 geometry_msgs::Pose mapToOdomTransform(geometry_msgs::Pose pose);
 void setGETjagZeroPose(const std::string& name, gazebo_msgs::SetModelState& setmodelstate);
+geometry_msgs::Pose setRandomObst();
+geometry_msgs::Pose transformMaze(maze position);
 std::string BASE_FRAME = "/base_link";
 std::string MAP_FRAME = "/map";
 std::string ODOM_FRAME = "/odom";
 std::string gazeboMoveObjectFrame = "world";
-std::string tf_prefix = "GETjag";
+std::string tf_prefix = "//GETjag1";
 std::unique_ptr<tf::TransformListener> tfListener;
 tf::StampedTransform transform;
+MazeReader mazeReader;
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "robot_positioning");
 	ros::NodeHandle nh;
+
 	tf_prefix = ros::this_node::getNamespace();
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
-	std::cout<<"tf_prefix"<<tf_prefix<<std::endl;
+	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+	int robot_number = 1;
+	iss >> robot_number;
+
 	BASE_FRAME = tf_prefix + BASE_FRAME;
 	MAP_FRAME = tf_prefix + MAP_FRAME;
 	ODOM_FRAME = tf_prefix + ODOM_FRAME;
@@ -73,11 +83,14 @@ int main(int argc, char** argv) {
 	geometry_msgs::Pose mapGoalPose;
 	visualization_msgs::MarkerArray markerArray;
 
+
+	std::vector<maze> maze_vect;
+
 	while(ros::ok())
 	{
 		if(reset == true)
 		{
-
+			mazeReader.reset();
 			nh.setParam(resetParam,false);
 			reset = false;
 			// set all getjag to a zero pose
@@ -93,18 +106,16 @@ int main(int argc, char** argv) {
 			}
 
 			std::this_thread::sleep_for(std::chrono::seconds(1));
+			maze_vect = mazeReader.readTextFile(robot_number);
 
-			int possibleRandomObstacles = 5;
-			int minObstacles = 3;
-			std::random_device rd;
-			std::mt19937 mt(rd());
-			std::uniform_real_distribution<double> obst(minObstacles, possibleRandomObstacles);
-
-			int anzObstacles = obst(mt);
-			for(int i=1; i<=anzObstacles+1; i++)
+			for(int i=0; i<=maze_vect.size()-1; i++)
 			{
-				creatRandomPose(startPose, 5);
+				//std::cout<<"x="<<maze_vect[i].x<<"\ty="<<maze_vect[i].y<<"\ty1="<<maze_vect[i].orientation<<std::endl;
+
+				startPose = transformMaze(maze_vect[i]);
+
 				startPose = mapToOdomTransform(startPose);
+
 
 				int objectIndex;
 				if(tf_prefix == "GETjag1")
@@ -113,27 +124,27 @@ int main(int argc, char** argv) {
 				}
 				else if(tf_prefix == "GETjag2")
 				{
-					objectIndex=i+10;
+					objectIndex=i+15;
 				}
 				else if(tf_prefix == "GETjag3")
 				{
-					objectIndex=i+20;
+					objectIndex=i+30;
 				}
 				else if(tf_prefix == "GETjag4")
 				{
-					objectIndex=i+30;
+					objectIndex=i+45;
 				}
 				else if(tf_prefix == "GETjag5")
 				{
-					objectIndex=i+40;
+					objectIndex=i+60;
 				}
 				else if(tf_prefix == "GETjag6")
 				{
-					objectIndex=i+50;
+					objectIndex=i+75;
 				}
 
 				// set obstacles
-				setObjectPose("object_robocup_wall_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
+				setObjectPose("object_robocup_wall250_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
 				if (client.call(setmodelstate))
 				{
 					//ROS_INFO("Successful to call service: Set Obstacle: %i",i);
@@ -144,8 +155,57 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 			}
+			int possibleRandomObstacles = 5;
+
+
+			for(int i=1; i<=possibleRandomObstacles+1; i++)
+			{
+				startPose = setRandomObst();
+				startPose = mapToOdomTransform(startPose);
+
+				int objectIndex;
+				if(tf_prefix == "GETjag1")
+				{
+					objectIndex=i+10;
+					std::cout<<"objectIndex="<<objectIndex<<std::endl;
+				}
+				else if(tf_prefix == "GETjag2")
+				{
+					objectIndex=i+25;
+				}
+				else if(tf_prefix == "GETjag3")
+				{
+					objectIndex=i+40;
+				}
+				else if(tf_prefix == "GETjag4")
+				{
+					objectIndex=i+55;
+				}
+				else if(tf_prefix == "GETjag5")
+				{
+					objectIndex=i+70;
+				}
+				else if(tf_prefix == "GETjag6")
+				{
+					objectIndex=i+85;
+				}
+
+				// set obstacles
+				setObjectPose("object_robocup_wall250_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
+				if (client.call(setmodelstate))
+				{
+					//ROS_INFO("Successful to call service: Set Obstacle: %i",i);
+				}
+				else
+				{
+					ROS_ERROR("Failed to call service: Set Obstacle: %i",i);
+					return 1;
+				}
+			}
+
 			// set getjag to a random pose
-			creatRandomPose(startPose, 4.5);
+			//creatRandomPose(startPose, 4.5);
+			startPose = transformMaze(mazeReader.getRandomCell());
 			startPose = mapToOdomTransform(startPose);
 
 			setObjectPose(tf_prefix, startPose, setmodelstate, true);
@@ -164,7 +224,9 @@ int main(int argc, char** argv) {
 			nh.setParam("reset_elevation_map",true);
 
 			// Create random goal position message
-			creatRandomPose(mapGoalPose, 4.5);
+			//creatRandomPose(mapGoalPose, 4.5);
+			mapGoalPose = transformMaze(mazeReader.getRandomCell());
+
 			markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, mapGoalPose.position.x, mapGoalPose.position.y, 1.0, 1.0, 0.0,1.0));
 			nh.setParam("Ready_to_Start_DRL_Agent",true);
 
@@ -190,6 +252,53 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+
+geometry_msgs::Pose setRandomObst()
+{
+	geometry_msgs::Pose pose;
+	maze randomCell = mazeReader.getRandomCell();
+	pose = transformMaze(randomCell);
+
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<double> roll_orientaton(M_PI/2, M_PI/2 + M_PI/4);
+	std::uniform_real_distribution<double> height(0, 0.3);
+
+	pose.position.z = height(mt);
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0,  roll_orientaton(mt), randomCell.orientation/180*M_PI);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+	std::cout<<"x="<<pose.position.x<<"y"<<pose.position.y<<std::endl;
+
+	return pose;
+}
+
+
+geometry_msgs::Pose transformMaze(maze position)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = position.x;
+
+	pose.position.y = position.y;
+
+	pose.position.z = 0;
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, position.orientation/180*M_PI);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+	return pose;
+}
 
 void creatRandomPose(geometry_msgs::Pose& pose, int xyInterval)
 {

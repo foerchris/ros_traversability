@@ -1,0 +1,7 @@
+mazegen
+*.swp
+tags
+*.plt
+*.o
+examples/*_*.png
+examples/*_*.svg
