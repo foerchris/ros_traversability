@@ -114,51 +114,51 @@ int main(int argc, char *argv[]) {
       maze = new RectangularMaze(optionmap["-w"], optionmap["-h"]);
       break;
 
-    case 1:
-      if (optionmap["-s"] < 1) {
-        std::cerr << "Invalide size " << optionmap["-s"]
-                  << " for hexagonal maze with triangular lattice\n";
-        usage(std::cerr);
-        return 1;
-      }
-      std::cout << "Hexagonal maze with triangular lattice of size "
-                << optionmap["-s"] << "\n";
-      maze = new HexagonalMaze(optionmap["-s"]);
-      break;
-
-    case 2:
-      if (optionmap["-s"] < 1) {
-        std::cerr << "Invalide size " << optionmap["-s"]
-                  << " for honeycomb maze\n";
-        usage(std::cerr);
-        return 1;
-      }
-      std::cout << "Honeycomb maze of size " << optionmap["-s"] << "\n";
-      maze = new HoneyCombMaze(optionmap["-s"]);
-      break;
-
-    case 3:
-      if (optionmap["-s"] < 1) {
-        std::cerr << "Invalide size " << optionmap["-s"]
-                  << " for circular maze\n";
-        usage(std::cerr);
-        return 1;
-      }
-      std::cout << "Circular maze of size " << optionmap["-s"] << "\n";
-      maze = new CircularMaze(optionmap["-s"]);
-      break;
-
-    case 4:
-      if (optionmap["-s"] < 1) {
-        std::cerr << "Invalide size " << optionmap["-s"]
-                  << " for circular maze with triangular lattice\n";
-        usage(std::cerr);
-        return 1;
-      }
-      std::cout << "Circular maze with triangular lattice of size "
-                << optionmap["-s"] << "\n";
-      maze = new CircularHexagonMaze(optionmap["-s"]);
-      break;
+//    case 1:
+//      if (optionmap["-s"] < 1) {
+//        std::cerr << "Invalide size " << optionmap["-s"]
+//                  << " for hexagonal maze with triangular lattice\n";
+//        usage(std::cerr);
+//        return 1;
+//      }
+//      std::cout << "Hexagonal maze with triangular lattice of size "
+//                << optionmap["-s"] << "\n";
+//      maze = new HexagonalMaze(optionmap["-s"]);
+//      break;
+//
+//    case 2:
+//      if (optionmap["-s"] < 1) {
+//        std::cerr << "Invalide size " << optionmap["-s"]
+//                  << " for honeycomb maze\n";
+//        usage(std::cerr);
+//        return 1;
+//      }
+//      std::cout << "Honeycomb maze of size " << optionmap["-s"] << "\n";
+//      maze = new HoneyCombMaze(optionmap["-s"]);
+//      break;
+//
+//    case 3:
+//      if (optionmap["-s"] < 1) {
+//        std::cerr << "Invalide size " << optionmap["-s"]
+//                  << " for circular maze\n";
+//        usage(std::cerr);
+//        return 1;
+//      }
+//      std::cout << "Circular maze of size " << optionmap["-s"] << "\n";
+//      maze = new CircularMaze(optionmap["-s"]);
+//      break;
+//
+//    case 4:
+//      if (optionmap["-s"] < 1) {
+//        std::cerr << "Invalide size " << optionmap["-s"]
+//                  << " for circular maze with triangular lattice\n";
+//        usage(std::cerr);
+//        return 1;
+//      }
+//      std::cout << "Circular maze with triangular lattice of size "
+//                << optionmap["-s"] << "\n";
+//      maze = new CircularHexagonMaze(optionmap["-s"]);
+//      break;
 
     default:
       std::cerr << "Unknown maze type " << optionmap["-m"];

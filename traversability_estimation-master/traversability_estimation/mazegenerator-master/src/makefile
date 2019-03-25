@@ -3,8 +3,8 @@ CXXFLAGS = -W -Wall -Wno-unused-result -O3 -std=c++11
 
 all: mazegen
 
-OBJECTS = breadthfirstsearch.o cellborder.o circularhexagonmaze.o \
-	circularmaze.o depthfirstsearch.o hexagonalmaze.o honeycombmaze.o \
+OBJECTS = breadthfirstsearch.o cellborder.o \
+	depthfirstsearch.o \
 	kruskal.o main.o maze.o minimumspanningtreealgorithm.o rectangularmaze.o
 
 mazegen: $(OBJECTS)
