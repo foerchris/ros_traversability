@@ -117,7 +117,8 @@ int main(int argc, char** argv) {
 			int anzObstacles = obst(mt);
 			for(int i=1; i<=anzObstacles+1; i++)
 			{
-				startPose = transformMaze(mazeReader.getRandomCell());
+				creatRandomPose(startPose, 5);
+				//startPose = transformMaze(mazeReader.getRandomCell());
 				startPose = mapToOdomTransform(startPose);
 
 				int objectIndex;
@@ -158,7 +159,7 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 			}
-
+/*
 
 			for(int i=1; i<=possibleRandomObstacles+1; i++)
 			{
@@ -204,11 +205,11 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 			}
-
+*/
 			// set getjag to a random pose
-			//creatRandomPose(startPose, 4.5);
+			creatRandomPose(startPose, 4.5);
 			startPose = transformMaze(mazeReader.getRandomCell());
-			startPose = mapToOdomTransform(startPose);
+			//startPose = mapToOdomTransform(startPose);
 
 			setObjectPose(tf_prefix, startPose, setmodelstate, true);
 			if (client.call(setmodelstate))

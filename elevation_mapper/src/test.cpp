@@ -8,31 +8,29 @@ int main( int argc, char** argv )
   ros::init(argc, argv, "points_and_lines");
   ros::NodeHandle n;
 
-  ros::Rate r(30);
+  ros::Rate r(1);
   float env_size = 10.0;
   float f = 0.0;
-//while (ros::ok())
- //{
-  std::vector <float> xes;
-	  for (float x = env_size/8; x <= env_size - env_size/8; x += env_size/4)
-	  {
-		  for (float y = env_size/8; y <= env_size - env_size/8; y += env_size/4)
-		  {
-			  xes.push_back(x);
-		  }
-	  }
-	  std::cout<<"xes.size()"<< xes.size() << std::endl;
+  while (ros::ok())
+  {
+	  int zahl1=0, zahl2=3;
+	  std::vector<int> bla;
 
-	  std::vector<int> forbidden_list;
-//forbidden_list.push_back(1);
-	  forbidden_list.push_back(2);
-	  forbidden_list.push_back(3);
-	  forbidden_list.push_back(4);
 
-	  if(std::find(forbidden_list.begin(), forbidden_list.end(), 1) != forbidden_list.end())
+	  for (zahl1; zahl1<zahl2; zahl1++)
 	  {
-	      printf(" v contains x ");
+		  bla.push_back(zahl1);
+
+		  printf("zahl1 = %i\n", zahl1);
+		  printf("zahl2 = %i\n", zahl2);
+
 	  }
-    r.sleep();
-  //}
+
+	  for (auto blabla: bla)
+	  {
+		  printf("blabla = %i\n", blabla);
+
+	  }
+      r.sleep();
+  }
 }
