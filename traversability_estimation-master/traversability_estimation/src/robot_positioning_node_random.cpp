@@ -104,15 +104,14 @@ int main(int argc, char** argv) {
 				ROS_ERROR("Failed to call service: Set GETjag!!!");
 				return 1;
 			}
-			startPose.position.x = 12;
-			startPose.position.y = 5;
+			
+			
+			// reset obstacles
+			startPose.position.x = 15;
+			startPose.position.y = 15;
 			startPose.position.z = 0;
 			for(int i=1; i<=10+1; i++)
 			{
-				//creatRandomPose(startPose, 5);
-				//startPose = transformMaze(mazeReader.getRandomCell());
-				startPose = mapToOdomTransform(startPose);
-
 				int objectIndex;
 				if(tf_prefix == "GETjag1")
 				{
@@ -157,8 +156,8 @@ int main(int argc, char** argv) {
 
 
 
-			int possibleRandomObstacles = 3;
-			int minObstacles = 3;
+			int possibleRandomObstacles = 4;
+			int minObstacles = 4;
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_real_distribution<double> obst(minObstacles, possibleRandomObstacles);
@@ -257,8 +256,8 @@ int main(int argc, char** argv) {
 */
 			// set getjag to a random pose
 			creatRandomPose(startPose, 4.5);
-			startPose = transformMaze(mazeReader.getRandomCell());
-			//startPose = mapToOdomTransform(startPose);
+			//startPose = transformMaze(mazeReader.getRandomCell());
+			startPose = mapToOdomTransform(startPose);
 
 			setObjectPose(tf_prefix, startPose, setmodelstate, true);
 			if (client.call(setmodelstate))

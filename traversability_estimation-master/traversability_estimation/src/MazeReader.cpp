@@ -12,8 +12,8 @@ MazeReader::MazeReader ()
 {
 	//std::ofstream myfile;
 	//path = ros::package::getPath("traversability_estimation")+"/mazegenerator-master";
-	//path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
-	path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
+	path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
+	//path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
 
 	env_size = 10.0;
 	possible_cells = getPosibleCells();
