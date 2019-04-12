@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
 				ROS_ERROR("Failed to call service: Set GETjag!!!");
 				return 1;
 			}
-			
-			
+
+
 			// reset obstacles
 			startPose.position.x = 15;
 			startPose.position.y = 15;
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 
 
 			int possibleRandomObstacles = 4;
-			int minObstacles = 4;
+			int minObstacles = 3;
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_real_distribution<double> obst(minObstacles, possibleRandomObstacles);
@@ -270,9 +270,10 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 
 			nh.setParam("reset_elevation_map",true);
+			std::this_thread::sleep_for(std::chrono::seconds(5));
 
 			// Create random goal position message
 			//creatRandomPose(mapGoalPose, 4.5);

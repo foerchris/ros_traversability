@@ -223,6 +223,8 @@ int main(int argc, char** argv) {
 
 			nh.setParam("reset_elevation_map",true);
 
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+
 			// Create random goal position message
 			//creatRandomPose(mapGoalPose, 4.5);
 			mapGoalPose = transformMaze(mazeReader.getRandomCell());
