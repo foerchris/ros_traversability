@@ -40,6 +40,9 @@ void setObjectPose(const std::string& name, geometry_msgs::Pose startPose, gazeb
 geometry_msgs::Pose mapToBaseLinkTransform(geometry_msgs::Pose pose);
 geometry_msgs::Pose mapToOdomTransform(geometry_msgs::Pose pose);
 void setGETjagZeroPose(const std::string& name, gazebo_msgs::SetModelState& setmodelstate);
+geometry_msgs::Pose creatRandomOrientation(geometry_msgs::Pose pose);
+
+
 geometry_msgs::Pose setRandomObst();
 geometry_msgs::Pose transformMaze(maze position);
 std::string BASE_FRAME = "/base_link";
@@ -156,17 +159,18 @@ int main(int argc, char** argv) {
 
 
 
-			int possibleRandomObstacles = 4;
-			int minObstacles = 3;
+			int possibleRandomObstacles = 3;
+			int minObstacles = 2;
 			std::random_device rd;
 			std::mt19937 mt(rd());
-			std::uniform_real_distribution<double> obst(minObstacles, possibleRandomObstacles);
+			std::uniform_real_distribution<double> obst(minObstacles, minObstacles+possibleRandomObstacles);
 
 			int anzObstacles = obst(mt);
 			for(int i=1; i<=anzObstacles+1; i++)
 			{
-				creatRandomPose(startPose, 5);
-				//startPose = transformMaze(mazeReader.getRandomCell());
+				//creatRandomPose(startPose, 5);
+				startPose = transformMaze(mazeReader.getRandomCell());
+				startPose = creatRandomOrientation(startPose);
 				startPose = mapToOdomTransform(startPose);
 
 				int objectIndex;
@@ -255,8 +259,10 @@ int main(int argc, char** argv) {
 			}
 */
 			// set getjag to a random pose
-			creatRandomPose(startPose, 4.5);
-			//startPose = transformMaze(mazeReader.getRandomCell());
+			//creatRandomPose(startPose, 4.5);
+			startPose = transformMaze(mazeReader.getRandomCell());
+			startPose = creatRandomOrientation(startPose);
+
 			startPose = mapToOdomTransform(startPose);
 
 			setObjectPose(tf_prefix, startPose, setmodelstate, true);
@@ -375,6 +381,25 @@ void creatRandomPose(geometry_msgs::Pose& pose, int xyInterval)
 	pose.orientation.y = myQuaternion.y();
 	pose.orientation.z = myQuaternion.z();
 	pose.orientation.w = myQuaternion.w();
+}
+
+geometry_msgs::Pose creatRandomOrientation(geometry_msgs::Pose pose)
+{
+	std::random_device rd;
+	std::mt19937 mt(rd());
+
+
+	std::uniform_real_distribution<double> orientaton(-M_PI, M_PI);
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, orientaton(mt));
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+	return pose;
 }
 
 void poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs::Odometry& setPose)
