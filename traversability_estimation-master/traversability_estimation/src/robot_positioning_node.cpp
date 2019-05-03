@@ -104,7 +104,93 @@ int main(int argc, char** argv) {
 				ROS_ERROR("Failed to call service: Set GETjag!!!");
 				return 1;
 			}
+			
+			//reset obstacles
+			startPose.position.x = 15;
+			startPose.position.y = 15;
+			startPose.position.z = 0;
+			for(int i=1; i<=10+1; i++)
+			{
+				int objectIndex;
+				if(tf_prefix == "GETjag1")
+				{
+					objectIndex=i;
+				}
+				else if(tf_prefix == "GETjag2")
+				{
+					objectIndex=i+15;
+				}
+				else if(tf_prefix == "GETjag3")
+				{
+					objectIndex=i+30;
+				}
+				else if(tf_prefix == "GETjag4")
+				{
+					objectIndex=i+45;
+				}
+				else if(tf_prefix == "GETjag5")
+				{
+					objectIndex=i+60;
+				}
+				else if(tf_prefix == "GETjag6")
+				{
+					objectIndex=i+75;
+				}
 
+				// set obstacles
+				setObjectPose("object_robocup_wall250_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
+				if (client.call(setmodelstate))
+				{
+					//ROS_INFO("Successful to call service: Set Obstacle: %i",i);
+				}
+				else
+				{
+					ROS_ERROR("Failed to call service: Set Obstacle: %i",i);
+					return 1;
+				}
+			}
+
+			for(int i=1; i<=5+1; i++)
+			{
+				int objectIndex;
+				if(tf_prefix == "GETjag1")
+				{
+					objectIndex=i;
+					std::cout<<"objectIndex="<<objectIndex<<std::endl;
+				}
+				else if(tf_prefix == "GETjag2")
+				{
+					objectIndex=i+5;
+				}
+				else if(tf_prefix == "GETjag3")
+				{
+					objectIndex=i+10;
+				}
+				else if(tf_prefix == "GETjag4")
+				{
+					objectIndex=i+15;
+				}
+				else if(tf_prefix == "GETjag5")
+				{
+					objectIndex=i+20;
+				}
+				else if(tf_prefix == "GETjag6")
+				{
+					objectIndex=i+25;
+				}
+
+				// set obstacles
+				setObjectPose("object_robocup_box_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
+				if (client.call(setmodelstate))
+				{
+					ROS_INFO("Successful to call service: Set object_robocup_box_clone_%i",i);
+				}
+				else
+				{
+					ROS_ERROR("Failed to call service: Set Obstacle: %i",i);
+					return 1;
+				}
+			}
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 			maze_vect = mazeReader.readTextFile(robot_number);
 
@@ -155,46 +241,49 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 			}
-			int possibleRandomObstacles = 5;
+			int possibleRandomObstacles = 3;
 
 
 			for(int i=1; i<=possibleRandomObstacles+1; i++)
 			{
+			
 				startPose = setRandomObst();
 				startPose = mapToOdomTransform(startPose);
+
+				startPose.position.z = startPose.position.z - 0.3;
 
 				int objectIndex;
 				if(tf_prefix == "GETjag1")
 				{
-					objectIndex=i+10;
+					objectIndex=i;
 					std::cout<<"objectIndex="<<objectIndex<<std::endl;
 				}
 				else if(tf_prefix == "GETjag2")
 				{
-					objectIndex=i+25;
+					objectIndex=i+5;
 				}
 				else if(tf_prefix == "GETjag3")
 				{
-					objectIndex=i+40;
+					objectIndex=i+10;
 				}
 				else if(tf_prefix == "GETjag4")
 				{
-					objectIndex=i+55;
+					objectIndex=i+15;
 				}
 				else if(tf_prefix == "GETjag5")
 				{
-					objectIndex=i+70;
+					objectIndex=i+20;
 				}
 				else if(tf_prefix == "GETjag6")
 				{
-					objectIndex=i+85;
+					objectIndex=i+25;
 				}
 
 				// set obstacles
-				setObjectPose("object_robocup_wall250_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
+				setObjectPose("object_robocup_box_clone_"+std::to_string(objectIndex), startPose,setmodelstate, false);
 				if (client.call(setmodelstate))
 				{
-					//ROS_INFO("Successful to call service: Set Obstacle: %i",i);
+					ROS_INFO("Successful to call service: Set object_robocup_box_clone_%i",i);
 				}
 				else
 				{
@@ -219,9 +308,10 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 
 			nh.setParam("reset_elevation_map",true);
+			std::this_thread::sleep_for(std::chrono::seconds(5));
 
 			// Create random goal position message
 			//creatRandomPose(mapGoalPose, 4.5);
