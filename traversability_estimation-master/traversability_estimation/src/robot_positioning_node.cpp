@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
 					return 1;
 				}
 			}
-			int possibleRandomObstacles = 3;
+			int possibleRandomObstacles = 5;
 
 
 			for(int i=1; i<=possibleRandomObstacles+1; i++)
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
 				startPose = setRandomObst();
 				startPose = mapToOdomTransform(startPose);
 
-				startPose.position.z = startPose.position.z - 0.3;
+				startPose.position.z = startPose.position.z - 0.6;
 
 				int objectIndex;
 				if(tf_prefix == "GETjag1")
@@ -308,10 +308,10 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			std::this_thread::sleep_for(std::chrono::seconds(2));
+			//std::this_thread::sleep_for(std::chrono::seconds(2));
 
 			nh.setParam("reset_elevation_map",true);
-			std::this_thread::sleep_for(std::chrono::seconds(5));
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 
 
 			// Create random goal position message
@@ -511,10 +511,10 @@ void setObjectPose(const std::string& name, geometry_msgs::Pose startPose, gazeb
 	model_twist.angular.z = 0.0;
 	modelstate.twist = model_twist;
 
-	if(robot)
+	/*if(robot)
 	{
 		startPose.position.z = 2;
-	}
+	}*/
 
 	//std::cout<<name<<": Pose x: "<<startPose.position.x<< "Pose y: "<<startPose.position.y<<std::endl;
 	modelstate.pose = startPose;
