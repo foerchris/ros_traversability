@@ -113,7 +113,7 @@ maze MazeReader::getRandomCell()
 	std::random_device rd;
 	std::mt19937 mt(rd());
     std::uniform_int_distribution<> dis(0, possible_cells.size()-1);
-    std::uniform_int_distribution<> dis_orientation(0, 1);
+    std::uniform_int_distribution<> dis_orientation(-180, 180);
     int rand_cell_number;
 
     for(std::size_t i = 0; i<10; i++)
@@ -129,11 +129,8 @@ maze MazeReader::getRandomCell()
     forbidden_list.push_back(rand_cell_number);
 
     maze random_cell = possible_cells[rand_cell_number];
-    random_cell.orientation = 0;
-    if(dis_orientation(mt) == 1)
-    {
-        random_cell.orientation = 90;
-    }
+	random_cell.orientation = dis_orientation(mt);
+
 	return random_cell;
 }
 
