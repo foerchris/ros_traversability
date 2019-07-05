@@ -1,0 +1,11 @@
+<launch>
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+
+		<node pkg="robot_navigation" name="auto_robot_navigation_server" type="auto_robot_navigation_server" output="screen" respawn="false">
+		</node>
+	</group>
+
+
+</launch>

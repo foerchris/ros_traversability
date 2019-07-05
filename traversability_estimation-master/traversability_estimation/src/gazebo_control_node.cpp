@@ -7,11 +7,9 @@
 
 #include <ros/ros.h>
 #include "traversability_estimation/GazebObjectControl.h"
-#include <tf2/LinearMath/Quaternion.h>
 
 
-#include <chrono>
-#include <thread>
+
 std::string BASE_FRAME = "/base_link";
 std::string MAP_FRAME = "/map";
 std::string ODOM_FRAME = "/odom";
@@ -21,7 +19,7 @@ std::string tf_prefix = "//GETjag1";
 
 
 int main(int argc, char** argv) {
-	ros::init(argc, argv, "robot_positioning");
+	ros::init(argc, argv, "gazebo_control_node");
 	ros::NodeHandle nh;
 
 	//tf_prefix = ros::this_node::getNamespace();
@@ -41,7 +39,7 @@ int main(int argc, char** argv) {
 	GazebObjectControl gazebObjectControl(nh);
 
 	geometry_msgs::Pose startPose;
-	startPose.position.x = 0;
+	startPose.position.x = 18;
 	startPose.position.y = 0;
 	startPose.position.z = 0;
 
@@ -53,23 +51,22 @@ int main(int argc, char** argv) {
 	startPose.orientation.y = myQuaternion.y();
 	startPose.orientation.z = myQuaternion.z();
 	startPose.orientation.w = myQuaternion.w();
-	gazebObjectControl.spwanObject("gg", "object_sickdayschild0",startPose );
+//	gazebObjectControl.spwanObject("gg", "object_sickdayschild0",startPose );
 
-	std::this_thread::sleep_for(std::chrono::seconds(3));
+//	std::this_thread::sleep_for(std::chrono::seconds(3));
+
+//	startPose.position.x = 10;
+
+//	gazebObjectControl.setObject("gg", startPose);
 
 
-	startPose.position.x = 10;
+//	std::this_thread::sleep_for(std::chrono::seconds(3));
 
-	gazebObjectControl.setObject("gg", startPose);
-
-
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-
-	gazebObjectControl.deleteObject("gg");
+//	gazebObjectControl.deleteObject("gg");
 
 	while(ros::ok())
 	{
-
+		gazebObjectControl.publischGoal(startPose);
 		ros::spinOnce ();
 		rate.sleep();
 	}

@@ -12,11 +12,28 @@
 #include <cmath>
 
 
-
+using namespace std;
 //#define TrackingControl_SIMULATOR_ENABLED true
 
 TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double fast_speed, double init_speed)
 {
+
+	BASE_FRAME = "/base_link";
+	MAP_FRAME = "/map";
+	ODOM_FRAME = "/odom";
+	tf_prefix = "//GETjag1";
+
+	//tf_prefix = ros::this_node::getNamespace();
+	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
+
+	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+	int robot_number = 1;
+	iss >> robot_number;
+
+	BASE_FRAME = tf_prefix + BASE_FRAME;
+	MAP_FRAME = tf_prefix + MAP_FRAME;
+	ODOM_FRAME = tf_prefix + ODOM_FRAME;
+
     markerPublisher = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
     camAnglePitchPub =nh.advertise<std_msgs::Float64>("sensorhead_pitch_controller/command",1);
     camAngleYawPub =nh.advertise<std_msgs::Float64>("sensorhead_yaw_controller/command",1);
@@ -24,12 +41,12 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
 	forwardMode=1;
 
 	// ROS Publisher
-	velPub = nh.advertise<geometry_msgs::Twist>("cmd_vel",1);	// ROS services
+	velPub = nh.advertise<geometry_msgs::Twist>( "cmd_vel",1);	// ROS services
 	srvFollow = nh.advertiseService("follow_object_in_image", &TrackingControl::followObjectCallback, this);
 
 	save=0;
 	count=0;
-	robotStartStop=false;
+	robotStartStop=true;
 	robotSpeed = 0.2;
 	currentTrackingState=START;
 	Kp = 0.5;
@@ -396,12 +413,14 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
 	velocities.angular.z = u2;
 	std::cout<<"velocities.angular.z"<<velocities.angular.z<<std::endl;
 
-	if(robotStartStop)
+	if(true)
 	{
 		if(	selectedPoint<=2 || selectedPoint >= robotCoordinates.size()-3)
 		{
 			velocities.angular.z = 0;
 		}
+		std::cout<<"Publish: velocities.angular.z"<<velocities.angular.z<<std::endl;
+		std::cout<<"Publish: velocities.linear.x"<<velocities.linear.x<<std::endl;
 
         velPub.publish (velocities);
 	}
@@ -650,6 +669,11 @@ bool TrackingControl::followObjectCallback(std_srvs::Empty::Request &req,
 {
 	robotStartStop=!robotStartStop;
 	return true;
+}
+
+void TrackingControl::setRobotSpeed(double speed)
+{
+	robotSpeed = speed;
 }
 
 void TrackingControl::startRobotMovement(bool startMovement)

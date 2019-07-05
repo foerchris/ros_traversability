@@ -1,0 +1,35 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  K1: 0.6
+  K2: 1.45
+  K3: 1.5
+  Kd: 0.05
+  Ki: 15.0
+  Kp: 1.0
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      K1: 0.6
+      K2: 1.45
+      K3: 1.5
+      Kd: 0.05
+      Ki: 15.0
+      Kp: 1.0
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      prozentAngVel: 0.03
+      prozentLinVel: 0.03
+      robotSpeed: 0.5
+      robotStartStop: false
+      state: true
+      type: ''
+    state: []
+  prozentAngVel: 0.03
+  prozentLinVel: 0.03
+  robotSpeed: 0.5
+  robotStartStop: false
+state: []

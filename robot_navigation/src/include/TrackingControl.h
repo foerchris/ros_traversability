@@ -86,6 +86,8 @@ private:
 	double clcCurvature(std::vector<pose> curvPoints);
 	double area2(pose p1, pose p2 , pose p3);
 	void panCamera();
+	void setRobotSpeed(double speed);
+
 	ros::Publisher markerPublisher;
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g , double b , double a );
 	// ROS publisher
@@ -102,9 +104,11 @@ private:
 	int forwardMode;
 
 	int direction;
-	const std::string BASE_FRAME = "base_link";
-	const std::string ODOM_FRAME = "odom";
-	const std::string MAP_FRAME = "map";
+	std::string tf_prefix;
+	std::string BASE_FRAME;
+	std::string MAP_FRAME;
+	std::string ODOM_FRAME;
+
 
 	std::unique_ptr<tf::TransformListener> tfListener;
 	tf::StampedTransform transform;

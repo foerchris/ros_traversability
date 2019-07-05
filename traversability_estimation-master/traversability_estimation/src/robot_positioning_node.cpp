@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 				ROS_ERROR("Failed to call service: Set GETjag!!!");
 				return 1;
 			}
-			
+
 			//reset obstacles
 			startPose.position.x = 15;
 			startPose.position.y = 15;
@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
 
 			for(int i=1; i<=possibleRandomObstacles+1; i++)
 			{
-			
+
 				startPose = setRandomObst();
 				startPose = mapToOdomTransform(startPose);
 

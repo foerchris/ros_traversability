@@ -90,6 +90,14 @@ add_executable(robot_navigation_server
 				src/SnakeMode.cpp
 				)
 
+
+add_executable(auto_robot_navigation_server
+				src/auto_robot_navigation_server.cpp
+				src/RobotDrive.cpp
+				src/ContourPathPlanner.cpp
+				src/TrackingControl.cpp
+				)
+
 add_executable(flipper_control_server
 				src/flipper_control_server.cpp
 				src/FlipperControl.cpp
@@ -106,6 +114,12 @@ target_link_libraries(robot_navigation_server
   yaml-cpp
   ${catkin_LIBRARIES}
 )
+target_link_libraries(auto_robot_navigation_server
+  ${catkin_LIBRARIES}
+  ${OMPL_LIBRARIES}
+
+)
+
 
 target_link_libraries(flipper_control_server
   ${OpenCV_LIBRARIES}
@@ -119,5 +133,6 @@ target_link_libraries(flipper_tf_broadcaster
 add_dependencies(robot_navigation_server ${PROJECT_NAME}_gencpp)
 add_dependencies(robot_navigation_server ${PROJECT_NAME}_gencfg)
 
-
+add_dependencies(auto_robot_navigation_server ${PROJECT_NAME}_gencpp)
+add_dependencies(auto_robot_navigation_server ${PROJECT_NAME}_gencfg)
 

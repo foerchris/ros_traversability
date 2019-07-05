@@ -114,6 +114,11 @@ add_executable(robot_positioning_node
     src/MazeReader.cpp
 )
 
+add_executable(gazebo_control_node
+    src/gazebo_control_node.cpp
+    src/GazebObjectControl.cpp
+)
+
 add_executable(robot_positioning_node_random
     src/robot_positioning_node_random.cpp
     src/MazeReader.cpp
@@ -137,6 +142,12 @@ target_link_libraries(
 target_link_libraries(robot_positioning_node
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(gazebo_control_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+
 
 target_link_libraries(robot_positioning_node_random
   ${catkin_LIBRARIES}
