@@ -55,6 +55,10 @@ private:
 	bool pathForwardView;
 	bool pathReversOriantation;
 
+	std::string tf_prefix;
+	std::string BASE_FRAME;
+	std::string MAP_FRAME;
+	std::string ODOM_FRAME;
 
 	TrackingControl* trackingControl = new TrackingControl(thisNodeHandel, 0.5, 0.2, 0.05);
 

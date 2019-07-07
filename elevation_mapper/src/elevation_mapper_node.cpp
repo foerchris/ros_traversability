@@ -27,8 +27,8 @@ ElevationMapper* mapper=NULL;
 ros::Publisher publisher;
 ros::Publisher elevationMapImagePublisher;
 double eleviation_mapping_resulution = 0.06;
-double creatMapszieX = 21;
-double creatMapszieY = 21;
+double creatMapszieX = 105;
+double creatMapszieY = 105;
 bool resetMap = false;
 
 std::string BASE_FRAME = "/base_link";
@@ -110,13 +110,11 @@ std::string cheakRectBound(const cv::Mat& image, const cv::Rect& myROI)
 	return error;
 }
 
-void getCropedImage(cv_bridge::CvImage& cv_ptr)
+void getCropedImage(cv_bridge::CvImage& cv_ptr, int widthX , int widthY)
 {
 	cv::Mat cvImage = cv_ptr.image;
 	//cvtColor(cvImage, cvImage, cv::COLOR_BGRA2GRAY);
 //cv_ptr.encoding
-	int widthX = 200;
-	int widthY = 200;
 	int x = cvImage.cols/2 - widthX/2;
 	int y = cvImage.rows/2 - widthY/2;
 	cv::Rect myROI(x, y , widthX, widthY);
@@ -158,9 +156,12 @@ void msgCallback(const ros::TimerEvent&)
 	grid_map::GridMap map = mapper->getMap();
 	grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC1" , cv_ptr);
 	Eigen::Array2i mapSize = map.getSize();
-	if(mapSize[0]>200 && mapSize[1]> 200)
+
+	int widthX = 1000;
+	int widthY = 1000;
+	if(mapSize[0]>widthX && mapSize[1]> widthY)
 	{
-		getCropedImage(cv_ptr);
+		getCropedImage(cv_ptr, widthX, widthY);
 	}
 	cv::Mat image = cv_ptr.image;
 	//cv_ptr.

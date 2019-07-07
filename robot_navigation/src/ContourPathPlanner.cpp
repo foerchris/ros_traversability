@@ -2,11 +2,28 @@
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
-
+using namespace std;
 
 
 ContourPathPlanner::ContourPathPlanner()
 {
+
+	BASE_FRAME = "/base_link";
+	MAP_FRAME = "/map";
+	ODOM_FRAME = "/odom";
+	tf_prefix = "//GETjag1";
+
+	tf_prefix = ros::this_node::getNamespace();
+	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
+
+	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+	int robot_number = 1;
+	iss >> robot_number;
+
+	BASE_FRAME = tf_prefix + BASE_FRAME;
+	MAP_FRAME = tf_prefix + MAP_FRAME;
+	ODOM_FRAME = tf_prefix + ODOM_FRAME;
+
     markerPublisher = thisNodeHandel.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
 	/*while (markerPublisher.getNumSubscribers() < 1)
 	{
@@ -28,7 +45,7 @@ visualization_msgs::Marker ContourPathPlanner::createMarker (std::string ns, int
 {
 	visualization_msgs::Marker marker;
 
-	marker.header.frame_id = "map";
+	marker.header.frame_id = MAP_FRAME;
 	marker.header.stamp = ros::Time();
 	marker.ns = ns;
 

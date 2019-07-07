@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include "FlipperControl.h"
+#include <flipper_control/FlipperControl.h>
 
 int main(int argc, char **argv)
 {

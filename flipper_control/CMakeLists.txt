@@ -59,6 +59,7 @@ generate_dynamic_reconfigure_options(
 
 )
 include_directories(
+    include
 	${OpenCV_INCLUDE_DIRS}
 	${PROJECT_SOURCE_DIR}/src/include
 	${EIGEN3_INCLUDE_DIR}
@@ -66,11 +67,19 @@ include_directories(
 )
 
 catkin_package(
-	 INCLUDE_DIRS src/include
+      INCLUDE_DIRS include
+      LIBRARIES flipper_control
 	  CATKIN_DEPENDS message_runtime std_msgs dynamic_reconfigure geometry_msgs roscpp sensor_msgs tf get_std_msgs get_vis_msgs
 	#  DEPENDS system_lib
 )
 
+add_library(flipper_control  src/GetContactPoints.cpp)
+
+
+target_link_libraries(flipper_control
+                        ${OpenCV_LIBRARIES}
+                        ${catkin_LIBRARIES}
+)
 
 add_executable(flipper_control_server
 				src/flipper_control_server.cpp
@@ -110,10 +119,22 @@ target_link_libraries(flipper_tf_broadcaster
 target_link_libraries(plane_tf_broadcaster
   ${catkin_LIBRARIES}
 )
+
+
+
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencpp)
 add_dependencies(flipper_control_server ${PROJECT_NAME}_gencfg)
 
 add_dependencies(tf_broadcaster ${PROJECT_NAME}_gencpp)
 add_dependencies(tf_broadcaster ${PROJECT_NAME}_gencfg)
 
+
+
+install(TARGETS flipper_control
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 

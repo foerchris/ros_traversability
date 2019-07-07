@@ -21,10 +21,11 @@
 // Tf
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
-#include "GetContactPoints.h"
-#include "CalcFlipperAngles.h"
-#include "ClcNESM.h"
-#include "FitPlane.h"
+#include <flipper_control/GetContactPoints.h>
+#include <flipper_control/CalcFlipperAngles.h>
+#include <flipper_control/ClcNESM.h>
+#include <flipper_control/FitPlane.h>
+
 #include <dynamic_reconfigure/server.h>
 #include <flipper_control/FlipperControlConfig.h>
 

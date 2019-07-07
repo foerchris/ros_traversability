@@ -6,6 +6,9 @@
  */
 
 #include "traversability_estimation/GazebObjectControl.h"
+
+#include <image_transport/image_transport.h>
+
 #include <chrono>
 #include <thread>
 using namespace std;
@@ -20,9 +23,9 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	BASE_FRAME = "/base_link";
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
-	tf_prefix = "//GETjag1";
+	tf_prefix = "//GETjag2";
 
-	tf_prefix = ros::this_node::getNamespace();
+	//tf_prefix = ros::this_node::getNamespace();
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
@@ -39,10 +42,19 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	spawnModelClient = nodeHandle_.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_sdf_model");
 	deleteModelClient = nodeHandle_.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
+	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebObjectControl::resetRobotSrv, this);
+	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebObjectControl::resetRobotSrv, this);
 
-	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
+	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/goal_pose", 20);
+	//goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
+	elevationMapImagePublisher = nodeHandle_.advertise<sensor_msgs::Image>("/" + tf_prefix+"/elevation_robot_ground_map", 20);
+	//elevationMapImagePublisher = nodeHandle_.advertise<sensor_msgs::Image>("elevation_robot_ground_map", 20);
 
-	resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebObjectControl::resetRobotSrv, this);
+	static image_transport::ImageTransport it(nodeHandle_);
+	static image_transport::Subscriber it_sub;
+	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
+	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
+
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
@@ -67,14 +79,29 @@ GazebObjectControl::~GazebObjectControl ()
 {
 }
 
+
 void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 {
+
 	nav_msgs::Odometry goalPoseMsg;
 	//robotGoalPose = mapToBaseLinkTransform(goalPose);
 	poseToOdomMsg(goalPose,goalPoseMsg);
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
+	if(mapImageSet)
+	{
+
+
+		cv_ptr->image = getContactPoints.getRobotGroundImage(globalMapImage,1.5,1.5,  MAP_FRAME, BASE_FRAME);
+
+		sensor_msgs::Image pubImage;
+		cv_ptr->toImageMsg(pubImage);
+
+		elevationMapImagePublisher.publish(pubImage);
+	}
+
+
 }
 
 void GazebObjectControl::setObject(const string& modelName, geometry_msgs::Pose startPose)
@@ -297,7 +324,6 @@ bool GazebObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
 	startPose.orientation.y = myQuaternion.y();
 	startPose.orientation.z = myQuaternion.z();
 	startPose.orientation.w = myQuaternion.w();
-	startPose = tfTransform(startPose, MAP_FRAME,ODOM_FRAME);
 
 	setObject(tf_prefix,startPose);
 	return true;
@@ -359,6 +385,25 @@ geometry_msgs::Pose GazebObjectControl::tfTransform(const geometry_msgs::Pose& p
 	returnPose.orientation.w = quat.w();
 
 	return returnPose;
+}
+
+
+void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
+{
+	try
+	{
+		cv_ptr = cv_bridge::toCvCopy(msg, "8UC1");
+	}
+	catch (cv_bridge::Exception& e)
+	{
+		ROS_ERROR("cv_bridge exception: %s", e.what());
+		return;
+	}
+
+	(cv_ptr->image).copyTo(globalMapImage);
+
+
+	mapImageSet = true;
 }
 
 

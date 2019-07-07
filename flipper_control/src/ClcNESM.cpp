@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include "include/ClcNESM.h"
+#include <flipper_control/ClcNESM.h>
 
 ClcNESM::ClcNESM()
 {

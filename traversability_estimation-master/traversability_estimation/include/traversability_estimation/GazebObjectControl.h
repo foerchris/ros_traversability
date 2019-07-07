@@ -29,6 +29,9 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core.hpp>
 
+#include <flipper_control/GetContactPoints.h>
+
+
 class GazebObjectControl
 {
 
@@ -52,11 +55,15 @@ class GazebObjectControl
 	void generateWorld(int minObjects, int maxObjects);
 	void destroyWorld();
 
+	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
+
+
 	ros::ServiceClient setModelClient;
 	ros::ServiceClient spawnModelClient;
 	ros::ServiceClient deleteModelClient;
 	ros::ServiceServer resetRobot;
 
+	ros::Publisher elevationMapImagePublisher;
 	ros::Publisher goalPosePublischer;
 	ros::Publisher markerPublisher;
 
@@ -68,12 +75,14 @@ class GazebObjectControl
 	std::vector<std::string> objects;
 	std::vector<std::string> spwanedObjects;
 
-
+	cv_bridge::CvImagePtr cv_ptr;
 	//*****
 	double resultion;
 	double mapSizeX;
 	double mapSizeY;
 
+	cv::Mat globalMapImage;
+	bool mapImageSet;
 
 	std::string tf_prefix;
 	std::string BASE_FRAME;
@@ -83,6 +92,8 @@ class GazebObjectControl
 	std::unique_ptr<tf::TransformListener> tfListener;
 
 	visualization_msgs::MarkerArray markerArray;
+
+	GetContactPoints getContactPoints;
 };
 
 

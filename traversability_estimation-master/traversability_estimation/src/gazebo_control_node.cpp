@@ -14,18 +14,18 @@ std::string BASE_FRAME = "/base_link";
 std::string MAP_FRAME = "/map";
 std::string ODOM_FRAME = "/odom";
 std::string gazeboMoveObjectFrame = "world";
-std::string tf_prefix = "//GETjag1";
+std::string tf_prefix = "//GETjag2";
 
 
 
 int main(int argc, char** argv) {
 	ros::init(argc, argv, "gazebo_control_node");
 	ros::NodeHandle nh;
-
 	//tf_prefix = ros::this_node::getNamespace();
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+
 	int robot_number = 1;
 	iss >> robot_number;
 
@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
 	ODOM_FRAME = tf_prefix + ODOM_FRAME;
 	ros::Rate rate (10);
 	ros::Rate rate2sec (0.5);
+	std::cout<<"__LINE__"<< __LINE__ <<std::endl;
 
 
 	GazebObjectControl gazebObjectControl(nh);
@@ -66,6 +67,7 @@ int main(int argc, char** argv) {
 
 	while(ros::ok())
 	{
+
 		gazebObjectControl.publischGoal(startPose);
 		ros::spinOnce ();
 		rate.sleep();

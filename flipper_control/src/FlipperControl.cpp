@@ -5,7 +5,8 @@
  *      Author: chfo
  */
 
-#include "FlipperControl.h"
+#include <flipper_control/FlipperControl.h>
+
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/Imu.h>

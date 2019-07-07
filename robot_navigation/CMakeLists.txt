@@ -74,8 +74,8 @@ include_directories(
 )
 
 catkin_package(
-	 INCLUDE_DIRS src/include
-     LIBRARIES myLineLib
+	     INCLUDE_DIRS src/include
+      LIBRARIES myLineLib
 	  CATKIN_DEPENDS message_runtime std_msgs dynamic_reconfigure geometry_msgs roscpp sensor_msgs tf get_std_msgs get_vis_msgs
 	#  DEPENDS system_lib
 )

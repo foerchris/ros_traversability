@@ -4,7 +4,8 @@
  *  Created on: 16.01.2019
  *      Author: chfo
  */
-#include "CalcFlipperAngles.h"
+#include <flipper_control/CalcFlipperAngles.h>
+
 #include "math.h"
 
 

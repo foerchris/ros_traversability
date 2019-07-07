@@ -43,6 +43,7 @@ class GetContactPoints
 
 	// returns the a region according to the  width and length from the map given its coordinat frame
 	std::vector<geometry_msgs::Pose> getRegions(cv::Mat mapImage,const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame);
+	cv::Mat getRobotGroundImage(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame);
 
 
 	// cropes the image with an rotated rect according to the position and orientation of the robot inside the map

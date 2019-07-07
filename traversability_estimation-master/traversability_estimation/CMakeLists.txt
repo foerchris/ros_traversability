@@ -17,6 +17,7 @@ require_custom_package (OpenCV 3)
 
 require_custom_package (ompl 1)
 
+
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
@@ -25,6 +26,8 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map_msgs
   grid_map_filters
   roscpp
+  cv3_bridge
+  image_transport
   tf
   tf_conversions
   traversability_estimation_filters
@@ -32,12 +35,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   sensor_msgs
+  flipper_control
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
 find_package(kindr QUIET)
 find_package(PkgConfig REQUIRED)
+find_package(flipper_control REQUIRED)
 if(NOT kindr_FOUND)
   # Attempt to find package-based kindr
   pkg_check_modules(kindr kindr REQUIRED)
@@ -70,6 +75,7 @@ catkin_package(
     std_msgs
     geometry_msgs
     sensor_msgs
+    flipper_control
 #  DEPENDS Eigen
 )
 
@@ -85,6 +91,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
   ${kindr_INCLUDE_DIRS}
+  ${flipper_controlINCLUDE_DIRS}
 )
 
 ## Declare a cpp library

@@ -5,7 +5,8 @@
  *      Author: chfo
  */
 
-#include "GetContactPoints.h"
+#include <flipper_control/GetContactPoints.h>
+
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 
@@ -26,8 +27,8 @@ GetContactPoints::GetContactPoints()
 
 	tfListener = std::unique_ptr<tf::TransformListener> (new tf::TransformListener);
 	// get namespace for tf
-	tf_prefix = "//GETjag";
-	tf_prefix = ros::this_node::getNamespace();
+	tf_prefix = "//GETjag2";
+	//tf_prefix = ros::this_node::getNamespace();
 
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 	mapSizeX = 200;
@@ -231,6 +232,55 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getRegions(cv::Mat mapImage, 
 	return getPosesFromImage(flipperMap, nextPose, original_frame, destination_frame);
 }
 
+cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = 0;
+	pose.position.y = 0;
+	pose.position.z = 0;
+
+	pose.orientation.x = 0;
+	pose.orientation.y = 0;
+	pose.orientation.z = 0;
+	pose.orientation.w = 1.0;
+
+	//************** recalc the area witch has to be taken from the map
+	geometry_msgs::Pose pose1;
+
+	geometry_msgs::Pose pose2;
+
+	pose1 = pose;
+	pose2 = pose;
+
+	pose1.position.x = regionLength/2;
+	pose2.position.x = -regionLength/2;
+
+	pose1 = tfTransform(pose1, destination_frame, original_frame);
+	pose2 = tfTransform(pose2, destination_frame, original_frame);
+
+	double regionMapLength = clcDistanz(pose1,pose2);
+
+	pose1 = pose;
+	pose2 = pose;
+
+	pose1.position.x = regionWidth/2;
+	pose2.position.x = -regionWidth/2;
+
+	pose1 = tfTransform(pose1, destination_frame, original_frame);
+	pose2 = tfTransform(pose2, destination_frame, original_frame);
+
+	double regionMapWidth = clcDistanz(pose1,pose2);
+
+
+	geometry_msgs::Pose nextPose = tfTransform(pose, destination_frame, original_frame);
+
+	cv::Mat flipperMap;
+
+	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
+
+	return flipperMap;
+}
 double GetContactPoints::clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2)
 {
 	double x = pose1.position.x - pose2.position.x; //calculating number to square in next step
@@ -278,15 +328,15 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
     warpAffine(mapImage, rotated, M, mapImage.size(), 2);
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
-/*
+
     cv::Mat copy = mapImage.clone();
 
-    DrawRotatedRectangle(copy,rect );
-    imshow("wadw", copy);
-    waitKey(1);
+    //DrawRotatedRectangle(copy,rect );
+    //imshow("wadw", copy);
+    //waitKey(1);
 
-    imshow("awdawd", cropped);
-    waitKey(1);*/
+    //imshow("awdawd", cropped);
+    //waitKey(1);
 	return cropped;
 }
 

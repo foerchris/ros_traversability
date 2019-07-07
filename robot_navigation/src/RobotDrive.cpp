@@ -17,7 +17,7 @@ RobotDrive::RobotDrive(ros::NodeHandle& nodeHandle)
 	ODOM_FRAME = "/odom";
 	tf_prefix = "//GETjag1";
 
-	//tf_prefix = ros::this_node::getNamespace();
+	tf_prefix = ros::this_node::getNamespace();
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
@@ -57,8 +57,7 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 	goal.orientation.z = goalPoseMsg->pose.pose.orientation.z;
 	goal.orientation.w = goalPoseMsg->pose.pose.orientation.w;
 
-
-	//tfTransform(goal, BASE_FRAME, MAP_FRAME);
+	goal = tfTransform(goal, BASE_FRAME, MAP_FRAME);
 
 	pose Pose;
 

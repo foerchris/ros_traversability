@@ -5,7 +5,8 @@
  *      Author: chfo
  */
 
-#include "FitPlane.h"
+#include <flipper_control/FitPlane.h>
+
 #include "math.h"
 #include "tf/transform_datatypes.h"
 FitPlane::FitPlane()
