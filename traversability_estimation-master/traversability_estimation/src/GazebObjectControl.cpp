@@ -9,8 +9,7 @@
 
 #include <image_transport/image_transport.h>
 
-#include <chrono>
-#include <thread>
+
 using namespace std;
 
 GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
@@ -23,9 +22,12 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	BASE_FRAME = "/base_link";
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
-	tf_prefix = "//GETjag2";
 
-	//tf_prefix = ros::this_node::getNamespace();
+	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
@@ -67,16 +69,12 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	objects.push_back("object_robocup_stairs");
 	objects.push_back("object_robocup_stepfield");
 
-	generateWorld(2, 5);
-
-	std::this_thread::sleep_for(std::chrono::seconds(5));
-
-	destroyWorld();
 
 }
 
 GazebObjectControl::~GazebObjectControl ()
 {
+	destroyWorld();
 }
 
 
@@ -160,8 +158,9 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 		string object = objects[objectRndNumber(mt)];
 		cout<<object<<endl;
 		geometry_msgs::Pose position = setRandomObst(false, false);
-		spwanedObjects.push_back(object + "_" + std::to_string(i));
-		spwanObject(object + "_" + std::to_string(i), object, position);
+		string objectName = object + "_" + tf_prefix + "_" + std::to_string(i);
+		spwanedObjects.push_back(objectName);
+		spwanObject(objectName, object, position);
 	}
 }
 geometry_msgs::Pose GazebObjectControl::setRandomObst(bool rotation, bool xyShift)
@@ -311,6 +310,11 @@ visualization_msgs::Marker GazebObjectControl::createMarker (std::string ns, int
 bool GazebObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
 		std_srvs::Empty::Response &res)
 {
+	setRobotZeroPose();
+	return true;
+}
+void GazebObjectControl::setRobotZeroPose()
+{
 	geometry_msgs::Pose startPose;
 	startPose.position.x = 0;
 	startPose.position.y = 0;
@@ -326,7 +330,6 @@ bool GazebObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
 	startPose.orientation.w = myQuaternion.w();
 
 	setObject(tf_prefix,startPose);
-	return true;
 }
 
 

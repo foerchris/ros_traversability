@@ -194,9 +194,12 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	nodeHandel = &nh;
 	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix.empty())
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
-	std::cout<<"tf_prefix"<<tf_prefix<<std::endl;
 	BASE_FRAME = tf_prefix + BASE_FRAME;
 	MAP_FRAME = tf_prefix + MAP_FRAME;
 	nh.setParam("reset_elevation_map",false);

@@ -28,8 +28,11 @@ GetContactPoints::GetContactPoints()
 	tfListener = std::unique_ptr<tf::TransformListener> (new tf::TransformListener);
 	// get namespace for tf
 	tf_prefix = "//GETjag2";
-	//tf_prefix = ros::this_node::getNamespace();
-
+	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 	mapSizeX = 200;
 	mapSizeY = 200;

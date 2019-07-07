@@ -29,6 +29,9 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/core.hpp>
 
+#include <chrono>
+#include <thread>
+
 #include <flipper_control/GetContactPoints.h>
 
 
@@ -42,6 +45,9 @@ class GazebObjectControl
 	void deleteObject(const std::string& modelName);
 	void setObject(const std::string& modelName, geometry_msgs::Pose startPose);
 	void publischGoal(const geometry_msgs::Pose& goalPose);
+	void destroyWorld();
+	void generateWorld(int minObjects, int maxObjects);
+	void setRobotZeroPose();
 
 
 
@@ -52,8 +58,6 @@ class GazebObjectControl
 	bool resetRobotSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
 	geometry_msgs::Pose setRandomObst(bool rotation, bool yShift);
-	void generateWorld(int minObjects, int maxObjects);
-	void destroyWorld();
 
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 

@@ -301,8 +301,6 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
     visualization_msgs::MarkerArray markerArray;
     bool terminate=true;
 	static std::size_t selectedPoint;
-	std::cout<<"direction"<<direction<<std::endl;
-	std::cout<<"selectedPoint"<<selectedPoint<<std::endl;
 
 	if(reset)
 	{
@@ -360,15 +358,7 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
 		velPub.publish (velocities);
 		return false;
 	}
-	std::cout<<"updatedPoints.x"<<updatedPoints.at(0).x<<std::endl;
-	std::cout<<"updatedPoints.y"<<updatedPoints.at(0).y<<std::endl;
-	std::cout<<"updatedPoints.yaw"<<updatedPoints.at(0).yaw<<std::endl;
-	std::cout<<"updatedPoints.x"<<updatedPoints.at(1).x<<std::endl;
-	std::cout<<"updatedPoints.y"<<updatedPoints.at(1).y<<std::endl;
-	std::cout<<"updatedPoints.yaw"<<updatedPoints.at(1).yaw<<std::endl;
-	std::cout<<"updatedPoints.x"<<updatedPoints.at(2).x<<std::endl;
-	std::cout<<"updatedPoints.y"<<updatedPoints.at(2).y<<std::endl;
-	std::cout<<"updatedPoints.yaw"<<updatedPoints.at(2).yaw<<std::endl;
+
 	double tangentialVelocity, angularVelocity,curvature;
 
 	curvature=clcCurvature(updatedPoints);
@@ -387,9 +377,6 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
 	{
 		errorPose.yaw=0;
 	}
-	std::cout<<"errorPose.x"<<errorPose.x<<std::endl;
-	std::cout<<"errorPose.y"<<errorPose.y<<std::endl;
-	std::cout<<"errorPose.yaw"<<errorPose.yaw<<std::endl;
 
 
 	tangentialVelocity= robotSpeed;
@@ -402,25 +389,19 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
 	angularVelocity=curvature*tangentialVelocity;
 	double v1 = -K1*errorPose.x;
 	double v2 = -sgn(tangentialVelocity)*K2*errorPose.y - K3*errorPose.yaw;
-	std::cout<<"v1"<<v1<<std::endl;
-	std::cout<<"v2"<<v2<<std::endl;
 
 	double u1 = tangentialVelocity*cos(errorPose.yaw)-v1;
 	double u2 = angularVelocity-v2;
 
 	velocities.linear.x = direction*u1;
-	std::cout<<"velocities.linear.x"<<velocities.linear.x<<std::endl;
 	velocities.angular.z = u2;
-	std::cout<<"velocities.angular.z"<<velocities.angular.z<<std::endl;
 
-	if(true)
+	if(robotStartStop)
 	{
 		if(	selectedPoint<=2 || selectedPoint >= robotCoordinates.size()-3)
 		{
 			velocities.angular.z = 0;
 		}
-		std::cout<<"Publish: velocities.angular.z"<<velocities.angular.z<<std::endl;
-		std::cout<<"Publish: velocities.linear.x"<<velocities.linear.x<<std::endl;
 
         velPub.publish (velocities);
 	}
@@ -432,13 +413,9 @@ bool TrackingControl::pointDistanzCheak(const pose &globalCoordinates)
 {
 
 	pose robotCoordinates=globalCoordinates;
-	std::cout<<"robotCoordinatesbevor"<<robotCoordinates.x<<std::endl;
-	std::cout<<"robotCoordinatesbevor"<<robotCoordinates.y<<std::endl;
 
 
 	globaleToRobotTransform(robotCoordinates);
-	std::cout<<"robotCoordinatesbevor"<<robotCoordinates.x<<std::endl;
-	std::cout<<"robotCoordinatesbevor"<<robotCoordinates.y<<std::endl;
 
 	if(robotCoordinates.x>0)
 	{
