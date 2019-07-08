@@ -1,0 +1,94 @@
+drl_world:
+    version: 4
+    objects:
+        - name                : object_robocup_box
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -1.2..-0.85
+              orientationR  : 0.0..0.23
+              orientationP  : -0.23..0.23
+              orientationY  : -0.3..0.3
+
+        - name                : object_robocup_stairs
+          mirrored_object     : true
+          shift               : 1.21
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0
+
+        - name                : object_robocup_stepfield
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+        - name                : object_robocup_stepfield01
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -0.2
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+
+        - name                : object_robocup_stepfield2
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+        - name                : object_robocup_sloped_box_1
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+        - name                : object_robocup_sloped_box_2
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+        - name                : object_robocup_small_slope_1
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141
+
+        - name                : object_robocup_small_slope_2
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0/3.141

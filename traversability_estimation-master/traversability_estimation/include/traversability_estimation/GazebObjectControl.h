@@ -33,6 +33,7 @@
 #include <thread>
 
 #include <flipper_control/GetContactPoints.h>
+#include "traversability_estimation/GetObjectInfoFromYaml.h"
 
 
 class GazebObjectControl
@@ -57,7 +58,8 @@ class GazebObjectControl
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g , double b , double a);
 	bool resetRobotSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
-	geometry_msgs::Pose setRandomObst(bool rotation, bool yShift);
+	geometry_msgs::Pose setRandomObst(const object_options& objectOptions, const bool& mirror, const double& lastX);
+	double creatRndPosition(const min_max_object_pose& minMaxObjectPose);
 
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 
@@ -98,6 +100,8 @@ class GazebObjectControl
 	visualization_msgs::MarkerArray markerArray;
 
 	GetContactPoints getContactPoints;
+	GetObjectInfoFromYaml getObjectInfoFromYaml_;
+
 };
 
 

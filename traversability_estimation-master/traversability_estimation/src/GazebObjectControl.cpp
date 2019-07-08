@@ -13,7 +13,8 @@
 using namespace std;
 
 GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
-		: nodeHandle_(nodeHandle)
+		: nodeHandle_(nodeHandle),
+		  getObjectInfoFromYaml_(nodeHandle)
 {
 	//ofstream myfile;
 	//path = ros::package::getPath("traversability_estimation")+"/mazegenerator-master";
@@ -68,6 +69,9 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	objects.push_back("object_robocup_box");
 	objects.push_back("object_robocup_stairs");
 	objects.push_back("object_robocup_stepfield");
+
+	getObjectInfoFromYaml_.loadYaml("drl_flipper_objects");
+
 
 
 }
@@ -145,57 +149,64 @@ void GazebObjectControl::destroyWorld()
 
 void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 {
+
+	int anzDifObjects = getObjectInfoFromYaml_.numPossibleObjects();
 	random_device rd;
 	mt19937 mt(rd());
-	uniform_real_distribution<double> objectRndNumber(0, objects.size());
-	uniform_real_distribution<double> anzObjectRndNumber(minObjects, maxObjects);
+	uniform_int_distribution<int> objectRndNumber(0, anzDifObjects-1);
+	uniform_int_distribution<int> anzObjectRndNumber(minObjects, maxObjects);
 
 	int anzObjects = anzObjectRndNumber(mt);
-	cout<<anzObjects<<endl;
-
+	double lastX =0;
 	for(int i=0; i<anzObjects; i++)
 	{
-		string object = objects[objectRndNumber(mt)];
+		int randNum = objectRndNumber(mt);
+		//int randNum = 0;
+
+		string object = getObjectInfoFromYaml_.getName(randNum);
 		cout<<object<<endl;
-		geometry_msgs::Pose position = setRandomObst(false, false);
+		object_options objectOptions;
+		getObjectInfoFromYaml_.getinitPose(randNum,objectOptions);
+
+		geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
+
 		string objectName = object + "_" + tf_prefix + "_" + std::to_string(i);
 		spwanedObjects.push_back(objectName);
 		spwanObject(objectName, object, position);
+		if(objectOptions.mirrorObject)
+		{
+			lastX = position.position.x;
+			geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
+			string objectName = object + "_" + tf_prefix + "_mirror_" + std::to_string(i);
+			spwanedObjects.push_back(objectName);
+			spwanObject(objectName, object, position);
+		}
 	}
 }
-geometry_msgs::Pose GazebObjectControl::setRandomObst(bool rotation, bool xyShift)
+geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
 {
 	geometry_msgs::Pose pose;
 
+
+
 	random_device rd;
 	mt19937 mt(rd());
-	uniform_real_distribution<double> xPosition(2, 15);
-	uniform_real_distribution<double> yPosition(-1, 1);
-	uniform_real_distribution<double> zPosition(0, 0.3);
-	uniform_real_distribution<double> rp_orientaton(M_PI/2, M_PI/2 + M_PI/4);
-	uniform_real_distribution<double> y_orientaton(-M_PI, M_PI);
 
+	pose.position.x = creatRndPosition(objectOptions.x);
+	pose.position.y = creatRndPosition(objectOptions.y);
+	pose.position.z = creatRndPosition(objectOptions.z);
 
-	pose.position.x = xPosition(mt);
-	pose.position.y = 0;
-	pose.position.z = 0;
-
-	if(xyShift)
-	{
-		pose.position.y = yPosition(mt);
-		pose.position.z = zPosition(mt);
-	}
 
 	tf2::Quaternion myQuaternion;
+	double yaw = creatRndPosition(objectOptions.yaw);
 
-	if(rotation)
+	if(mirror)
 	{
-		myQuaternion.setRPY(  rp_orientaton(mt),  rp_orientaton(mt), y_orientaton(mt));
+		cout<<"objectOptions.length"<<objectOptions.length<<endl;
+		pose.position.x = lastX + objectOptions.length;
+		yaw = yaw - M_PI;
 	}
-	else
-	{
-		myQuaternion.setRPY(0,0,0);
-	}
+	myQuaternion.setRPY(creatRndPosition(objectOptions.roll),  creatRndPosition(objectOptions.pitch), yaw);
 
 
 	pose.orientation.x = myQuaternion.x();
@@ -203,9 +214,32 @@ geometry_msgs::Pose GazebObjectControl::setRandomObst(bool rotation, bool xyShif
 	pose.orientation.z = myQuaternion.z();
 	pose.orientation.w = myQuaternion.w();
 
+
+
 	return pose;
 }
 
+double GazebObjectControl::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
+{
+	random_device rd;
+	mt19937 mt(rd());
+	double value;
+	if(minMaxObjectPose.minMaxcase == 1)
+	{
+		uniform_real_distribution<double> xPosition(minMaxObjectPose.min, minMaxObjectPose.max);
+		value = xPosition(mt);
+	}
+	else if(minMaxObjectPose.minMaxcase == 2)
+	{
+		value = minMaxObjectPose.min;
+	}
+	else
+	{
+		value = minMaxObjectPose.min;
+	}
+	return value;
+
+}
 void GazebObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
 {
 	startPose = tfTransform(startPose, MAP_FRAME,ODOM_FRAME);

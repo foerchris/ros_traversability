@@ -124,6 +124,7 @@ add_executable(robot_positioning_node
 add_executable(gazebo_control_node
     src/gazebo_control_node.cpp
     src/GazebObjectControl.cpp
+    src/GetObjectInfoFromYaml.cpp
 )
 
 add_executable(robot_positioning_node_random
@@ -153,6 +154,7 @@ target_link_libraries(robot_positioning_node
 target_link_libraries(gazebo_control_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  yaml-cpp
 )
 
 
