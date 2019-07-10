@@ -357,7 +357,6 @@ void ContourPathPlanner::forwardBackwarMode(const bool& forwardView, const bool&
 
 void ContourPathPlanner::setPathPoints(std::vector<pose> inputPoints)
 {
-    cout<<"pt: "<<"x="<<inputPoints.at(0).x<<"y="<<inputPoints.at(0).y <<"z="<<inputPoints.at(0).z<<endl;
 	startPoses.clear();
     startPoses=inputPoints;
 }
@@ -405,16 +404,12 @@ void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
     geometry_msgs::Pose geoPose;
     for(std::size_t i=0; i<pt.size();i++)
     {
-        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
 
     	poseToGeo(pt.at(i),geoPose);
-        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
 
     	geoPose = tfTransform(geoPose, MAP_FRAME, BASE_FRAME);
     	geoToPose(geoPose,pt.at(i));
-        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
 
-    	//trackingControl->robotToGlobaleTransform(pt.at(i));
     }
 	try
 	{

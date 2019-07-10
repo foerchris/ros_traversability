@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
 
 	std::string resetParam = "End_of_episode";
 	bool reset = true;
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 
 	while(ros::ok())
 	{
