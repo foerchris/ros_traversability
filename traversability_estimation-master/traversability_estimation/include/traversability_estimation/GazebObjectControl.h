@@ -49,6 +49,7 @@ class GazebObjectControl
 	void destroyWorld();
 	void generateWorld(int minObjects, int maxObjects);
 	void setRobotZeroPose();
+	void clcGoalPathSrvsCall();
 
 
 
@@ -67,6 +68,7 @@ class GazebObjectControl
 	ros::ServiceClient setModelClient;
 	ros::ServiceClient spawnModelClient;
 	ros::ServiceClient deleteModelClient;
+	ros::ServiceClient clcPathClient;
 	ros::ServiceServer resetRobot;
 
 	ros::Publisher elevationMapImagePublisher;

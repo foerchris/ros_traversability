@@ -17,7 +17,7 @@
 
 #include <dynamic_reconfigure/server.h>
 #include <robot_navigation/TrackingControlConfig.h>
-
+#include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 #include <nav_msgs/Odometry.h>
 
@@ -87,6 +87,7 @@ private:
 	double area2(pose p1, pose p2 , pose p3);
 	void panCamera();
 	void setRobotSpeed(double speed);
+	void startStopCallback (const std_msgs::BoolConstPtr& boolMsg);
 
 	ros::Publisher markerPublisher;
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g , double b , double a );
@@ -96,6 +97,7 @@ private:
 	ros::Publisher 	camAnglePitchPub;
 	ros::Publisher 	camAngleYawPub;
 	ros::Subscriber	odomSub;
+	ros::Subscriber robotStartStopSub;
 	std_msgs::Float64 camAnglePitch;
 	std_msgs::Float64 camAngleYaw;
 

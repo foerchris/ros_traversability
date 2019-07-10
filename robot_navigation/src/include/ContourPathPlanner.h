@@ -14,6 +14,7 @@
 #include <ompl/base/spaces/DubinsStateSpace.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
+#include <tf/transform_listener.h>
 
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
@@ -44,6 +45,12 @@ private:
 	void printTrajectory(const ompl::base::StateSpacePtr& space,  const std::vector<double>& pt);
 	void printPolyTrajectory(const ompl::base::StateSpacePtr& space,  const std::vector<pose>& pt);
 	void printCircleTrajectory(const ompl::base::StateSpacePtr& space,  const std::vector<double>& pt);
+	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
+	void poseToGeo(pose posePose, geometry_msgs::Pose& geoPose);
+	void geoToPose(geometry_msgs::Pose geoPose,pose& posePose);
+
+	std::unique_ptr<tf::TransformListener> tfListener;
+
 	std::vector<pose> Poses;
 
 	std::vector<pose> startPoses;

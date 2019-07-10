@@ -44,7 +44,10 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	setModelClient = nodeHandle_.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
 	spawnModelClient = nodeHandle_.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_sdf_model");
 	deleteModelClient = nodeHandle_.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
+	clcPathClient = nodeHandle_.serviceClient<std_srvs::Empty>("clc_path_to_goal");
+
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
+
 	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebObjectControl::resetRobotSrv, this);
 	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebObjectControl::resetRobotSrv, this);
 
@@ -80,6 +83,20 @@ GazebObjectControl::~GazebObjectControl ()
 {
 	destroyWorld();
 }
+void GazebObjectControl::clcGoalPathSrvsCall()
+{
+	std_srvs::Empty empty;
+	if (clcPathClient.call(empty))
+	{
+		ROS_INFO("Successful to call service: clc_path_to_goal");
+	}
+	else
+	{
+		ROS_ERROR("Unsuccessful to call service: clc_path_to_goal");
+		//return 1;
+	}
+
+}
 
 
 void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
@@ -87,7 +104,8 @@ void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 
 	nav_msgs::Odometry goalPoseMsg;
 	//robotGoalPose = mapToBaseLinkTransform(goalPose);
-	poseToOdomMsg(goalPose,goalPoseMsg);
+	geometry_msgs::Pose robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
+	poseToOdomMsg(robotGoalPose,goalPoseMsg);
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
@@ -122,7 +140,7 @@ void GazebObjectControl::setObject(const string& modelName, geometry_msgs::Pose 
 	model_twist.angular.z = 0.0;
 	modelstate.twist = model_twist;
 
-	startPose = tfTransform(startPose, MAP_FRAME,ODOM_FRAME);
+	startPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 
 	modelstate.pose = startPose;
 
@@ -242,7 +260,7 @@ double GazebObjectControl::creatRndPosition(const min_max_object_pose& minMaxObj
 }
 void GazebObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
 {
-	startPose = tfTransform(startPose, MAP_FRAME,ODOM_FRAME);
+	startPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 
 	gazebo_msgs::SpawnModel spawnModel;
 

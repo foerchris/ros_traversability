@@ -39,6 +39,7 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
     camAngleYawPub =nh.advertise<std_msgs::Float64>("sensorhead_yaw_controller/command",1);
     odomSub = nh.subscribe<nav_msgs::Odometry> ("odom", 1, &TrackingControl::odomCallback,this);
 	forwardMode=1;
+    robotStartStopSub = nh.subscribe<std_msgs::Bool> ("start_stop_robot", 1, &TrackingControl::startStopCallback,this);
 
 	// ROS Publisher
 	velPub = nh.advertise<geometry_msgs::Twist>( "cmd_vel",1);	// ROS services
@@ -362,7 +363,6 @@ bool TrackingControl::referencePath(const std::vector<pose> &globalCoordinates, 
 	double tangentialVelocity, angularVelocity,curvature;
 
 	curvature=clcCurvature(updatedPoints);
-	std::cout<<"curvature"<<curvature<<std::endl;
 
 	markerArray.markers.push_back (createMarker("static circle", 1, globalCoordinates.at(selectedPoint).x, globalCoordinates.at(selectedPoint).y, 1.0, 0.0,1.0, 1.0));
     markerArray.markers.push_back (createMarker("static circle", 1, globalCoordinates.at(selectedPoint).x, globalCoordinates.at(selectedPoint).y, 1.0, 0.0,1.0, 1.0));
@@ -672,4 +672,9 @@ void TrackingControl::odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 
 
 }
+void TrackingControl::startStopCallback (const std_msgs::BoolConstPtr& boolMsg)
+{
+	robotStartStop = boolMsg->data;
+}
+
 

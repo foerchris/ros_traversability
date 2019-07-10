@@ -23,6 +23,7 @@ ContourPathPlanner::ContourPathPlanner()
 	BASE_FRAME = tf_prefix + BASE_FRAME;
 	MAP_FRAME = tf_prefix + MAP_FRAME;
 	ODOM_FRAME = tf_prefix + ODOM_FRAME;
+	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
     markerPublisher = thisNodeHandel.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
 	/*while (markerPublisher.getNumSubscribers() < 1)
@@ -119,7 +120,7 @@ void ContourPathPlanner::plan(const ompl::base::StateSpacePtr& space, bool easy)
         ss.simplifySolution();
         og::PathGeometric path = ss.getSolutionPath();
         path.interpolate(1000);
-        path.printAsMatrix(std::cout);
+        //path.printAsMatrix(std::cout);
     }
     else
         std::cout << "No solution found" << std::endl;
@@ -144,9 +145,9 @@ void ContourPathPlanner::printTrajectory(const ompl::base::StateSpacePtr& space,
 
     const unsigned int num_pts = (space->distance(from(), to()) / 0.1);
 
-    std::cout << "Number of points " <<  num_pts << std::endl;
+//    std::cout << "Number of points " <<  num_pts << std::endl;
 
-    std::cout << "distance: " << space->distance(from(), to()) << "\npath:\n";
+   // std::cout << "distance: " << space->distance(from(), to()) << "\npath:\n";
 
     visualization_msgs::MarkerArray markerArray;
 
@@ -154,7 +155,7 @@ void ContourPathPlanner::printTrajectory(const ompl::base::StateSpacePtr& space,
     {
         space->interpolate(from(), to(), (double)i/num_pts, s());
         reals = s.reals();
-        std::cout << "path " << reals[0] << ' ' << reals[1] << ' ' << reals[2] << ' ' << std::endl;
+  //      std::cout << "path " << reals[0] << ' ' << reals[1] << ' ' << reals[2] << ' ' << std::endl;
         pose creatPose;
 
         creatPose.x=reals[0];
@@ -182,12 +183,12 @@ void ContourPathPlanner::printPolyTrajectory(const ompl::base::StateSpacePtr& sp
     	from[0] = pt.at(i).x;
     	from[1] = pt.at(i).y;
     	from[2] = pt.at(i).yaw;
-	    std::cout << "from"<<i+1<<": " << from[0] << ' ' << from[1] << ' ' << from[2] << ' ' << std::endl;
+	   // std::cout << "from"<<i+1<<": " << from[0] << ' ' << from[1] << ' ' << from[2] << ' ' << std::endl;
 
     	to[0] = pt.at(i+1).x;
     	to[1] = pt.at(i+1).y;
     	to[2] = pt.at(i+1).yaw;
-	    std::cout << "to"<<i+1<<": " << to[0] << ' ' << to[1] << ' ' << to[2] << ' ' << std::endl;
+	    //std::cout << "to"<<i+1<<": " << to[0] << ' ' << to[1] << ' ' << to[2] << ' ' << std::endl;
 
     	const unsigned int num_pts = (space->distance(from(), to()) / 0.02);
 
@@ -199,7 +200,7 @@ void ContourPathPlanner::printPolyTrajectory(const ompl::base::StateSpacePtr& sp
     	{
     	    space->interpolate(from(), to(), (double)j/num_pts, s());
     	    reals = s.reals();
-    	    std::cout << "path"<<i+1<<": " << reals[0] << ' ' << reals[1] << ' ' << reals[2] << ' ' << std::endl;
+    	  //  std::cout << "path"<<i+1<<": " << reals[0] << ' ' << reals[1] << ' ' << reals[2] << ' ' << std::endl;
 
     	    pose creatPose;
 
@@ -246,20 +247,20 @@ void ContourPathPlanner::printCircleTrajectory(const ompl::base::StateSpacePtr& 
     {
     	from[2] = orientation_axis + angle_alpha;
     	to[2] = orientation_axis - angle_alpha;
-    	std::cout << "left " << std::endl;
+    	//std::cout << "left " << std::endl;
     }
 
     else if (orientation == -1)
     {
     	from[2] = orientation_axis - angle_alpha;
     	to[2] = orientation_axis + angle_alpha;
-    	std::cout << "right " << std::endl;
+    	//std::cout << "right " << std::endl;
     }
 
     const unsigned int num_pts = (space->distance(from(), to()) / 0.02);
-    std::cout << "Number of points " <<  num_pts << std::endl;
+   // std::cout << "Number of points " <<  num_pts << std::endl;
 
-    std::cout << "distance: " << space->distance(from(), to()) << "\npath:\n";
+    //std::cout << "distance: " << space->distance(from(), to()) << "\npath:\n";
 
     visualization_msgs::MarkerArray markerArray;
 
@@ -356,6 +357,7 @@ void ContourPathPlanner::forwardBackwarMode(const bool& forwardView, const bool&
 
 void ContourPathPlanner::setPathPoints(std::vector<pose> inputPoints)
 {
+    cout<<"pt: "<<"x="<<inputPoints.at(0).x<<"y="<<inputPoints.at(0).y <<"z="<<inputPoints.at(0).z<<endl;
 	startPoses.clear();
     startPoses=inputPoints;
 }
@@ -368,6 +370,9 @@ void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
     pose zeroPose;
     zeroPose.x =0;
     zeroPose.y =0;
+    zeroPose.z =0;
+    zeroPose.roll = 0;
+    zeroPose.pitch = 0;
     zeroPose.yaw =0;
     int view=1;
     int orientation=1;
@@ -397,9 +402,19 @@ void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
     pt.push_back(zeroPose);
     pt.push_back(startPoses.at(0));
     //pt.at(1).x=pt.at(1).x;
+    geometry_msgs::Pose geoPose;
     for(std::size_t i=0; i<pt.size();i++)
     {
-    	trackingControl->robotToGlobaleTransform(pt.at(i));
+        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
+
+    	poseToGeo(pt.at(i),geoPose);
+        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
+
+    	geoPose = tfTransform(geoPose, MAP_FRAME, BASE_FRAME);
+    	geoToPose(geoPose,pt.at(i));
+        cout<<"pt: "<<"x="<<pt.at(i).x<<"y="<<pt.at(i).y <<"z="<<pt.at(i).z<<endl;
+
+    	//trackingControl->robotToGlobaleTransform(pt.at(i));
     }
 	try
 	{
@@ -480,5 +495,96 @@ void ContourPathPlanner::clcPathToPoints(double planRadius)
 	catch(...) {
 	    std::cerr << "Exception of unknown type!\n";
 	}
+}
+void ContourPathPlanner::poseToGeo(pose posePose, geometry_msgs::Pose& geoPose)
+{
+	tf2::Quaternion myQuaternion;
+	myQuaternion.setRPY(posePose.roll,  posePose.pitch, posePose.yaw);
+
+	geoPose.position.x = posePose.x;
+	geoPose.position.y = posePose.y;
+	geoPose.position.z = posePose.z;
+	geoPose.orientation.x = myQuaternion.getX();
+	geoPose.orientation.y = myQuaternion.getY();
+	geoPose.orientation.z = myQuaternion.getZ();
+	geoPose.orientation.w = myQuaternion.getW();
+
+
+
+}
+void ContourPathPlanner::geoToPose(geometry_msgs::Pose geoPose,pose &posePose)
+{
+	tf::Quaternion quat;
+	quat.setX(geoPose.orientation.x);
+	quat.setY(geoPose.orientation.y);
+	quat.setZ(geoPose.orientation.z);
+	quat.setW(geoPose.orientation.w);
+
+	double roll, pitch, yaw;
+	tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+
+	posePose.x = geoPose.position.x;
+	posePose.y = geoPose.position.y;
+	posePose.z = geoPose.position.z;
+	posePose.roll = roll;
+	posePose.pitch = pitch;
+	posePose.yaw = yaw;
+}
+
+geometry_msgs::Pose ContourPathPlanner::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
+{
+	// TF transformation of the Point which is nearest to the robot
+	const ros::Time& scanTimeStamp = ros::Time (0);
+
+    try
+	{
+		tfListener->waitForTransform (destination_frame, original_frame, scanTimeStamp, ros::Duration (3.0));
+	}
+	catch (tf::TransformException& ex)
+	{
+		ROS_ERROR("%s",ex.what());
+	}
+
+	tf::Quaternion quat;
+	quat.setX(pose.orientation.x);
+	quat.setY(pose.orientation.y);
+	quat.setZ(pose.orientation.z);
+	quat.setW(pose.orientation.w);
+
+
+	tf::Vector3 origin;
+
+	origin.setX(pose.position.x);
+	origin.setY(pose.position.y);
+	origin.setZ(pose.position.z);
+
+	tf::StampedTransform transform;
+
+	tf::Stamped<tf::Pose> transPose (tf::Pose( quat,origin), scanTimeStamp, original_frame);
+
+	tf::Stamped<tf::Pose> poseTransformed;
+
+	try
+	{
+		tfListener->transformPose(destination_frame, scanTimeStamp, transPose, original_frame, poseTransformed);
+	}
+	catch (tf::TransformException& ex)
+	{
+		ROS_ERROR(" Point xyz %s", ex.what ());
+	}
+
+	origin=poseTransformed.getOrigin();
+	quat=poseTransformed.getRotation();
+
+	geometry_msgs::Pose returnPose;
+	returnPose.position.x=origin.getX();
+	returnPose.position.y=origin.getY();
+	returnPose.position.z=origin.getZ();
+	returnPose.orientation.x = quat.x();
+	returnPose.orientation.y = quat.y();
+	returnPose.orientation.z = quat.z();
+	returnPose.orientation.w = quat.w();
+
+	return returnPose;
 }
 

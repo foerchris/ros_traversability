@@ -45,8 +45,9 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 {
 
 
-	//contourPathPlanner.forwardBackwarMode(true,1,1);
-	//cout<<"serviceCalled"<<serviceCalled<<endl;
+	contourPathPlanner.forwardBackwarMode(true,1,1);
+
+
 	geometry_msgs::Pose goal;
 	goal.position.x = goalPoseMsg->pose.pose.position.x;
 	goal.position.y = goalPoseMsg->pose.pose.position.y;
@@ -56,8 +57,6 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 	goal.orientation.y = goalPoseMsg->pose.pose.orientation.y;
 	goal.orientation.z = goalPoseMsg->pose.pose.orientation.z;
 	goal.orientation.w = goalPoseMsg->pose.pose.orientation.w;
-
-	goal = tfTransform(goal, BASE_FRAME, MAP_FRAME);
 
 	pose Pose;
 
@@ -77,6 +76,7 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 	Pose.roll = roll;
 	Pose.pitch = pitch;
 	Pose.yaw = yaw;
+
 	pathPoses.push_back(Pose);
 
 	contourPathPlanner.followPath(ReferencePathControl,drive);

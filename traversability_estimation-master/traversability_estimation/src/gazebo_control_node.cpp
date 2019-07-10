@@ -66,20 +66,27 @@ int main(int argc, char** argv) {
 		{
 			nh.setParam(resetParam,false);
 			reset = false;
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			// set all getjag to a zero pose
 			gazebObjectControl.setRobotZeroPose();
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			//reset obstacles
 			gazebObjectControl.destroyWorld();
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			gazebObjectControl.generateWorld(2,4);
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 
 			//std::this_thread::sleep_for(std::chrono::seconds(1));
 
 			nh.setParam("reset_elevation_map",true);
-			std::this_thread::sleep_for(std::chrono::seconds(4));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+
+			gazebObjectControl.clcGoalPathSrvsCall();
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 
 			nh.setParam("Ready_to_Start_DRL_Agent",true);
 
