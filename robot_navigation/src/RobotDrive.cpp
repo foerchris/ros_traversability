@@ -18,6 +18,10 @@ RobotDrive::RobotDrive(ros::NodeHandle& nodeHandle)
 	tf_prefix = "//GETjag1";
 
 	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
@@ -45,7 +49,7 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 {
 
 
-	contourPathPlanner.forwardBackwarMode(true,1,1);
+	//contourPathPlanner.forwardBackwarMode(true,1,1);
 
 
 	geometry_msgs::Pose goal;
@@ -57,29 +61,22 @@ void RobotDrive::getGoalPose(const nav_msgs::Odometry::ConstPtr& goalPoseMsg)
 	goal.orientation.y = goalPoseMsg->pose.pose.orientation.y;
 	goal.orientation.z = goalPoseMsg->pose.pose.orientation.z;
 	goal.orientation.w = goalPoseMsg->pose.pose.orientation.w;
+	pose posePose;
+	goal.position.x = 18;
+	goal.position.y = 0;
+	goal.position.z = 0;
 
-	pose Pose;
-
-	Pose.x = goal.position.x;
-	Pose.y = goal.position.y;
-	Pose.z = goal.position.z;
-
-	tf::Quaternion quat;
-	quat.setX(goal.orientation.x);
-	quat.setY(goal.orientation.y);
-	quat.setZ(goal.orientation.z);
-	quat.setW(goal.orientation.w);
-
-	double roll, pitch, yaw;
-	tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-
-	Pose.roll = roll;
-	Pose.pitch = pitch;
-	Pose.yaw = yaw;
-
-	pathPoses.push_back(Pose);
-
-	contourPathPlanner.followPath(ReferencePathControl,drive);
+	goal.orientation.x = 0;
+	goal.orientation.y = 0;
+	goal.orientation.z = 0;
+	goal.orientation.w = 1.0;
+	contourPathPlanner.geoToPose(goal, posePose);
+	pathPoses.clear();
+	pathPoses.push_back(posePose);
+	if(drive)
+	{
+		contourPathPlanner.followPath(ReferencePathControl,drive);
+	}
 }
 
 
@@ -148,6 +145,7 @@ void RobotDrive::clcPath(double planningRadius, vector<pose> Poses)
 bool RobotDrive::clcPathSrv(std_srvs::Empty::Request &req,
 		std_srvs::Empty::Response &res)
 {
+	drive = false;
 	clcPath(0.5, pathPoses);
 	return true;
 }

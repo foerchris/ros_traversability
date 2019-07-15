@@ -14,6 +14,10 @@ ContourPathPlanner::ContourPathPlanner()
 	tf_prefix = "//GETjag1";
 
 	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
@@ -47,6 +51,7 @@ visualization_msgs::Marker ContourPathPlanner::createMarker (std::string ns, int
 	visualization_msgs::Marker marker;
 
 	marker.header.frame_id = MAP_FRAME;
+
 	marker.header.stamp = ros::Time();
 	marker.ns = ns;
 
@@ -404,11 +409,11 @@ void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
     geometry_msgs::Pose geoPose;
     for(std::size_t i=0; i<pt.size();i++)
     {
-
+		std::cout<<"pt.at(i) befor: x="<<pt.at(i).x<<" y="<<pt.at(i).y<<" z="<<pt.at(i).z<<std::endl;
     	poseToGeo(pt.at(i),geoPose);
-
-    	geoPose = tfTransform(geoPose, MAP_FRAME, BASE_FRAME);
+    	//geoPose = tfTransform(geoPose, MAP_FRAME, BASE_FRAME);
     	geoToPose(geoPose,pt.at(i));
+    	std::cout<<"pt.at(i) after: x="<<pt.at(i).x<<" y="<<pt.at(i).y<<" z="<<pt.at(i).z<<std::endl;
 
     }
 	try
@@ -529,6 +534,9 @@ void ContourPathPlanner::geoToPose(geometry_msgs::Pose geoPose,pose &posePose)
 geometry_msgs::Pose ContourPathPlanner::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
 {
 	// TF transformation of the Point which is nearest to the robot
+	std::cout<<"destination_frame: "<<destination_frame<<" original_frame:"<<original_frame<<std::endl;
+	std::cout<<"pose befor: x="<<pose.position.x<<" y="<<pose.position.y<<" z="<<pose.position.z<<std::endl;
+
 	const ros::Time& scanTimeStamp = ros::Time (0);
 
     try
@@ -579,7 +587,7 @@ geometry_msgs::Pose ContourPathPlanner::tfTransform(const geometry_msgs::Pose& p
 	returnPose.orientation.y = quat.y();
 	returnPose.orientation.z = quat.z();
 	returnPose.orientation.w = quat.w();
-
+	std::cout<<"pose after: x="<<pose.position.x<<" y="<<pose.position.y<<" z="<<pose.position.z<<std::endl;
 	return returnPose;
 }
 

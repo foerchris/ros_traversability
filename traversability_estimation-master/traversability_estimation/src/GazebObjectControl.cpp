@@ -16,10 +16,7 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 		: nodeHandle_(nodeHandle),
 		  getObjectInfoFromYaml_(nodeHandle)
 {
-	//ofstream myfile;
-	//path = ros::package::getPath("traversability_estimation")+"/mazegenerator-master";
-	//path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
-	//path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
+
 	BASE_FRAME = "/base_link";
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
@@ -101,19 +98,21 @@ void GazebObjectControl::clcGoalPathSrvsCall()
 
 void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 {
-
+	
 	nav_msgs::Odometry goalPoseMsg;
 	//robotGoalPose = mapToBaseLinkTransform(goalPose);
 	geometry_msgs::Pose robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
 	poseToOdomMsg(robotGoalPose,goalPoseMsg);
+	
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
-	if(mapImageSet)
+	
+	if(mapImageSet && globalMapImage.cols>0 && globalMapImage.rows>0)
 	{
 
 
-		cv_ptr->image = getContactPoints.getRobotGroundImage(globalMapImage,1.5,1.5,  MAP_FRAME, BASE_FRAME);
+		cv_ptr->image = getContactPoints.getRobotGroundImage(globalMapImage,2,2,  MAP_FRAME, BASE_FRAME);
 
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
@@ -370,7 +369,7 @@ void GazebObjectControl::setRobotZeroPose()
 	geometry_msgs::Pose startPose;
 	startPose.position.x = 0;
 	startPose.position.y = 0;
-	startPose.position.z = 0;
+	startPose.position.z = 0.5;
 
 	tf2::Quaternion myQuaternion;
 
