@@ -27,7 +27,10 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf/transform_listener.h>
 #include <cv_bridge/cv_bridge.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
+
 
 #include <chrono>
 #include <thread>
@@ -45,11 +48,12 @@ class GazebObjectControl
 	void spwanObject(const std::string& modelName, const std::string& xmlName, geometry_msgs::Pose startPose);
 	void deleteObject(const std::string& modelName);
 	void setObject(const std::string& modelName, geometry_msgs::Pose startPose);
-	void publischGoal(const geometry_msgs::Pose& goalPose);
+	//void publischGoal(const geometry_msgs::Pose& goalPose);
 	void destroyWorld();
 	void generateWorld(int minObjects, int maxObjects);
 	void setRobotZeroPose();
 	void clcGoalPathSrvsCall();
+	void creatEnviroment();
 
 
 
@@ -61,6 +65,8 @@ class GazebObjectControl
 	geometry_msgs::Pose tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame);
 	geometry_msgs::Pose setRandomObst(const object_options& objectOptions, const bool& mirror, const double& lastX);
 	double creatRndPosition(const min_max_object_pose& minMaxObjectPose);
+	void publischGoal(const ros::TimerEvent& event);
+	void resetCallback(const ros::TimerEvent& event);
 
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 
@@ -77,6 +83,8 @@ class GazebObjectControl
 
 	//! ROS node handle.
 	ros::NodeHandle& nodeHandle_;
+	ros::Timer msg_timer;
+	ros::Timer reset_timer;
 
 	std::string modelPath;
 	std::string gazeboMoveObjectFrame;
@@ -88,6 +96,11 @@ class GazebObjectControl
 	double resultion;
 	double mapSizeX;
 	double mapSizeY;
+
+	bool resetWorld;
+	bool calculating;
+
+	geometry_msgs::Pose goalPose;
 
 	cv::Mat globalMapImage;
 	bool mapImageSet;

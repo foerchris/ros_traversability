@@ -130,7 +130,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "8UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
 	}
 	catch (cv_bridge::Exception& e)
 	{

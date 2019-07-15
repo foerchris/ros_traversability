@@ -58,6 +58,8 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
 	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
 
+	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebObjectControl::publischGoal, this, _1));
+	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebObjectControl::resetCallback, this, _1));
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
@@ -71,21 +73,74 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 	objects.push_back("object_robocup_stepfield");
 
 	getObjectInfoFromYaml_.loadYaml("drl_flipper_objects");
+	
+	goalPose.position.x = 18;
+	goalPose.position.y = 0;
+	goalPose.position.z = 0;
 
+	tf2::Quaternion myQuaternion;
 
+	myQuaternion.setRPY( 0, 0, 0);
 
+	goalPose.orientation.x = myQuaternion.x();
+	goalPose.orientation.y = myQuaternion.y();
+	goalPose.orientation.z = myQuaternion.z();
+	goalPose.orientation.w = myQuaternion.w();
+	
+	resetWorld = true;
+	calculating = false;
 }
 
 GazebObjectControl::~GazebObjectControl ()
 {
 	destroyWorld();
 }
+
+void GazebObjectControl::resetCallback(const ros::TimerEvent& event)
+{
+	creatEnviroment();
+}
+
+
+void GazebObjectControl::creatEnviroment()
+{
+	if(resetWorld && !calculating)
+	{
+		nodeHandle_.setParam("End_of_episode",false);
+		resetWorld = false;
+		calculating == true;
+		// set all getjag to a zero pose
+		setRobotZeroPose();
+
+		//reset obstacles
+		destroyWorld();
+
+		generateWorld(2,4);
+
+		std::this_thread::sleep_for(std::chrono::seconds(3));
+		
+		clcGoalPathSrvsCall();
+		calculating == false;
+
+
+	}
+	if(!calculating)
+	{
+		if(nodeHandle_.hasParam( "End_of_episode"))
+		{
+			nodeHandle_.getParam( "End_of_episode",resetWorld);
+		}
+	}
+}
+
 void GazebObjectControl::clcGoalPathSrvsCall()
 {
 	std_srvs::Empty empty;
 	if (clcPathClient.call(empty))
 	{
 		ROS_INFO("Successful to call service: clc_path_to_goal");
+		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
+
 	}
 	else
 	{
@@ -95,12 +150,12 @@ void GazebObjectControl::clcGoalPathSrvsCall()
 
 }
 
-
-void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
+void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
+//void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 {
 	
+	
 	nav_msgs::Odometry goalPoseMsg;
-	//robotGoalPose = mapToBaseLinkTransform(goalPose);
 	geometry_msgs::Pose robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
 	poseToOdomMsg(robotGoalPose,goalPoseMsg);
 	
@@ -112,8 +167,9 @@ void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 	{
 
 
-		cv_ptr->image = getContactPoints.getRobotGroundImage(globalMapImage,2,2,  MAP_FRAME, BASE_FRAME);
-
+		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
+		 
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
 
@@ -199,6 +255,8 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 			spwanObject(objectName, object, position);
 		}
 	}
+	nodeHandle_.setParam("reset_elevation_map",true);
+
 }
 geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
 {
@@ -444,17 +502,26 @@ geometry_msgs::Pose GazebObjectControl::tfTransform(const geometry_msgs::Pose& p
 
 void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
+
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "8UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
 	}
 	catch (cv_bridge::Exception& e)
 	{
 		ROS_ERROR("cv_bridge exception: %s", e.what());
 		return;
 	}
-
-	(cv_ptr->image).copyTo(globalMapImage);
+	//cv::imshow("bhaldhw", cv_ptr->image);
+	//cv::waitKey(1);	
+	//std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
+	cv::Mat image;
+	(cv_ptr->image).copyTo(image);
+	image.convertTo(image, CV_32FC1, 1/255.0 );
+	//cv::imshow("bhaldhw", image);
+	//cv::waitKey(1);	
+	(image).copyTo(globalMapImage);
 
 
 	mapImageSet = true;

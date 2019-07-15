@@ -247,7 +247,7 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 	pose.orientation.y = 0;
 	pose.orientation.z = 0;
 	pose.orientation.w = 1.0;
-
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 	//************** recalc the area witch has to be taken from the map
 	geometry_msgs::Pose pose1;
 
@@ -261,6 +261,7 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	pose1 = tfTransform(pose1, destination_frame, original_frame);
 	pose2 = tfTransform(pose2, destination_frame, original_frame);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	double regionMapLength = clcDistanz(pose1,pose2);
 
@@ -272,6 +273,7 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	pose1 = tfTransform(pose1, destination_frame, original_frame);
 	pose2 = tfTransform(pose2, destination_frame, original_frame);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	double regionMapWidth = clcDistanz(pose1,pose2);
 
@@ -279,8 +281,10 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 	geometry_msgs::Pose nextPose = tfTransform(pose, destination_frame, original_frame);
 
 	cv::Mat flipperMap;
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	return flipperMap;
 }
@@ -314,23 +318,31 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 	cv::Point2f point(x,y);
 	cv::Size2f size(widthX,widthY);
 	tf::Quaternion quat(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	float angle = -tf::getYaw(quat)/M_PI*180;
     // rect is the RotatedRect
 
 	cv::RotatedRect rect(point, size,  angle);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // matrices we'll use
     Mat M, rotated, cropped;
     // get angle and size from the bounding box
     Size rect_size = rect.size;
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // get the rotation matrix
     M = getRotationMatrix2D(rect.center, angle, 1.0);
+    std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
     // perform the affine transformation
     warpAffine(mapImage, rotated, M, mapImage.size(), 2);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     cv::Mat copy = mapImage.clone();
 

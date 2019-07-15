@@ -154,15 +154,19 @@ void msgCallback(const ros::TimerEvent&)
 	}
 	cv_bridge::CvImage cv_ptr;
 	grid_map::GridMap map = mapper->getMap();
-	grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC1" , cv_ptr);
-	Eigen::Array2i mapSize = map.getSize();
+	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC1" , cv_ptr);
+	grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "16UC1" , cv_ptr);
 
+	
+	Eigen::Array2i mapSize = map.getSize();
+	
 	int widthX = 1000;
 	int widthY = 1000;
 	if(mapSize[0]>widthX && mapSize[1]> widthY)
 	{
 		getCropedImage(cv_ptr, widthX, widthY);
 	}
+	
 	cv::Mat image = cv_ptr.image;
 	//cv_ptr.
 	//cv::imshow("hklhsadh",image);
@@ -194,7 +198,7 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	nodeHandel = &nh;
 	tf_prefix = ros::this_node::getNamespace();
-	if(tf_prefix.empty())
+	if(tf_prefix == "/")
 	{
 		tf_prefix = "//GETjag1";
 	}
@@ -212,7 +216,7 @@ int main(int argc, char** argv)
     listener = new(tf::TransformListener);
 
 	ros::Subscriber CloudListener = nh.subscribe<pcl::PointCloud<pcl::PointXYZ>>("xtion/depth/points", 10, cloudCallback);
-	ros::Timer msg_timer = nh.createTimer(ros::Duration(2), msgCallback);
+	ros::Timer msg_timer = nh.createTimer(ros::Duration(1), msgCallback);
 
 	ros::spin();
 
