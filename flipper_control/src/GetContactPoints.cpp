@@ -424,7 +424,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<char >(i,j);
 
-	    	pose.position.z = value*0.0043;
+	    	pose.position.z = value*0.0000167;
 
 
 	    	pose = rotate_point(pose, theta, nextPose);

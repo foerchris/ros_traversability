@@ -138,6 +138,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 		return;
 	}
 	cv::Mat mapImage = cv_ptr->image;
+	mapImage.convertTo(mapImage, CV_32FC1, 1);
 
 	mapImage.copyTo(globalMapImage);
 
