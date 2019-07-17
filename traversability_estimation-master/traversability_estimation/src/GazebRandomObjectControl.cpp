@@ -1,18 +1,18 @@
 /*
- * GazebObjectControl.cpp
+ * GazebRandomObjectControl.cpp
  *
  *  Created on: 04.07.2019
  *      Author: chfo
  */
 
-#include "traversability_estimation/GazebObjectControl.h"
+#include "traversability_estimation/GazebRandomObjectControl.h"
 
 #include <image_transport/image_transport.h>
 
 
 using namespace std;
 
-GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
+GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 		: nodeHandle_(nodeHandle),
 		  getObjectInfoFromYaml_(nodeHandle)
 {
@@ -45,8 +45,8 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
 
-	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebObjectControl::resetRobotSrv, this);
-	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebObjectControl::resetRobotSrv, this);
+	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
+	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
 
 	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/goal_pose", 20);
 	//goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
@@ -55,24 +55,22 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 
 	static image_transport::ImageTransport it(nodeHandle_);
 	static image_transport::Subscriber it_sub;
-	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
-	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&GazebObjectControl::MapImageCallback, this, _1));
+	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&GazebRandomObjectControl::MapImageCallback, this, _1));
+	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&GazebRandomObjectControl::MapImageCallback, this, _1));
 
-	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebObjectControl::publischGoal, this, _1));
-	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebObjectControl::resetCallback, this, _1));
+	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebRandomObjectControl::publischGoal, this, _1));
+	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebRandomObjectControl::resetCallback, this, _1));
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
 	gazeboMoveObjectFrame = 'world';
 
+	objects.clear();
 
-	objects.push_back("object_cube_multicolor");
-	objects.push_back("object_cylinder_multicolor");
-	objects.push_back("object_robocup_box");
-	objects.push_back("object_robocup_stairs");
-	objects.push_back("object_robocup_stepfield");
+	getObjectInfoFromYaml_.loadYaml("drl_objects");
 
-	getObjectInfoFromYaml_.loadYaml("drl_flipper_objects");
+	generateWorld();
+
 
 	goalPose.position.x = 18;
 	goalPose.position.y = 0;
@@ -89,72 +87,70 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 
 	resetWorld = true;
 	calculating = false;
+
+
 }
 
-GazebObjectControl::~GazebObjectControl ()
+GazebRandomObjectControl::~GazebRandomObjectControl ()
 {
 	destroyWorld();
 }
 
-void GazebObjectControl::resetCallback(const ros::TimerEvent& event)
+void GazebRandomObjectControl::resetCallback(const ros::TimerEvent& event)
 {
 	creatEnviroment();
 }
 
 
-void GazebObjectControl::creatEnviroment()
+void GazebRandomObjectControl::creatEnviroment()
 {
-	if(resetWorld && !calculating)
+	if(resetWorld)
 	{
+		mazeReader.reset();
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
-		calculating == true;
 		// set all getjag to a zero pose
 		setRobotZeroPose();
 
 		//reset obstacles
-		destroyWorld();
+		resetAllObjects();
+		setObjectInWorld();
 
-		generateWorld(2,4);
+		setRobotStartPose();
+
+		goalPose = transformMaze(mazeReader.getRandomCell());
+
+		nodeHandle_.setParam("reset_elevation_map",true);
 
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 
-
-		clcGoalPathSrvsCall();
-		calculating == false;
-
+		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
 	}
-	if(!calculating)
+
+	if(nodeHandle_.hasParam( "End_of_episode"))
 	{
-		if(nodeHandle_.hasParam( "End_of_episode"))
-		{
-			nodeHandle_.getParam( "End_of_episode",resetWorld);
-		}
+		nodeHandle_.getParam( "End_of_episode",resetWorld);
 	}
 }
 
-void GazebObjectControl::clcGoalPathSrvsCall()
+void GazebRandomObjectControl::clcGoalPathSrvsCall()
 {
-
 	std_srvs::Empty empty;
-	int i =0;
-	while (!clcPathClient.call(empty) && i<15)
+	if (clcPathClient.call(empty))
 	{
 		ROS_INFO("Successful to call service: clc_path_to_goal");
-		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		i+=1;
-	}/*
+	}
 	else
 	{
 		ROS_ERROR("Unsuccessful to call service: clc_path_to_goal");
-	}*/
+		//return 1;
+	}
 
 }
 
-void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
-//void GazebObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
+void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
+//void GazebRandomObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
 {
 
 
@@ -182,7 +178,7 @@ void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
 
 }
 
-void GazebObjectControl::setObject(const string& modelName, geometry_msgs::Pose startPose)
+void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs::Pose startPose)
 {
 	gazebo_msgs::SetModelState setmodelstate;
 	gazebo_msgs::ModelState modelstate;
@@ -215,72 +211,114 @@ void GazebObjectControl::setObject(const string& modelName, geometry_msgs::Pose 
 	}
 }
 
-void GazebObjectControl::destroyWorld()
+void GazebRandomObjectControl::destroyWorld()
 {
 	for(auto object:spwanedObjects)
 	{
-		deleteObject(object);
+		deleteObject(object.name);
 	}
 }
 
-void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
+void GazebRandomObjectControl::resetAllObjects()
 {
+	geometry_msgs::Pose pose;
+	pose.position.x = 7;
+	pose.position.y = 0;
+	pose.position.z = 0;
 
-	int anzDifObjects = getObjectInfoFromYaml_.numPossibleObjects();
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, 0);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+
+	for(auto object:spwanedObjects)
+	{
+		setObject(object.name, goalPose);
+	}
+}
+
+void GazebRandomObjectControl::setObjectInWorld()
+{
 	random_device rd;
 	mt19937 mt(rd());
-	uniform_int_distribution<int> objectRndNumber(0, anzDifObjects-1);
-	uniform_int_distribution<int> anzObjectRndNumber(minObjects, maxObjects);
 
-	int anzObjects = anzObjectRndNumber(mt);
-	double lastX =0;
-	for(int i=0; i<anzObjects; i++)
+	uniform_int_distribution<int> randNumber(3 , spwanedObjects.size());
+	uniform_int_distribution<int> randObject(0 , spwanedObjects.size());
+	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	int numberOfObjects = randNumber(mt);
+
+
+	for(int i=0; i<numberOfObjects; i++)
 	{
-		int randNum = objectRndNumber(mt);
-		//int randNum = 0;
 
-		string object = getObjectInfoFromYaml_.getName(randNum);
-		cout<<object<<endl;
+		std::shuffle(spwanedObjects.begin(), spwanedObjects.end(), std::default_random_engine(seed));
+		string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+
+
 		object_options objectOptions;
-		getObjectInfoFromYaml_.getinitPose(randNum,objectOptions);
+		getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
+		double _;
+		geometry_msgs::Pose position = setRandomObst(objectOptions,false,_);
 
-		geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
+		setObject(spwanedObjects[i].name, position);
 
-		string objectName = object + "_" + tf_prefix + "_" + std::to_string(i);
-		spwanedObjects.push_back(objectName);
-		spwanObject(objectName, object, position);
-		if(objectOptions.mirrorObject)
-		{
-			lastX = position.position.x;
-			geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
-			string objectName = object + "_" + tf_prefix + "_mirror_" + std::to_string(i);
-			spwanedObjects.push_back(objectName);
-			spwanObject(objectName, object, position);
-		}
 	}
-	nodeHandle_.setParam("reset_elevation_map",true);
 
 }
-geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
+void GazebRandomObjectControl::generateWorld()
+{
+	geometry_msgs::Pose pose;
+	pose.position.x = 7;
+	pose.position.y = 0;
+	pose.position.z = 0;
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, 0);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+
+	for(int i=0; i<getObjectInfoFromYaml_.numPossibleObjects(); i++)
+	{
+		for(int j=0; j<getObjectInfoFromYaml_.numThisObjects(i); j++)
+		{
+
+			string object = getObjectInfoFromYaml_.getName(i);
+			object_options objectOptions;
+			getObjectInfoFromYaml_.getinitPose(i,objectOptions);
+
+			//geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
+
+			objectNameIndex objectName;
+			objectName.name = object + "_" + tf_prefix + "_" + std::to_string(j);
+			objectName.yamlIndex = i;
+
+			spwanedObjects.push_back(objectName);
+			spwanObject(objectName.name, object, pose);
+		}
+	}
+}
+geometry_msgs::Pose GazebRandomObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
 {
 	geometry_msgs::Pose pose;
 
 
-
-	random_device rd;
-	mt19937 mt(rd());
-
-	pose.position.x = creatRndPosition(objectOptions.x);
-	pose.position.y = creatRndPosition(objectOptions.y);
+	maze randomCell = mazeReader.getRandomCell();
+	pose = transformMaze(randomCell);
 	pose.position.z = creatRndPosition(objectOptions.z);
-
 
 	tf2::Quaternion myQuaternion;
 	double yaw = creatRndPosition(objectOptions.yaw);
 
 	if(mirror)
 	{
-		cout<<"objectOptions.length"<<objectOptions.length<<endl;
 		pose.position.x = lastX + objectOptions.length;
 		yaw = yaw - M_PI;
 	}
@@ -297,7 +335,7 @@ geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& obje
 	return pose;
 }
 
-double GazebObjectControl::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
+double GazebRandomObjectControl::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
 {
 	random_device rd;
 	mt19937 mt(rd());
@@ -318,7 +356,7 @@ double GazebObjectControl::creatRndPosition(const min_max_object_pose& minMaxObj
 	return value;
 
 }
-void GazebObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
+void GazebRandomObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
 {
 	startPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 
@@ -343,7 +381,7 @@ void GazebObjectControl::spwanObject(const string& modelName, const string& xmlN
 	}
 }
 
-void GazebObjectControl::deleteObject(const string& modelName)
+void GazebRandomObjectControl::deleteObject(const string& modelName)
 {
 	gazebo_msgs::DeleteModel deleteModel;
 
@@ -361,7 +399,7 @@ void GazebObjectControl::deleteObject(const string& modelName)
 	}
 }
 
-string  GazebObjectControl::readXmlFile(const string& name)
+string  GazebRandomObjectControl::readXmlFile(const string& name)
 {
 	string filePath = modelPath + name + "/model.sdf";
 
@@ -372,7 +410,7 @@ string  GazebObjectControl::readXmlFile(const string& name)
 }
 
 
-void GazebObjectControl::poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs::Odometry& setPose)
+void GazebRandomObjectControl::poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs::Odometry& setPose)
 {
 	 setPose.pose.pose.position.x = pose.position.x;
 	 setPose.pose.pose.position.y = pose.position.y;
@@ -385,7 +423,7 @@ void GazebObjectControl::poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs
 }
 
 
-visualization_msgs::Marker GazebObjectControl::createMarker (std::string ns, int id, double x, double y,  double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0)
+visualization_msgs::Marker GazebRandomObjectControl::createMarker (std::string ns, int id, double x, double y,  double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0)
 {
 	visualization_msgs::Marker marker;
 
@@ -419,17 +457,27 @@ visualization_msgs::Marker GazebObjectControl::createMarker (std::string ns, int
 
 	return marker;
 }
-bool GazebObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
+bool GazebRandomObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
 		std_srvs::Empty::Response &res)
 {
 	setRobotZeroPose();
 	return true;
 }
-void GazebObjectControl::setRobotZeroPose()
+
+void GazebRandomObjectControl::setRobotStartPose()
 {
 	geometry_msgs::Pose startPose;
-	startPose.position.x = 0;
-	startPose.position.y = 0;
+	startPose = transformMaze(mazeReader.getRandomCell());
+	startPose = creatRandomOrientation(startPose);
+
+	setObject(tf_prefix,startPose);
+}
+
+void GazebRandomObjectControl::setRobotZeroPose()
+{
+	geometry_msgs::Pose startPose;
+	startPose.position.x = 6;
+	startPose.position.y = 6;
 	startPose.position.z = 0.5;
 
 	tf2::Quaternion myQuaternion;
@@ -445,7 +493,7 @@ void GazebObjectControl::setRobotZeroPose()
 }
 
 
-geometry_msgs::Pose GazebObjectControl::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
+geometry_msgs::Pose GazebRandomObjectControl::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
 {
 	// TF transformation of the Point which is nearest to the robot
 	const ros::Time& scanTimeStamp = ros::Time (0);
@@ -503,9 +551,8 @@ geometry_msgs::Pose GazebObjectControl::tfTransform(const geometry_msgs::Pose& p
 }
 
 
-void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
+void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-	std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
 
 	try
 	{
@@ -518,7 +565,6 @@ void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	//cv::imshow("bhaldhw", cv_ptr->image);
 	//cv::waitKey(1);
-	//std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
 	image.convertTo(image, CV_32FC1, 1/255.0 );
@@ -530,5 +576,44 @@ void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	mapImageSet = true;
 }
 
+geometry_msgs::Pose GazebRandomObjectControl::transformMaze(maze position)
+{
+	geometry_msgs::Pose pose;
 
+	pose.position.x = position.x;
+
+	pose.position.y = position.y;
+
+	pose.position.z = 0;
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, position.orientation/180*M_PI);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+	return pose;
+}
+
+
+geometry_msgs::Pose GazebRandomObjectControl::creatRandomOrientation(geometry_msgs::Pose pose)
+{
+	std::random_device rd;
+	std::mt19937 mt(rd());
+
+
+	std::uniform_real_distribution<double> orientaton(-M_PI, M_PI);
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, orientaton(mt));
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+	return pose;
+}
 

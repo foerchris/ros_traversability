@@ -56,6 +56,18 @@ int GetObjectInfoFromYaml::numPossibleObjects()
 	}
 }
 
+int GetObjectInfoFromYaml::numThisObjects(const int& index)
+{
+	if(yamlLoaded)
+	{
+		return objectConfig["drl_world"]["objects"][index]["number"].as<int>();
+	}
+	else
+	{
+		ROS_ERROR("Yaml file not loaded please execute GetObjectInfoFromYaml::loadYaml() first");
+		return 0;
+	}
+}
 
 
 std::string GetObjectInfoFromYaml::getName(const int& index)

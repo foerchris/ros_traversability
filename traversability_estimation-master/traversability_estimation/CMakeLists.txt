@@ -127,6 +127,12 @@ add_executable(gazebo_control_node
     src/GetObjectInfoFromYaml.cpp
 )
 
+add_executable(gazebo_random_control_node
+    src/gazebo_random_control_node.cpp
+    src/GazebRandomObjectControl.cpp
+    src/GetObjectInfoFromYaml.cpp
+    src/MazeReader.cpp
+)
 add_executable(robot_positioning_node_random
     src/robot_positioning_node_random.cpp
     src/MazeReader.cpp
@@ -152,6 +158,13 @@ target_link_libraries(robot_positioning_node
 )
 
 target_link_libraries(gazebo_control_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  yaml-cpp
+)
+
+
+target_link_libraries(gazebo_random_control_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   yaml-cpp

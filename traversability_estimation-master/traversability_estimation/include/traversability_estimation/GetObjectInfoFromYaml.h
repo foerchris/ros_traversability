@@ -43,6 +43,7 @@ class GetObjectInfoFromYaml {
 		int numPossibleObjects();
 		std::string getName(const int& index);
 		void getinitPose(const int& index, object_options& objectOptions);
+		int numThisObjects(const int& index);
 
 
 	private:
