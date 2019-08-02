@@ -463,6 +463,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 
 			pose.position.z = value*0.0043;
 
+			std::cout<<"pose.position.z"<<pose.position.z<<std::endl;
 
 	    	pose = rotate_point(pose, theta, nextPose);
 

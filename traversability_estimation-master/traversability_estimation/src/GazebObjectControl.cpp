@@ -65,15 +65,13 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 
 	gazeboMoveObjectFrame = 'world';
 
-
-	objects.push_back("object_cube_multicolor");
-	objects.push_back("object_cylinder_multicolor");
-	objects.push_back("object_robocup_box");
-	objects.push_back("object_robocup_stairs");
-	objects.push_back("object_robocup_stepfield");
+	objects.clear();
 
 	getObjectInfoFromYaml_.loadYaml("drl_flipper_objects");
 
+
+	generateWorld2();
+	
 	goalPose.position.x = 18;
 	goalPose.position.y = 0;
 	goalPose.position.z = 0;
@@ -104,34 +102,55 @@ void GazebObjectControl::resetCallback(const ros::TimerEvent& event)
 
 void GazebObjectControl::creatEnviroment()
 {
-	if(resetWorld && !calculating)
+	if(resetWorld)
 	{
-		nodeHandle_.setParam("End_of_episode",false);
+		/*nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
-		calculating == true;
 		// set all getjag to a zero pose
 		setRobotZeroPose();
-
+		
 		//reset obstacles
 		destroyWorld();
 
-		generateWorld(2,4);
+		generateWorld(1,4);
+		
+		nodeHandle_.setParam("reset_elevation_map",true);
 
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 
+		clcGoalPathSrvsCall();
+
+		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);*/
+		nodeHandle_.setParam("End_of_episode",false);
+		resetWorld = false;
+		// set all getjag to a zero pose
+		setRobotZeroPose();
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+		//reset obstacles
+		resetAllObjects();
+
+		setObjectInWorld();
+		
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		nodeHandle_.setParam("reset_elevation_map",true);
+
+		std::this_thread::sleep_for(std::chrono::seconds(4));
 
 		clcGoalPathSrvsCall();
-		calculating == false;
+
+		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
 
 	}
-	if(!calculating)
+
+	if(nodeHandle_.hasParam( "End_of_episode"))
 	{
-		if(nodeHandle_.hasParam( "End_of_episode"))
-		{
-			nodeHandle_.getParam( "End_of_episode",resetWorld);
-		}
+
+		nodeHandle_.getParam( "End_of_episode",resetWorld);
 	}
+	
 }
 
 void GazebObjectControl::clcGoalPathSrvsCall()
@@ -139,12 +158,14 @@ void GazebObjectControl::clcGoalPathSrvsCall()
 
 	std_srvs::Empty empty;
 	int i =0;
-	while (!clcPathClient.call(empty) && i<15)
+	while (!clcPathClient.call(empty))
 	{
-		ROS_INFO("Successful to call service: clc_path_to_goal");
-		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		i+=1;
+		if(i>=15)
+		{
+			break;
+		}
 	}/*
 	else
 	{
@@ -206,11 +227,11 @@ void GazebObjectControl::setObject(const string& modelName, geometry_msgs::Pose 
 
 	if (setModelClient.call(setmodelstate))
 	{
-		ROS_INFO("Successful to call service: Set Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Set Model: %s",modelName.c_str());
 	}
 	else
 	{
-		ROS_ERROR("Successful to call service: Set Model: %s",modelName.c_str());
+		//ROS_ERROR("Successful to call service: Set Model: %s",modelName.c_str());
 		//return 1;
 	}
 }
@@ -219,7 +240,9 @@ void GazebObjectControl::destroyWorld()
 {
 	for(auto object:spwanedObjects)
 	{
-		deleteObject(object);
+		deleteObject(object.name);
+		deleteObject(object.name +  "_mirror_");
+
 	}
 }
 
@@ -231,6 +254,7 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 	mt19937 mt(rd());
 	uniform_int_distribution<int> objectRndNumber(0, anzDifObjects-1);
 	uniform_int_distribution<int> anzObjectRndNumber(minObjects, maxObjects);
+	spwanedObjects.clear();
 
 	int anzObjects = anzObjectRndNumber(mt);
 	double lastX =0;
@@ -240,26 +264,128 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 		//int randNum = 0;
 
 		string object = getObjectInfoFromYaml_.getName(randNum);
-		cout<<object<<endl;
 		object_options objectOptions;
 		getObjectInfoFromYaml_.getinitPose(randNum,objectOptions);
 
 		geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
 
-		string objectName = object + "_" + tf_prefix + "_" + std::to_string(i);
+		objectNameIndex objectName;
+		objectName.name = object + "_" + tf_prefix + "_" + std::to_string(i);
+		objectName.yamlIndex = i;
 		spwanedObjects.push_back(objectName);
-		spwanObject(objectName, object, position);
+		spwanObject(objectName.name, object, position);
 		if(objectOptions.mirrorObject)
 		{
 			lastX = position.position.x;
 			geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
-			string objectName = object + "_" + tf_prefix + "_mirror_" + std::to_string(i);
+			objectName.name = object + "_" + tf_prefix + "_mirror_" + std::to_string(i);
+			objectName.yamlIndex = i;
 			spwanedObjects.push_back(objectName);
-			spwanObject(objectName, object, position);
+			spwanObject(objectName.name, object, position);
 		}
 	}
-	nodeHandle_.setParam("reset_elevation_map",true);
 
+}
+
+
+void GazebObjectControl::generateWorld2()
+{
+	geometry_msgs::Pose pose;
+	pose.position.x = 0;
+	pose.position.y = 10;
+	pose.position.z = 0;
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, 0);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+
+	for(int i=0; i<getObjectInfoFromYaml_.numPossibleObjects(); i++)
+	{
+		for(int j=0; j<getObjectInfoFromYaml_.numThisObjects(i); j++)
+		{
+
+			string object = getObjectInfoFromYaml_.getName(i);
+			object_options objectOptions;
+			getObjectInfoFromYaml_.getinitPose(i,objectOptions);
+
+			//geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
+
+			objectNameIndex objectName;
+			objectName.name = object + "_" + tf_prefix + "_" + std::to_string(j);
+			objectName.yamlIndex = i;
+
+			spwanedObjects.push_back(objectName);
+			spwanObject(objectName.name, object, pose);
+			if(objectOptions.mirrorObject)
+			{
+			//lastX = position.position.x;
+				//geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
+				string objectName = object + "_" + tf_prefix + "_" + std::to_string(j)+ "_mirror_";
+				std::cout<<"mirror spwanedObjects[i].name: "<<objectName<<std::endl;
+
+				//spwanedObjects.push_back(objectName);
+				spwanObject(objectName, object, pose);
+			}
+		}
+	}
+}
+void GazebObjectControl::setObjectInWorld()
+{
+	random_device rd;
+	mt19937 mt(rd());
+
+	uniform_int_distribution<int> randNumber(1 , spwanedObjects.size());
+	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	int numberOfObjects = randNumber(mt);
+
+	double lastX =0;
+	for(auto  object:spwanedObjects)
+	{
+		std::cout<<"object"<<object.name<<std::endl;
+	}
+	std::shuffle(spwanedObjects.begin(), spwanedObjects.end(), std::default_random_engine(seed));
+	for(auto  object:spwanedObjects)
+	{
+		std::cout<<"object"<<object.name<<std::endl;
+	}
+	std::cout<<"numberOfObjects"<<numberOfObjects<<std::endl;
+
+	for(int i=0; i<numberOfObjects; i++)
+	{
+
+		string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+
+
+		object_options objectOptions;
+		getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
+		std::cout<<"spwanedObjects[i].name"<<spwanedObjects[i].name<<std::endl;
+
+		double _;
+		geometry_msgs::Pose position = setRandomObst(objectOptions,false,_);
+		std::cout<<"position.position.x"<<position.position.x<<std::endl;
+		std::cout<<"position.position.y"<<position.position.y<<std::endl;
+		setObject(spwanedObjects[i].name, position);
+		lastX = position.position.x;
+		std::cout<<"objectOptions.mirrorObject"<<objectOptions.mirrorObject<<std::endl;
+
+		if(objectOptions.mirrorObject)
+		{
+			std::cout<<"lastX"<<lastX<<std::endl;
+			std::cout<<"spwanedObjects[i].name: "<<spwanedObjects[i].name + "_mirror_"<<std::endl;
+			std::cout<<"position.position.x"<<position.position.x<<std::endl;
+			position = setRandomObst(objectOptions,true,lastX);
+			std::cout<<"position.position.x"<<position.position.x<<std::endl;
+			std::cout<<"position.position.y"<<position.position.y<<std::endl;
+
+			setObject(spwanedObjects[i].name + "_mirror_", position);
+		}
+
+	}
 }
 geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
 {
@@ -277,13 +403,17 @@ geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& obje
 
 	tf2::Quaternion myQuaternion;
 	double yaw = creatRndPosition(objectOptions.yaw);
+	std::cout<<"pose.position.x"<<pose.position.x<<std::endl;
+	std::cout<<"objectOptions.length"<<objectOptions.length<<std::endl;
+	std::cout<<"lastX"<<lastX<<std::endl;
 
 	if(mirror)
 	{
-		cout<<"objectOptions.length"<<objectOptions.length<<endl;
 		pose.position.x = lastX + objectOptions.length;
 		yaw = yaw - M_PI;
 	}
+	std::cout<<"pose.position.x"<<pose.position.x<<std::endl;
+
 	myQuaternion.setRPY(creatRndPosition(objectOptions.roll),  creatRndPosition(objectOptions.pitch), yaw);
 
 
@@ -295,6 +425,34 @@ geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& obje
 
 
 	return pose;
+}
+
+void GazebObjectControl::resetAllObjects()
+{
+	geometry_msgs::Pose pose;
+	pose.position.x = 0;
+	pose.position.y = 10;
+	pose.position.z = 0;
+
+	tf2::Quaternion myQuaternion;
+
+	myQuaternion.setRPY( 0, 0, 0);
+
+	pose.orientation.x = myQuaternion.x();
+	pose.orientation.y = myQuaternion.y();
+	pose.orientation.z = myQuaternion.z();
+	pose.orientation.w = myQuaternion.w();
+
+	for(auto object:spwanedObjects)
+	{
+		object_options objectOptions;
+		getObjectInfoFromYaml_.getinitPose(object.yamlIndex,objectOptions);
+		setObject(object.name, pose);
+		if(objectOptions.mirrorObject)
+		{
+			setObject(object.name + "_mirror_", pose);
+		}
+	}
 }
 
 double GazebObjectControl::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
@@ -334,11 +492,11 @@ void GazebObjectControl::spwanObject(const string& modelName, const string& xmlN
 
 	if (spawnModelClient.call(spawnModel))
 	{
-		ROS_INFO("Successful to call service: Spawn Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Spawn Model: %s",modelName.c_str());
 	}
 	else
 	{
-		ROS_ERROR("Successful to call service: Spawn Model: %s",modelName.c_str());
+		//ROS_ERROR("Successful to call service: Spawn Model: %s",modelName.c_str());
 		//return 1;
 	}
 }
@@ -352,11 +510,11 @@ void GazebObjectControl::deleteObject(const string& modelName)
 
 	if (deleteModelClient.call(deleteModel))
 	{
-		ROS_INFO("Successful to call service: Delete Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Delete Model: %s",modelName.c_str());
 	}
 	else
 	{
-		ROS_ERROR("Successful to call service: Delete Model: %s",modelName.c_str());
+		//ROS_ERROR("Successful to call service: Delete Model: %s",modelName.c_str());
 		//return 1;
 	}
 }
@@ -505,7 +663,6 @@ geometry_msgs::Pose GazebObjectControl::tfTransform(const geometry_msgs::Pose& p
 
 void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-	std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
 
 	try
 	{
@@ -518,7 +675,6 @@ void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	//cv::imshow("bhaldhw", cv_ptr->image);
 	//cv::waitKey(1);
-	//std::cout<<"GazebObjectControl: __LINE__"<<__LINE__<<std::endl;
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
 	image.convertTo(image, CV_32FC1, 1/255.0 );

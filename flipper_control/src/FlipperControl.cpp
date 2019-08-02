@@ -53,9 +53,11 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	serverTrackCon.setCallback(f2);
 
 	// get namespace for tf and init all frames plus tf_prefix
-	tf_prefix = "//GETjag";
 	tf_prefix = ros::this_node::getNamespace();
-
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	BASE_FRAME = "base_link";
@@ -144,7 +146,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_ptr->image.copyTo(mapImage);
 
 	mapImage.copyTo(globalMapImage);
-
+	std::cout<<"MapImageCallback"<<std::endl;
 	mapImageSet = true;
 }
 
@@ -454,13 +456,14 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 
 	if(frontFlipperAngleDesiredMsg.data<=M_PI/2 && frontFlipperAngleDesiredMsg.data>=-M_PI/2)
 	{
+		std::cout<<"frontFlipperAngleDesiredMsg.data"<<frontFlipperAngleDesiredMsg.data<<std::endl;
 		frontFlipperAngleDesiredPub.publish (frontFlipperAngleDesiredMsg);
 	}
 
 	if(rearFlipperAngleDesiredMsg.data<=M_PI/2 && rearFlipperAngleDesiredMsg.data>=-M_PI/2)
 	{
+		std::cout<<"rearFlipperAngleDesiredPub.data"<<rearFlipperAngleDesiredMsg.data<<std::endl;
 		rearFlipperAngleDesiredPub.publish (rearFlipperAngleDesiredMsg);
-
 	}
 }
 
