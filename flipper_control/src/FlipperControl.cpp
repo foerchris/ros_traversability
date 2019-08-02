@@ -130,15 +130,18 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "8UC1");
+
+		//cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
+
 	}
 	catch (cv_bridge::Exception& e)
 	{
 		ROS_ERROR("cv_bridge exception: %s", e.what());
 		return;
 	}
-	cv::Mat mapImage = cv_ptr->image;
-	mapImage.convertTo(mapImage, CV_32FC1, 1);
+	cv::Mat mapImage;
+	cv_ptr->image.copyTo(mapImage);
 
 	mapImage.copyTo(globalMapImage);
 
@@ -158,6 +161,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 {
 	FittedPlane fittedPlane;
 	double maxZ;
+
 	tf2::Quaternion quat = groundPlane(mapImage, &maxZ, &fittedPlane);
 
 	maxflipperContactPointsAngles angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
@@ -305,7 +309,7 @@ maxflipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const 
 
 	for(auto groundContactPoint:groundContactPoints)
 	{
-		ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
+		//ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", groundContactPoint.position.x, groundContactPoint.position.y, groundContactPoint.position.z);
 	}
 
 	std::vector<geometry_msgs::Pose> newGroundContactPoints;
@@ -435,14 +439,18 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 		frontFlipperAngleDesiredMsg.data = -robotFlipperAngles.flipperAngleFront;
 	}
 	else
+	{
 		ROS_INFO (" Front angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleFront);
+	}
+
 	if (robotFlipperAngles.flipperAngleRear != NAN)
 	{
 		rearFlipperAngleDesiredMsg.data = -robotFlipperAngles.flipperAngleRear;
 	}
 	else
+	{
 		ROS_INFO (" Rear angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleRear);
-
+	}
 
 	if(frontFlipperAngleDesiredMsg.data<=M_PI/2 && frontFlipperAngleDesiredMsg.data>=-M_PI/2)
 	{

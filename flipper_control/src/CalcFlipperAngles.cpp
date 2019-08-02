@@ -55,7 +55,7 @@ maxflipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vec
 		if(x >= 0)
 		{
 			d= sqrt(pow(x, 2)+ pow(z, 2));
-			ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", x, pose.position.y, z);
+			//ROS_INFO("pose: x = %3.6lf, y = %3.6lf, z = %3.6lf", x, pose.position.y, z);
 
 			//if(d<= dThreshold)
 			//{
@@ -78,7 +78,7 @@ maxflipperContactPointsAngles CalcFlipperAngles::clcContactAngles(const std::vec
 				//flipperAngle = phi1;
 				flipperAngle = phiContact;
 			}*/
-				ROS_INFO("phiContact = %3.6lf", phiContact/M_PI*180);
+				//ROS_INFO("phiContact = %3.6lf", phiContact/M_PI*180);
 
 			robotFlipperAngles.pose.push_back(pose);
 			robotFlipperAngles.phi1.push_back(phi1);

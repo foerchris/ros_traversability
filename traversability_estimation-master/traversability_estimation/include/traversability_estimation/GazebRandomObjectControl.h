@@ -71,7 +71,7 @@ class GazebRandomObjectControl
 	void resetAllObjects();
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 	void setRobotStartPose();
-	void setObjectInWorld();
+	void setObjectInWorld(const bool& setMaze);
 	geometry_msgs::Pose transformMaze(maze position);
 	geometry_msgs::Pose creatRandomOrientation(geometry_msgs::Pose pose);
 
@@ -98,7 +98,7 @@ class GazebRandomObjectControl
 	  std::size_t yamlIndex;
 	} ;
 	std::vector<objectNameIndex> spwanedObjects;
-
+	std::vector<objectNameIndex> mazeObjectList;
 	cv_bridge::CvImagePtr cv_ptr;
 	//*****
 	double resultion;
@@ -112,6 +112,7 @@ class GazebRandomObjectControl
 
 	cv::Mat globalMapImage;
 	bool mapImageSet;
+	int robot_number = 1;
 
 	std::string tf_prefix;
 	std::string BASE_FRAME;

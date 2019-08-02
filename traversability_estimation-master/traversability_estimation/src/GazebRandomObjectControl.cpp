@@ -29,7 +29,6 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
-	int robot_number = 1;
 	iss >> robot_number;
 
 	BASE_FRAME = tf_prefix + BASE_FRAME;
@@ -48,6 +47,7 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
 	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
 
+
 	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/goal_pose", 20);
 	//goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
 	elevationMapImagePublisher = nodeHandle_.advertise<sensor_msgs::Image>("/" + tf_prefix+"/elevation_robot_ground_map", 20);
@@ -62,8 +62,6 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebRandomObjectControl::resetCallback, this, _1));
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
-
-	gazeboMoveObjectFrame = 'world';
 
 	objects.clear();
 
@@ -109,20 +107,39 @@ void GazebRandomObjectControl::creatEnviroment()
 		mazeReader.reset();
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
-		// set all getjag to a zero pose
-		setRobotZeroPose();
 
 		//reset obstacles
 		resetAllObjects();
-		setObjectInWorld();
+		// set all getjag to a zero pose
+		setRobotZeroPose();
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+		random_device rd;
+		mt19937 mt(rd());
+		uniform_int_distribution<int> setMazeRnd(0, 1);
+
+		if(setMazeRnd(mt)==1)
+		{
+			setObjectInWorld(true);
+		}
+		else
+		{
+			setObjectInWorld(false);
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
 		setRobotStartPose();
 
 		goalPose = transformMaze(mazeReader.getRandomCell());
 
+		setObject(spwanedObjects[0].name, goalPose);
+
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+
 		nodeHandle_.setParam("reset_elevation_map",true);
 
-		std::this_thread::sleep_for(std::chrono::seconds(3));
+		std::this_thread::sleep_for(std::chrono::seconds(5));
 
 		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
@@ -139,7 +156,7 @@ void GazebRandomObjectControl::clcGoalPathSrvsCall()
 	std_srvs::Empty empty;
 	if (clcPathClient.call(empty))
 	{
-		ROS_INFO("Successful to call service: clc_path_to_goal");
+		//ROS_INFO("Successful to call service: clc_path_to_goal");
 	}
 	else
 	{
@@ -155,10 +172,25 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 
 
 	nav_msgs::Odometry goalPoseMsg;
-	geometry_msgs::Pose robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
+	geometry_msgs::Pose robotGoalPose ;
+	robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
+
+	/*while(fabs(goalPose.position.x-robotGoalPose.position.x) < 0.05)
+	{
+		robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::cout<<"publischGoal"<<std::endl;
+		std::cout<<"goalPose: x="<<goalPose.position.x<<" y="<<goalPose.position.x<<std::endl;
+		std::cout<<"robotGoalPose: x="<<robotGoalPose.position.x<<" y="<<robotGoalPose.position.x<<std::endl;
+	}*/
 	poseToOdomMsg(robotGoalPose,goalPoseMsg);
 
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
+	std::cout<<tf_prefix<<"Goal Pose"<<std::endl;
+	std::cout<<"goalPose: x="<<goalPose.position.x<<" y="<<goalPose.position.x<<std::endl;
+	std::cout<<"robotGoalPose: x="<<robotGoalPose.position.x<<" y="<<robotGoalPose.position.x<<std::endl;
+
+
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
 
@@ -166,13 +198,13 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	{
 
 
-		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
+		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		//groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
 
-		sensor_msgs::Image pubImage;
-		cv_ptr->toImageMsg(pubImage);
+		//sensor_msgs::Image pubImage;
+		//cv_ptr->toImageMsg(pubImage);
 
-		elevationMapImagePublisher.publish(pubImage);
+		//elevationMapImagePublisher.publish(pubImage);
 	}
 
 
@@ -194,15 +226,28 @@ void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs:
 	model_twist.angular.z = 0.0;
 	modelstate.twist = model_twist;
 
-	startPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
-
-	modelstate.pose = startPose;
+	geometry_msgs::Pose robotStartPose;
+	robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
+	/*int i = 0;
+	while(fabs(startPose.position.x-robotStartPose.position.x) < 0.05)
+	{*/
+		robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::cout<<"setObject"<<std::endl;
+		std::cout<<"startPose: x="<<startPose.position.x<<" y="<<startPose.position.x<<std::endl;
+		std::cout<<"robotStartPose: x="<<robotStartPose.position.x<<" y="<<robotStartPose.position.x<<std::endl;
+/*		if(i>30)
+		{
+			break;
+		}
+	}*/
+	modelstate.pose = robotStartPose;
 
 	setmodelstate.request.model_state = modelstate;
 
 	if (setModelClient.call(setmodelstate))
 	{
-		ROS_INFO("Successful to call service: Set Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Set Model: %s",modelName.c_str());
 	}
 	else
 	{
@@ -222,7 +267,7 @@ void GazebRandomObjectControl::destroyWorld()
 void GazebRandomObjectControl::resetAllObjects()
 {
 	geometry_msgs::Pose pose;
-	pose.position.x = 7;
+	pose.position.x = 8;
 	pose.position.y = 0;
 	pose.position.z = 0;
 
@@ -237,42 +282,60 @@ void GazebRandomObjectControl::resetAllObjects()
 
 	for(auto object:spwanedObjects)
 	{
-		setObject(object.name, goalPose);
+		setObject(object.name, pose);
 	}
 }
 
-void GazebRandomObjectControl::setObjectInWorld()
+void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 {
-	random_device rd;
-	mt19937 mt(rd());
 
-	uniform_int_distribution<int> randNumber(3 , spwanedObjects.size());
-	uniform_int_distribution<int> randObject(0 , spwanedObjects.size());
-	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-	int numberOfObjects = randNumber(mt);
-
-
-	for(int i=0; i<numberOfObjects; i++)
+	if(setMaze)
 	{
+		std::vector<maze> maze_vect;
+		maze_vect = mazeReader.readTextFile(robot_number);
 
-		std::shuffle(spwanedObjects.begin(), spwanedObjects.end(), std::default_random_engine(seed));
-		string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+		geometry_msgs::Pose position;
+		for(int i=0; i<=maze_vect.size()-1; i++)
+		{
+			//std::cout<<"x="<<maze_vect[i].x<<"\ty="<<maze_vect[i].y<<"\ty1="<<maze_vect[i].orientation<<std::endl;
 
+			position = transformMaze(maze_vect[i]);
+			setObject(mazeObjectList[i].name, position);
 
-		object_options objectOptions;
-		getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
-		double _;
-		geometry_msgs::Pose position = setRandomObst(objectOptions,false,_);
-
-		setObject(spwanedObjects[i].name, position);
-
+		}
 	}
+	else
+	{
+		random_device rd;
+		mt19937 mt(rd());
 
+		uniform_int_distribution<int> randNumber( spwanedObjects.size()-11 , spwanedObjects.size()-7);
+		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+		int numberOfObjects = randNumber(mt);
+
+		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
+
+		for(int i=0; i<numberOfObjects; i++)
+		{
+
+			string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+
+			object_options objectOptions;
+			getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
+			double _;
+			geometry_msgs::Pose position = setRandomObst(objectOptions,false,_);
+
+			setObject(spwanedObjects[i].name, position);
+
+		}
+	}
 }
+
 void GazebRandomObjectControl::generateWorld()
 {
+
 	geometry_msgs::Pose pose;
-	pose.position.x = 7;
+	pose.position.x = 8;
 	pose.position.y = 0;
 	pose.position.z = 0;
 
@@ -302,6 +365,10 @@ void GazebRandomObjectControl::generateWorld()
 
 			spwanedObjects.push_back(objectName);
 			spwanObject(objectName.name, object, pose);
+			if(object == "object_robocup_wall250")
+			{
+				mazeObjectList.push_back(objectName);
+			}
 		}
 	}
 }
@@ -312,16 +379,13 @@ geometry_msgs::Pose GazebRandomObjectControl::setRandomObst(const object_options
 
 	maze randomCell = mazeReader.getRandomCell();
 	pose = transformMaze(randomCell);
+
+
 	pose.position.z = creatRndPosition(objectOptions.z);
 
 	tf2::Quaternion myQuaternion;
 	double yaw = creatRndPosition(objectOptions.yaw);
 
-	if(mirror)
-	{
-		pose.position.x = lastX + objectOptions.length;
-		yaw = yaw - M_PI;
-	}
 	myQuaternion.setRPY(creatRndPosition(objectOptions.roll),  creatRndPosition(objectOptions.pitch), yaw);
 
 
@@ -358,7 +422,19 @@ double GazebRandomObjectControl::creatRndPosition(const min_max_object_pose& min
 }
 void GazebRandomObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
 {
-	startPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
+
+	geometry_msgs::Pose robotStartPose;
+
+	robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
+
+	while(fabs(startPose.position.x-robotStartPose.position.x) < 0.05)
+	{
+		robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::cout<<"spwanObject"<<std::endl;
+		std::cout<<"startPose: x="<<startPose.position.x<<" y="<<startPose.position.x<<std::endl;
+		std::cout<<"robotStartPose: x="<<robotStartPose.position.x<<" y="<<robotStartPose.position.x<<std::endl;
+	}
 
 	gazebo_msgs::SpawnModel spawnModel;
 
@@ -367,12 +443,12 @@ void GazebRandomObjectControl::spwanObject(const string& modelName, const string
 	string xmlFile = readXmlFile(xmlName);
 	spawnModel.request.model_xml = xmlFile;
 	spawnModel.request.robot_namespace = "";
-	spawnModel.request.initial_pose = startPose;
+	spawnModel.request.initial_pose = robotStartPose;
 	spawnModel.request.reference_frame = "";
 
 	if (spawnModelClient.call(spawnModel))
 	{
-		ROS_INFO("Successful to call service: Spawn Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Spawn Model: %s",modelName.c_str());
 	}
 	else
 	{
@@ -390,7 +466,7 @@ void GazebRandomObjectControl::deleteObject(const string& modelName)
 
 	if (deleteModelClient.call(deleteModel))
 	{
-		ROS_INFO("Successful to call service: Delete Model: %s",modelName.c_str());
+		//ROS_INFO("Successful to call service: Delete Model: %s",modelName.c_str());
 	}
 	else
 	{
@@ -468,16 +544,18 @@ void GazebRandomObjectControl::setRobotStartPose()
 {
 	geometry_msgs::Pose startPose;
 	startPose = transformMaze(mazeReader.getRandomCell());
-	startPose = creatRandomOrientation(startPose);
 
+	startPose = creatRandomOrientation(startPose);
+	setObject(spwanedObjects[1].name, startPose);
+	startPose.position.z = 0.5;
 	setObject(tf_prefix,startPose);
 }
 
 void GazebRandomObjectControl::setRobotZeroPose()
 {
 	geometry_msgs::Pose startPose;
-	startPose.position.x = 6;
-	startPose.position.y = 6;
+	startPose.position.x = 6.5;
+	startPose.position.y = 0;
 	startPose.position.z = 0.5;
 
 	tf2::Quaternion myQuaternion;

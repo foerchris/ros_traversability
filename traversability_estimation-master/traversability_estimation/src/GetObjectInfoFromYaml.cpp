@@ -23,7 +23,7 @@ GetObjectInfoFromYaml::~GetObjectInfoFromYaml()
 void GetObjectInfoFromYaml::loadYaml(const std::string& configName)
 {
 	std::vector<boost::filesystem::path> filesRobotConfigs;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
 	try
 	{
 		objectConfig = YAML::LoadFile(path +"/"+ configName + ".yaml");
@@ -31,11 +31,6 @@ void GetObjectInfoFromYaml::loadYaml(const std::string& configName)
 		yamlLoaded = true;
 
 		int objectCount = objectConfig["drl_world"]["objects"].size();
-
-		for (int j = 0; j < objectCount; j++)
-		{
-			std::cout<<"object"<< objectConfig["drl_world"]["objects"][j]["name"].as<std::string>()<<std::endl;
-		}
 
 	}
 	catch(YAML::ParserException& e)
@@ -72,7 +67,6 @@ int GetObjectInfoFromYaml::numThisObjects(const int& index)
 
 std::string GetObjectInfoFromYaml::getName(const int& index)
 {
-	std::cout<<"index"<<index<<std::endl;
 	if(yamlLoaded)
 	{
 		return objectConfig["drl_world"]["objects"][index]["name"].as<std::string>();

@@ -4,7 +4,7 @@
 
 	<group ns="$(arg namespace)">
 
-		<node pkg="flipper_control" name="flipper_control_server" type="flipper_control_server" output="screen">
+		<node pkg="flipper_control" name="flipper_control_server" type="flipper_control_server" respawn="true" output="screen">
 		</node>
 
 		<node pkg="flipper_control" type="tf_broadcaster" name="desired_pose_tf_broadcaster" args="next_base_link base_link 0.0 0.0 0.02 0.0 0.0 0.0" respawn="true" output="screen">

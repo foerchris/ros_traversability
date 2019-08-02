@@ -247,7 +247,6 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 	pose.orientation.y = 0;
 	pose.orientation.z = 0;
 	pose.orientation.w = 1.0;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 	//************** recalc the area witch has to be taken from the map
 	geometry_msgs::Pose pose1;
 
@@ -261,7 +260,6 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	pose1 = tfTransform(pose1, destination_frame, original_frame);
 	pose2 = tfTransform(pose2, destination_frame, original_frame);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	double regionMapLength = clcDistanz(pose1,pose2);
 
@@ -273,7 +271,6 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	pose1 = tfTransform(pose1, destination_frame, original_frame);
 	pose2 = tfTransform(pose2, destination_frame, original_frame);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	double regionMapWidth = clcDistanz(pose1,pose2);
 
@@ -281,10 +278,8 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 	geometry_msgs::Pose nextPose = tfTransform(pose, destination_frame, original_frame);
 
 	cv::Mat flipperMap;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
-	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+	flipperMap = getCropedImage16US1(nextPose, mapImage, regionMapWidth, regionMapLength);
 
 	return flipperMap;
 }
@@ -318,43 +313,83 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 	cv::Point2f point(x,y);
 	cv::Size2f size(widthX,widthY);
 	tf::Quaternion quat(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+	//std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	float angle = -tf::getYaw(quat)/M_PI*180;
     // rect is the RotatedRect
 
 	cv::RotatedRect rect(point, size,  angle);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+	//std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // matrices we'll use
     Mat M, rotated, cropped;
     // get angle and size from the bounding box
     Size rect_size = rect.size;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // get the rotation matrix
     M = getRotationMatrix2D(rect.center, angle, 1.0);
-    std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // perform the affine transformation
     warpAffine(mapImage, rotated, M, mapImage.size(), 2);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
-    cv::Mat copy = mapImage.clone();
 
-    //DrawRotatedRectangle(copy,rect );
-    //imshow("wadw", copy);
-    //waitKey(1);
-
-    //imshow("awdawd", cropped);
-    //waitKey(1);
 	return cropped;
 }
 
+cv::Mat GetContactPoints::getCropedImage16US1(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
+{
+    mapSizeX = mapImage.cols;
+    mapSizeY = mapImage.rows;
+
+   	int x = mapSizeX/2 - pose.position.y/resultion;
+   	int y = mapSizeY/2 - pose.position.x/resultion;
+
+
+	int widthX = rectSizeX/resultion;
+	int widthY = rectSizeY/resultion;
+	//std::cout<< "widthX"<<widthX<<std::endl;
+
+	cv::Point2f point(x,y);
+	cv::Size2f size(widthX,widthY);
+	tf::Quaternion quat(pose.orientation.x,pose.orientation.y,pose.orientation.z,pose.orientation.w);
+
+	float angle = -tf::getYaw(quat)/M_PI*180;
+    // rect is the RotatedRect
+
+	cv::RotatedRect rect(point, size,  angle);
+
+    // matrices we'll use
+    Mat M, rotated, cropped;
+    // get angle and size from the bounding box
+    Size rect_size = rect.size;
+
+    // get the rotation matrix
+    M = getRotationMatrix2D(rect.center, angle, 1.0);
+	//std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
+    // perform the affine transformation
+    warpAffine(mapImage, rotated, M, mapImage.size(), 2);
+	//std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
+    cv::Rect myROI(Point(rect.center.x -rect_size.width/2, rect.center.y - rect_size.height/2), Point(rect.center.x+rect_size.width/2, rect.center.y+rect_size.height/2));
+    cv::Mat croppedImage;
+    rotated(myROI).copyTo(croppedImage);
+    cv::Mat copy = rotated.clone();
+	//std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
+
+    //copy.convertTo(copy, CV_8UC1, 1);
+    //rectangle(copy, Point(rect.center.x -rect_size.width/2, rect.center.y - rect_size.height/2), Point(rect.center.x+rect_size.width/2, rect.center.y+rect_size.height/2), Scalar(255),CV_FILLED );
+    //imshow("wadaw", copy);
+    //waitKey(1);
+    //imshow("croppedImage", croppedImage);
+    //waitKey(1);
+
+	return croppedImage;
+}
 
 
 // Include center point of your rectangle, size of your rectangle and the degrees of rotation
@@ -405,7 +440,9 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	cv::Mat bwsrc;
 	cv::Mat src;
 	flipperMaps.copyTo(src);
-
+	src.convertTo(src, CV_8UC1, 1);
+	//cv::imshow("src", src);
+	//cv::waitKey(2);
 	float theta= 0;
 	double value = 0;
 
@@ -424,7 +461,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<char >(i,j);
 
-	    	pose.position.z = value*0.0000167;
+			pose.position.z = value*0.0043;
 
 
 	    	pose = rotate_point(pose, theta, nextPose);
@@ -551,11 +588,11 @@ tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::stri
 	pose = tfTransform(pose, destination_frame, original_frame);
 	tf::Quaternion q_map(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
 
-	ROS_INFO("orientation: x = %4.4lf, y = %4.4lf, z = %4.4lf,  w = %4.4lf", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+	//ROS_INFO("orientation: x = %4.4lf, y = %4.4lf, z = %4.4lf,  w = %4.4lf", pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
 
 	double rollMap, pitchMap, yawMap;
 	tf::Matrix3x3(q_map).getRPY(rollMap, pitchMap, yawMap);
-	ROS_INFO("map: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollMap, pitchMap, yawMap);
+	//ROS_INFO("map: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollMap, pitchMap, yawMap);
 
 	tf::Quaternion q_robot(q.getX(), q.getY(), q.getZ(), q.getW());
 
@@ -572,7 +609,7 @@ tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::stri
 	{
 		pitchRobot = pitchMap;
 	}
-	ROS_INFO("robot: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollRobot, pitchRobot, yawRobot);
+	//ROS_INFO("robot: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollRobot, pitchRobot, yawRobot);
 
 	q_new.setRPY(rollRobot, pitchRobot, yawRobot);
 	return q_new;

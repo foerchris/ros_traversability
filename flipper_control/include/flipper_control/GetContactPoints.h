@@ -85,6 +85,7 @@ class GetContactPoints
 	// *********** definitions for tf tranform
 	double clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2);
 	geometry_msgs::Pose rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose);
+	cv::Mat getCropedImage16US1(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY);
 
 	std::vector<geometry_msgs::Pose> clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q);
 
