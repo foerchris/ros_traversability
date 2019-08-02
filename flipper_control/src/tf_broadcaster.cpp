@@ -32,7 +32,7 @@ double globalyaw = 0;
 
 double fixed_velocity = 0;
 geometry_msgs::Twist currentVelocity;
-double delta_t = 0.8;
+double delta_t = 1.2;
 geometry_msgs::Pose deltaPose;
 geometry_msgs::Pose initPose;
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
 	ros::NodeHandle nodeHandle;
 	ros::Rate rate=100;
-	ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 1, odomCallback);
+	ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 20, odomCallback);
 	// setting up reconfigure servers
 	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig> server;
 	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig>::CallbackType f;

@@ -56,7 +56,7 @@ double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointF
 	cv::Vec3d uc = c_prime - g1_prime;
 
 	cv::Vec3d added = magnitude(ug.dot(uc))/magnitude(ug)*ug/magnitude(ug);
-	ROS_INFO(" magnitude(ug.dot(uc))/magnitude(ug)*ug/magnitude(ug): x = %4.4lf, y = %4.4lf, z = %4.4lf",added[0],added[1],added[2]);
+	//ROS_INFO(" magnitude(ug.dot(uc))/magnitude(ug)*ug/magnitude(ug): x = %4.4lf, y = %4.4lf, z = %4.4lf",added[0],added[1],added[2]);
 
 	cv::Vec3d p_foot = g1_prime + magnitude(ug.dot(uc))/magnitude(ug)*ug/magnitude(ug);
 

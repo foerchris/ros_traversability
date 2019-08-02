@@ -67,6 +67,9 @@ class GazebObjectControl
 	double creatRndPosition(const min_max_object_pose& minMaxObjectPose);
 	void publischGoal(const ros::TimerEvent& event);
 	void resetCallback(const ros::TimerEvent& event);
+	void generateWorld2();
+	void resetAllObjects();
+	void setObjectInWorld();
 
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 
@@ -89,7 +92,11 @@ class GazebObjectControl
 	std::string modelPath;
 	std::string gazeboMoveObjectFrame;
 	std::vector<std::string> objects;
-	std::vector<std::string> spwanedObjects;
+	struct objectNameIndex {
+	  std::string name;
+	  std::size_t yamlIndex;
+	} ;
+	std::vector<objectNameIndex> spwanedObjects;
 
 	cv_bridge::CvImagePtr cv_ptr;
 	//*****

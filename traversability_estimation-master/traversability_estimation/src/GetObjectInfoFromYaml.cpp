@@ -23,7 +23,6 @@ GetObjectInfoFromYaml::~GetObjectInfoFromYaml()
 void GetObjectInfoFromYaml::loadYaml(const std::string& configName)
 {
 	std::vector<boost::filesystem::path> filesRobotConfigs;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 	try
 	{
 		objectConfig = YAML::LoadFile(path +"/"+ configName + ".yaml");
@@ -72,7 +71,7 @@ int GetObjectInfoFromYaml::numThisObjects(const int& index)
 
 std::string GetObjectInfoFromYaml::getName(const int& index)
 {
-	std::cout<<"index"<<index<<std::endl;
+	//std::cout<<"index"<<index<<std::endl;
 	if(yamlLoaded)
 	{
 		return objectConfig["drl_world"]["objects"][index]["name"].as<std::string>();
