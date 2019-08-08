@@ -175,14 +175,16 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	geometry_msgs::Pose robotGoalPose ;
 	robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
 
-	/*while(fabs(goalPose.position.x-robotGoalPose.position.x) < 0.05)
+	int i = 0;
+	while(fabs(goalPose.position.x-robotGoalPose.position.x) < 0.05 && i<30)
 	{
 		robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		std::cout<<"publischGoal"<<std::endl;
 		std::cout<<"goalPose: x="<<goalPose.position.x<<" y="<<goalPose.position.x<<std::endl;
 		std::cout<<"robotGoalPose: x="<<robotGoalPose.position.x<<" y="<<robotGoalPose.position.x<<std::endl;
-	}*/
+		i += 1;
+	}
 	poseToOdomMsg(robotGoalPose,goalPoseMsg);
 
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
@@ -228,19 +230,16 @@ void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs:
 
 	geometry_msgs::Pose robotStartPose;
 	robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
-	/*int i = 0;
-	while(fabs(startPose.position.x-robotStartPose.position.x) < 0.05)
-	{*/
+	int i = 0;
+	while(fabs(startPose.position.x-robotStartPose.position.x) < 0.05 && i<30)
+	{
 		robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		std::cout<<"setObject"<<std::endl;
 		std::cout<<"startPose: x="<<startPose.position.x<<" y="<<startPose.position.x<<std::endl;
 		std::cout<<"robotStartPose: x="<<robotStartPose.position.x<<" y="<<robotStartPose.position.x<<std::endl;
-/*		if(i>30)
-		{
-			break;
-		}
-	}*/
+		i +=1;
+	}
 	modelstate.pose = robotStartPose;
 
 	setmodelstate.request.model_state = modelstate;
@@ -267,7 +266,7 @@ void GazebRandomObjectControl::destroyWorld()
 void GazebRandomObjectControl::resetAllObjects()
 {
 	geometry_msgs::Pose pose;
-	pose.position.x = 8;
+	pose.position.x = 18;
 	pose.position.y = 0;
 	pose.position.z = 0;
 
@@ -335,7 +334,7 @@ void GazebRandomObjectControl::generateWorld()
 {
 
 	geometry_msgs::Pose pose;
-	pose.position.x = 8;
+	pose.position.x = 18;
 	pose.position.y = 0;
 	pose.position.z = 0;
 
@@ -554,7 +553,7 @@ void GazebRandomObjectControl::setRobotStartPose()
 void GazebRandomObjectControl::setRobotZeroPose()
 {
 	geometry_msgs::Pose startPose;
-	startPose.position.x = 6.5;
+	startPose.position.x = 16.5;
 	startPose.position.y = 0;
 	startPose.position.z = 0.5;
 

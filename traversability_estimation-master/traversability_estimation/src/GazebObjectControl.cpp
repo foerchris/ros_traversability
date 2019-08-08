@@ -71,7 +71,7 @@ GazebObjectControl::GazebObjectControl(ros::NodeHandle& nodeHandle)
 
 
 	generateWorld2();
-	
+
 	goalPose.position.x = 18;
 	goalPose.position.y = 0;
 	goalPose.position.z = 0;
@@ -108,12 +108,12 @@ void GazebObjectControl::creatEnviroment()
 		resetWorld = false;
 		// set all getjag to a zero pose
 		setRobotZeroPose();
-		
+
 		//reset obstacles
 		destroyWorld();
 
 		generateWorld(1,4);
-		
+
 		nodeHandle_.setParam("reset_elevation_map",true);
 
 		std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -131,7 +131,7 @@ void GazebObjectControl::creatEnviroment()
 		resetAllObjects();
 
 		setObjectInWorld();
-		
+
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 		nodeHandle_.setParam("reset_elevation_map",true);
@@ -150,7 +150,7 @@ void GazebObjectControl::creatEnviroment()
 
 		nodeHandle_.getParam( "End_of_episode",resetWorld);
 	}
-	
+
 }
 
 void GazebObjectControl::clcGoalPathSrvsCall()
