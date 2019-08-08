@@ -72,6 +72,8 @@ class GazebRandomObjectControl
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 	void setRobotStartPose();
 	void setObjectInWorld(const bool& setMaze);
+	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
+
 	geometry_msgs::Pose transformMaze(maze position);
 	geometry_msgs::Pose creatRandomOrientation(geometry_msgs::Pose pose);
 
@@ -83,7 +85,10 @@ class GazebRandomObjectControl
 
 	ros::Publisher elevationMapImagePublisher;
 	ros::Publisher goalPosePublischer;
+	ros::Publisher currentPosePublischer;
 	ros::Publisher markerPublisher;
+	
+	ros::Subscriber odomSub;
 
 	//! ROS node handle.
 	ros::NodeHandle& nodeHandle_;
