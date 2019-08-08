@@ -27,8 +27,8 @@ ElevationMapper* mapper=NULL;
 ros::Publisher publisher;
 ros::Publisher elevationMapImagePublisher;
 double eleviation_mapping_resulution = 0.06;
-double creatMapszieX = 21;
-double creatMapszieY = 21;
+double creatMapszieX = 105;
+double creatMapszieY = 105;
 bool resetMap = false;
 
 std::string BASE_FRAME = "/base_link";
@@ -160,8 +160,8 @@ void msgCallback(const ros::TimerEvent&)
 
 	Eigen::Array2i mapSize = map.getSize();
 
-	int widthX = 200;
-	int widthY = 200;
+	int widthX = 1000;
+	int widthY = 1000;
 	if(mapSize[0]>widthX && mapSize[1]> widthY)
 	{
 		getCropedImage(cv_ptr, widthX, widthY);
