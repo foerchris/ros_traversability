@@ -28,7 +28,7 @@ ElevationMapper* mapper=NULL;
 ros::Publisher publisher;
 ros::Publisher elevationMapImagePublisher;
 double eleviation_mapping_resulution = 0.06;
-double scaleTo = 1;
+double scaleTo = 5;
 double creatMapszieX = 21*scaleTo;
 double creatMapszieY = 21*scaleTo;
 bool resetMap = false;
@@ -176,9 +176,6 @@ void msgCallback(const ros::TimerEvent&)
 
 	cv::Mat image ;
 	cv_ptr.image.copyTo(image);
-
-	cv::imshow("image",image);
-	cv::waitKey(1);
 
 	cv::Mat depth( image.rows, image.cols, CV_32FC1 );
 	cv::Mat alpha( image.rows, image.cols, CV_32FC1 );
