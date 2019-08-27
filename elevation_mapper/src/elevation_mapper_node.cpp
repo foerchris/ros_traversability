@@ -21,14 +21,16 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
 #include <ros/package.h>
+#include "grid_map_cv/GridMapCvConverter.hpp"
 
 tf::TransformListener* listener=NULL;
 ElevationMapper* mapper=NULL;
 ros::Publisher publisher;
 ros::Publisher elevationMapImagePublisher;
 double eleviation_mapping_resulution = 0.06;
-double creatMapszieX = 105;
-double creatMapszieY = 105;
+double scaleTo = 1;
+double creatMapszieX = 21*scaleTo;
+double creatMapszieY = 21*scaleTo;
 bool resetMap = false;
 
 std::string BASE_FRAME = "/base_link";
@@ -154,14 +156,19 @@ void msgCallback(const ros::TimerEvent&)
 	}
 	cv_bridge::CvImage cv_ptr;
 	grid_map::GridMap map = mapper->getMap();
-	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC1" , cv_ptr);
-	grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "16UC1" , cv_ptr);
+	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC4" , cv_ptr);
+	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "16UC1" , cv_ptr);
+
+	cv_ptr.header.stamp.fromNSec(map.getTimestamp());
+	cv_ptr.header.frame_id = map.getFrameId();
+	cv_ptr.encoding = "32FC4";
+	grid_map::GridMapCvConverter::toImage<float, 4>(map, std::string("elevation"), CV_32FC4, -10, 10, cv_ptr.image);
 
 
 	Eigen::Array2i mapSize = map.getSize();
 
-	int widthX = 1000;
-	int widthY = 1000;
+	int widthX = 200*scaleTo;
+	int widthY = 200*scaleTo;
 	if(mapSize[0]>widthX && mapSize[1]> widthY)
 	{
 		getCropedImage(cv_ptr, widthX, widthY);
@@ -169,10 +176,32 @@ void msgCallback(const ros::TimerEvent&)
 
 	cv::Mat image ;
 	cv_ptr.image.copyTo(image);
-	//cv_ptr.
-	//cv::imshow("hklhsadh",image);
-	//cv::waitKey(1);
-	//cv::imwrite((ros::package::getPath("elevation_mapper")+"/image.jpg").c_str(),image);
+
+	cv::imshow("image",image);
+	cv::waitKey(1);
+
+	cv::Mat depth( image.rows, image.cols, CV_32FC1 );
+	cv::Mat alpha( image.rows, image.cols, CV_32FC1 );
+
+
+	// forming an array of matrices is a quite efficient operation,
+	// because the matrix data is not copied, only the headers
+	cv::Mat out[] = { depth,alpha };
+	int from_to[] = { 0,0, 3,1};
+	cv::mixChannels( &image, 1, out, 2, from_to, 2 );
+
+	cv::Mat depthAlpha[2];
+
+
+	depthAlpha[0] = depth;
+	depthAlpha[1] = alpha;
+	cv::Mat image2 ;
+
+	cv::merge(depthAlpha, 2, image2);
+
+	cv_ptr.encoding = "32FC2";
+
+	image2.copyTo(cv_ptr.image);
 
 	sensor_msgs::Image pubImage;
 	cv_ptr.toImageMsg(pubImage);

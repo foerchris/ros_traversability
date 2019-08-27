@@ -125,7 +125,7 @@ void GazebRandomObjectControl::creatEnviroment()
 
 		if(setMazeRnd(mt)==1)
 		{
-			setObjectInWorld(false);
+			setObjectInWorld(true);
 		}
 		else
 		{
@@ -237,13 +237,13 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	{
 
 
-		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		//groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
+		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		groundImage.convertTo(cv_ptr->image, CV_16UC4, 255.0 );
 
-		//sensor_msgs::Image pubImage;
-		//cv_ptr->toImageMsg(pubImage);
+		sensor_msgs::Image pubImage;
+		cv_ptr->toImageMsg(pubImage);
 
-		//elevationMapImagePublisher.publish(pubImage);
+		elevationMapImagePublisher.publish(pubImage);
 	}
 }
 
@@ -672,7 +672,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "16UC4");
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -683,7 +683,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 	//cv::waitKey(1);
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
-	image.convertTo(image, CV_32FC1, 1/255.0 );
+	image.convertTo(image, CV_32FC4, 1/255.0 );
 	//cv::imshow("bhaldhw", image);
 	//cv::waitKey(1);
 	(image).copyTo(globalMapImage);
