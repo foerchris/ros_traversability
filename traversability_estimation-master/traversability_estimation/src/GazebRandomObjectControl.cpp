@@ -733,4 +733,3 @@ geometry_msgs::Pose GazebRandomObjectControl::creatRandomOrientation(geometry_ms
 	pose.orientation.w = myQuaternion.w();
 	return pose;
 }
-
