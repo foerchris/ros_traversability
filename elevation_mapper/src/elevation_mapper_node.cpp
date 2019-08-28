@@ -157,7 +157,8 @@ void msgCallback(const ros::TimerEvent&)
 	grid_map::GridMap map = mapper->getMap();
 	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "8UC1" , cv_ptr);
 	//grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "16UC4" , cv_ptr);
-	
+	grid_map::GridMapRosConverter::toCvImage(map, std::string("elevation") ,  "16UC4" , cv_ptr);
+
     grid_map::GridMapCvConverter::toImage<float, 4>(map, std::string("elevation"), CV_32FC1, -10, 10, cv_ptr.image);
 
 	Eigen::Array2i mapSize = map.getSize();
