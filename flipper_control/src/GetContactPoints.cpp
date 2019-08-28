@@ -229,9 +229,11 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getRegions(cv::Mat mapImage, 
 	geometry_msgs::Pose nextPose = tfTransform(pose, destination_frame, original_frame);
 
 	cv::Mat flipperMap;
-
+	cv::imshow("mapImage", mapImage);
+	cv::waitKey(1);
 	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
-
+	cv::imshow("flipperMap", flipperMap);
+	cv::waitKey(1);
 	return getPosesFromImage(flipperMap, nextPose, original_frame, destination_frame);
 }
 
@@ -279,7 +281,7 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	cv::Mat flipperMap;
 
-	flipperMap = getCropedImage16US1(nextPose, mapImage, regionMapWidth, regionMapLength);
+	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
 
 	return flipperMap;
 }
@@ -440,7 +442,6 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	cv::Mat bwsrc;
 	cv::Mat src;
 	flipperMaps.copyTo(src);
-	src.convertTo(src, CV_8UC1, 1);
 	//cv::imshow("src", src);
 	//cv::waitKey(2);
 	float theta= 0;
@@ -459,9 +460,10 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 
 	    	pose.position.x = nextPose.position.x + (cropLengthX/2 - cropLengthX/(flipperMaps.rows*2) - i*resultion);
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
-			value = src.at<char >(i,j);
+			value = src.at<float >(i,j);
 
-			pose.position.z = value*0.0043;
+			std::cout<<"value: "<<value<<std::endl;
+			pose.position.z = (value-0.500314)*20;
 
 			std::cout<<"pose.position.z"<<pose.position.z<<std::endl;
 

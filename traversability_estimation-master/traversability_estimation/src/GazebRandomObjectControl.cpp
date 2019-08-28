@@ -49,9 +49,9 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 
 
 	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/goal_pose", 20);
-	
+
 	currentPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/current_pose", 20);
-	
+
 	odomSub = nodeHandle_.subscribe<nav_msgs::Odometry> ("/" + tf_prefix+"/odom", 1, &GazebRandomObjectControl::odomCallback,this);
 
 	//goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
@@ -125,7 +125,7 @@ void GazebRandomObjectControl::creatEnviroment()
 
 		if(setMazeRnd(mt)==1)
 		{
-			setObjectInWorld(false);
+			setObjectInWorld(true);
 		}
 		else
 		{
@@ -173,13 +173,13 @@ void GazebRandomObjectControl::clcGoalPathSrvsCall()
 void GazebRandomObjectControl::odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 {
 	nav_msgs::Odometry currentPoseMsg;
-	
+
 	currentPoseMsg.header = odomMsg->header;
 	currentPoseMsg.child_frame_id = odomMsg->child_frame_id;
 	currentPoseMsg.twist = odomMsg->twist;
 
 	geometry_msgs::Pose currentRobotPose ;
-	
+
 	currentRobotPose.position.x = odomMsg->pose.pose.position.x;
 	currentRobotPose.position.y = odomMsg->pose.pose.position.y;
 	currentRobotPose.position.z = odomMsg->pose.pose.position.z;
@@ -188,7 +188,7 @@ void GazebRandomObjectControl::odomCallback (const nav_msgs::OdometryConstPtr& o
 	currentRobotPose.orientation.y = odomMsg->pose.pose.orientation.y;
 	currentRobotPose.orientation.z = odomMsg->pose.pose.orientation.z;
 	currentRobotPose.orientation.w = odomMsg->pose.pose.orientation.w;
-		
+
 	currentRobotPose = tfTransform(currentRobotPose, MAP_FRAME, ODOM_FRAME);
 
 	currentPoseMsg.pose.pose.position.x = currentRobotPose.position.x;
@@ -199,7 +199,7 @@ void GazebRandomObjectControl::odomCallback (const nav_msgs::OdometryConstPtr& o
 	currentPoseMsg.pose.pose.orientation.y =  currentRobotPose.orientation.y;
 	currentPoseMsg.pose.pose.orientation.z =  currentRobotPose.orientation.z;
 	currentPoseMsg.pose.pose.orientation.w =  currentRobotPose.orientation.w;
-	
+
 	currentPosePublischer.publish(currentPoseMsg);
 
 }
@@ -237,13 +237,18 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	{
 
 
+		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
 		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,10,10,  MAP_FRAME, BASE_FRAME);
-		//groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
+
 		(groundImage).copyTo(cv_ptr->image);
+
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
+
 		//cv::imshow("bhaldhw", groundImage);
+
 		//cv::waitKey(1);
+
 		elevationMapImagePublisher.publish(pubImage);
 	}
 }
@@ -673,7 +678,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "16UC4");
+		cv_ptr = cv_bridge::toCvCopy(msg, "32FC2");
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -684,9 +689,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 	//cv::waitKey(1);
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
-	//image.convertTo(image, CV_32FC1, 1/255.0 );
-	//cv::imshow("bhaldhw", image);
-	//cv::waitKey(1);
+
 	(image).copyTo(globalMapImage);
 
 

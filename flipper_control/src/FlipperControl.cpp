@@ -132,7 +132,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "8UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "32FC2");
 
 		//cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
 
@@ -145,8 +145,21 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat mapImage;
 	cv_ptr->image.copyTo(mapImage);
 
-	mapImage.copyTo(globalMapImage);
-	std::cout<<"MapImageCallback"<<std::endl;
+	cv::Mat depth( mapImage.rows, mapImage.cols, CV_32FC1 );
+	cv::Mat alpha( mapImage.rows, mapImage.cols, CV_32FC1 );
+
+
+	// forming an array of matrices is a quite efficient operation,
+	// because the matrix data is not copied, only the headers
+	cv::Mat out[] = { depth,alpha };
+	int from_to[] = { 0,0, 1,1};
+	cv::mixChannels( &mapImage, 1, out, 2, from_to, 2 );
+
+
+
+	//cv::imshow("groundImage", groundImage);
+	//cv::waitKey(1);
+	depth.copyTo(globalMapImage);
 	mapImageSet = true;
 }
 
