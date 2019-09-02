@@ -9,6 +9,8 @@
 #include <ros/ros.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Twist.h>
+
 #include <cstdio>
 #include <tf2/LinearMath/Quaternion.h>
 #include <nav_msgs/Odometry.h>
@@ -66,6 +68,39 @@ void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 	static_transformStamped.transform.rotation.z = quat.getZ();
 	static_transformStamped.transform.rotation.w = quat.getW();
 }
+
+void cmdCallback (const geometry_msgs::TwistConstPtr& cmdMsg)
+{
+	currentVelocity.angular = cmdMsg->angular;
+	currentVelocity.linear = cmdMsg->linear;
+
+	double theta = currentVelocity.angular.z * delta_t;
+	double v_dot = currentVelocity.linear.x * delta_t;
+	//double v_dot = fixed_velocity* delta_t;
+
+	static_transformStamped.header.stamp = ros::Time::now();
+
+	static_transformStamped.transform.translation.x = initPose.position.x +  v_dot * cos(theta) ;
+	static_transformStamped.transform.translation.y = initPose.position.y + v_dot * sin(theta);
+	static_transformStamped.transform.translation.z = initPose.position.z + 0;
+
+	tf2::Quaternion quat;
+
+	if(globalyaw==0)
+	{
+		quat.setRPY(0,0,theta);
+	}
+	else
+	{
+		quat.setRPY(0,0,theta-globalyaw);
+	}
+
+
+	static_transformStamped.transform.rotation.x = quat.getX();
+	static_transformStamped.transform.rotation.y = quat.getY();
+	static_transformStamped.transform.rotation.z = quat.getZ();
+	static_transformStamped.transform.rotation.w = quat.getW();
+}
 void reconfigureCallback(flipper_control::broadcasterConfig &config, uint32_t level)
 {
 		  fixed_velocity =config.fixed_velocity;
@@ -87,7 +122,9 @@ int main(int argc, char **argv)
 
 	ros::NodeHandle nodeHandle;
 	ros::Rate rate=100;
-	ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 20, odomCallback);
+	//ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 20, odomCallback);
+	ros::Subscriber odomSub = nodeHandle.subscribe<geometry_msgs::Twist> ("cmd_vel", 20, cmdCallback);
+
 	// setting up reconfigure servers
 	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig> server;
 	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig>::CallbackType f;

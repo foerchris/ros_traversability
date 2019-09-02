@@ -163,7 +163,7 @@ void msgCallback(const ros::TimerEvent&)
 	cv_ptr.header.stamp.fromNSec(map.getTimestamp());
 	cv_ptr.header.frame_id = map.getFrameId();
 	cv_ptr.encoding = "32FC4";
-	grid_map::GridMapCvConverter::toImage<float, 4>(map, std::string("elevation"), CV_32FC4, -10, 10, cv_ptr.image);
+	grid_map::GridMapCvConverter::toImage<float, 4>(map, std::string("elevation"), CV_32FC4, 0, 5, cv_ptr.image);
 
 	Eigen::Array2i mapSize = map.getSize();
 

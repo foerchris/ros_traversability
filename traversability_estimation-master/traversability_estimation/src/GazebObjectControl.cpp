@@ -8,6 +8,9 @@
 #include "traversability_estimation/GazebObjectControl.h"
 
 #include <image_transport/image_transport.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 
 using namespace std;
@@ -121,6 +124,7 @@ void GazebObjectControl::creatEnviroment()
 		clcGoalPathSrvsCall();
 
 		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);*/
+
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
 		// set all getjag to a zero pose
@@ -147,7 +151,6 @@ void GazebObjectControl::creatEnviroment()
 
 	if(nodeHandle_.hasParam( "End_of_episode"))
 	{
-
 		nodeHandle_.getParam( "End_of_episode",resetWorld);
 	}
 
@@ -187,13 +190,32 @@ void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
 
+
+	
 	if(mapImageSet && globalMapImage.cols>0 && globalMapImage.rows>0)
 	{
+		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
+		cv::Mat alpha( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
+		cv::Mat out[] = { depth,alpha };
+		int from_to[] = { 0,0, 1,1};
+		cv::mixChannels( &globalMapImage, 1, out, 2, from_to, 2 );
+
+		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+
+		//cv::mixChannels( &groundImage, 1, out, 2, from_to, 2 );
+		cv::Mat depthAlpha[2];
 
 
-		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		groundImage.convertTo(cv_ptr->image, CV_16UC1, 255.0 );
+		depthAlpha[0] = groundImageDepth;
+		depthAlpha[1] = groundImageAlpha;
+		cv::Mat image2 ;
 
+		cv::merge(depthAlpha, 2, image2);
+
+
+		image2.copyTo(cv_ptr->image);
+	
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
 
@@ -326,7 +348,6 @@ void GazebObjectControl::generateWorld2()
 			//lastX = position.position.x;
 				//geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
 				string objectName = object + "_" + tf_prefix + "_" + std::to_string(j)+ "_mirror_";
-				std::cout<<"mirror spwanedObjects[i].name: "<<objectName<<std::endl;
 
 				//spwanedObjects.push_back(objectName);
 				spwanObject(objectName, object, pose);
@@ -344,16 +365,8 @@ void GazebObjectControl::setObjectInWorld()
 	int numberOfObjects = randNumber(mt);
 
 	double lastX =0;
-	for(auto  object:spwanedObjects)
-	{
-		std::cout<<"object"<<object.name<<std::endl;
-	}
+
 	std::shuffle(spwanedObjects.begin(), spwanedObjects.end(), std::default_random_engine(seed));
-	for(auto  object:spwanedObjects)
-	{
-		std::cout<<"object"<<object.name<<std::endl;
-	}
-	std::cout<<"numberOfObjects"<<numberOfObjects<<std::endl;
 
 	for(int i=0; i<numberOfObjects; i++)
 	{
@@ -363,25 +376,15 @@ void GazebObjectControl::setObjectInWorld()
 
 		object_options objectOptions;
 		getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
-		std::cout<<"spwanedObjects[i].name"<<spwanedObjects[i].name<<std::endl;
 
 		double _;
 		geometry_msgs::Pose position = setRandomObst(objectOptions,false,_);
-		std::cout<<"position.position.x"<<position.position.x<<std::endl;
-		std::cout<<"position.position.y"<<position.position.y<<std::endl;
 		setObject(spwanedObjects[i].name, position);
 		lastX = position.position.x;
-		std::cout<<"objectOptions.mirrorObject"<<objectOptions.mirrorObject<<std::endl;
 
 		if(objectOptions.mirrorObject)
 		{
-			std::cout<<"lastX"<<lastX<<std::endl;
-			std::cout<<"spwanedObjects[i].name: "<<spwanedObjects[i].name + "_mirror_"<<std::endl;
-			std::cout<<"position.position.x"<<position.position.x<<std::endl;
 			position = setRandomObst(objectOptions,true,lastX);
-			std::cout<<"position.position.x"<<position.position.x<<std::endl;
-			std::cout<<"position.position.y"<<position.position.y<<std::endl;
-
 			setObject(spwanedObjects[i].name + "_mirror_", position);
 		}
 
@@ -403,16 +406,13 @@ geometry_msgs::Pose GazebObjectControl::setRandomObst(const object_options& obje
 
 	tf2::Quaternion myQuaternion;
 	double yaw = creatRndPosition(objectOptions.yaw);
-	std::cout<<"pose.position.x"<<pose.position.x<<std::endl;
-	std::cout<<"objectOptions.length"<<objectOptions.length<<std::endl;
-	std::cout<<"lastX"<<lastX<<std::endl;
+
 
 	if(mirror)
 	{
 		pose.position.x = lastX + objectOptions.length;
 		yaw = yaw - M_PI;
 	}
-	std::cout<<"pose.position.x"<<pose.position.x<<std::endl;
 
 	myQuaternion.setRPY(creatRndPosition(objectOptions.roll),  creatRndPosition(objectOptions.pitch), yaw);
 
@@ -666,21 +666,19 @@ void GazebObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "16UC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "32FC2");
 	}
 	catch (cv_bridge::Exception& e)
 	{
 		ROS_ERROR("cv_bridge exception: %s", e.what());
 		return;
 	}
-	//cv::imshow("bhaldhw", cv_ptr->image);
-	//cv::waitKey(1);
+
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
-	image.convertTo(image, CV_32FC1, 1/255.0 );
-	//cv::imshow("bhaldhw", image);
-	//cv::waitKey(1);
+
 	(image).copyTo(globalMapImage);
+
 
 
 	mapImageSet = true;

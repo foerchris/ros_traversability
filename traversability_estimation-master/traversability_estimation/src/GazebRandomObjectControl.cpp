@@ -238,18 +238,34 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 
 
 		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,10,10,  MAP_FRAME, BASE_FRAME);
+		
+		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
+		cv::Mat alpha( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
+		cv::Mat out[] = { depth,alpha };
+		int from_to[] = { 0,0, 1,1};
+		cv::mixChannels( &globalMapImage, 1, out, 2, from_to, 2 );
 
-		(groundImage).copyTo(cv_ptr->image);
+		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,10,10,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,10,10,  MAP_FRAME, BASE_FRAME);
 
+		//cv::mixChannels( &groundImage, 1, out, 2, from_to, 2 );
+		cv::Mat depthAlpha[2];
+
+
+		depthAlpha[0] = groundImageDepth;
+		depthAlpha[1] = groundImageAlpha;
+		cv::Mat image2 ;
+
+		cv::merge(depthAlpha, 2, image2);
+
+
+		image2.copyTo(cv_ptr->image);
+	
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
 
-		//cv::imshow("bhaldhw", groundImage);
-
-		//cv::waitKey(1);
-
 		elevationMapImagePublisher.publish(pubImage);
+		
 	}
 }
 
