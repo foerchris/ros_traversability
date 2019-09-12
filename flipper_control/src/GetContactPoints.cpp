@@ -256,7 +256,6 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	pose1.position.x = regionLength/2;
 	pose2.position.x = -regionLength/2;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 	pose1 = tfTransform(pose1, destination_frame, original_frame);
 	pose2 = tfTransform(pose2, destination_frame, original_frame);
@@ -275,21 +274,15 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	//double regionMapWidth = clcDistanz(pose1,pose2);
 	double regionMapWidth = regionWidth;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
 
 	geometry_msgs::Pose nextPose = tfTransform(pose, destination_frame, original_frame);
 
 	cv::Mat flipperMap;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
-	std::cout<<"regionMapWidth"<<regionMapWidth<<std::endl;
-	std::cout<<"regionMapLength"<<regionMapLength<<std::endl;
 
 	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
 	
 	
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
-
 	return flipperMap;
 }
 double GetContactPoints::clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2)
@@ -455,11 +448,9 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<float >(i,j);
 			
-			std::cout<<"value : "<<value<<std::endl;
 
-			pose.position.z = (value)*5;
+			pose.position.z = (value)*5 + 0.3;
 			
-			std::cout<<"pose.position.z : "<<pose.position.z<<std::endl;
 
 	    	pose = rotate_point(pose, theta, nextPose);
 

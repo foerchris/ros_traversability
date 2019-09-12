@@ -217,18 +217,11 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	{
 		robotGoalPose = tfTransform(goalPose, BASE_FRAME, MAP_FRAME);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		std::cout<<"publischGoal"<<std::endl;
-		std::cout<<"goalPose: x="<<goalPose.position.x<<" y="<<goalPose.position.x<<std::endl;
-		std::cout<<"robotGoalPose: x="<<robotGoalPose.position.x<<" y="<<robotGoalPose.position.x<<std::endl;
 		i +=1;
 	}
 	poseToOdomMsg(robotGoalPose,goalPoseMsg);
 
 	markerArray.markers.push_back (createMarker(tf_prefix+" Goal Pose", 1, goalPose.position.x, goalPose.position.y, 1.0, 1.0, 0.0,1.0));
-	std::cout<<tf_prefix<<"Goal Pose"<<std::endl;
-	std::cout<<"goalPose: x="<<goalPose.position.x<<" y="<<goalPose.position.x<<std::endl;
-	std::cout<<"robotGoalPose: x="<<robotGoalPose.position.x<<" y="<<robotGoalPose.position.x<<std::endl;
-
 
 	markerPublisher.publish(markerArray);
 	goalPosePublischer.publish(goalPoseMsg);
@@ -236,7 +229,12 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	if(mapImageSet && globalMapImage.cols>0 && globalMapImage.rows>0)
 	{
 
+		cv_bridge::CvImage cv_ptr_sub_map;
 
+
+		cv_ptr_sub_map.header.stamp = cv_ptr->header.stamp;
+		cv_ptr_sub_map.header.frame_id =cv_ptr->header.frame_id;
+		cv_ptr_sub_map.encoding = "32FC1";
 		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
 		
 		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
@@ -245,8 +243,8 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 		int from_to[] = { 0,0, 1,1};
 		cv::mixChannels( &globalMapImage, 1, out, 2, from_to, 2 );
 
-		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,10,10,  MAP_FRAME, BASE_FRAME);
-		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,10,10,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,12,12,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,12,12,  MAP_FRAME, BASE_FRAME);
 
 		//cv::mixChannels( &groundImage, 1, out, 2, from_to, 2 );
 		cv::Mat depthAlpha[2];
@@ -259,10 +257,10 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 		cv::merge(depthAlpha, 2, image2);
 
 
-		image2.copyTo(cv_ptr->image);
+		groundImageDepth.copyTo(cv_ptr_sub_map.image);
 	
 		sensor_msgs::Image pubImage;
-		cv_ptr->toImageMsg(pubImage);
+		cv_ptr_sub_map.toImageMsg(pubImage);
 
 		elevationMapImagePublisher.publish(pubImage);
 		
@@ -292,9 +290,6 @@ void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs:
 	{
 		robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		std::cout<<"setObject"<<std::endl;
-		std::cout<<"startPose: x="<<startPose.position.x<<" y="<<startPose.position.x<<std::endl;
-		std::cout<<"robotStartPose: x="<<robotStartPose.position.x<<" y="<<robotStartPose.position.x<<std::endl;
 		i +=1;
 	}
 	modelstate.pose = robotStartPose;
@@ -353,8 +348,6 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		geometry_msgs::Pose position;
 		for(int i=0; i<=maze_vect.size()-1; i++)
 		{
-			//std::cout<<"x="<<maze_vect[i].x<<"\ty="<<maze_vect[i].y<<"\ty1="<<maze_vect[i].orientation<<std::endl;
-
 			position = transformMaze(maze_vect[i]);
 			setObject(mazeObjectList[i].name, position);
 
@@ -367,7 +360,8 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 
 		uniform_int_distribution<int> randNumber( spwanedObjects.size()-11 , spwanedObjects.size()-7);
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-		int numberOfObjects = randNumber(mt);
+		//int numberOfObjects = randNumber(mt);
+		int numberOfObjects = spwanedObjects.size() -5 ;
 
 		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
 
@@ -488,9 +482,6 @@ void GazebRandomObjectControl::spwanObject(const string& modelName, const string
 	{
 		robotStartPose = tfTransform(startPose, ODOM_FRAME, MAP_FRAME);
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		std::cout<<"spwanObject"<<std::endl;
-		std::cout<<"startPose: x="<<startPose.position.x<<" y="<<startPose.position.x<<std::endl;
-		std::cout<<"robotStartPose: x="<<robotStartPose.position.x<<" y="<<robotStartPose.position.x<<std::endl;
 		i +=1;
 	}
 
@@ -705,6 +696,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 	//cv::waitKey(1);
 	cv::Mat image;
 	(cv_ptr->image).copyTo(image);
+
 
 	(image).copyTo(globalMapImage);
 

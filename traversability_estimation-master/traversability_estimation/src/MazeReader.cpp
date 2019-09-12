@@ -12,8 +12,8 @@ MazeReader::MazeReader ()
 {
 	//std::ofstream myfile;
 	//path = ros::package::getPath("traversability_estimation")+"/mazegenerator-master";
-	//path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
-	path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
+	path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
+	//path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
 
 	env_size = 10.0;
 	possible_cells = getPosibleCells();
@@ -112,29 +112,31 @@ maze MazeReader::getRandomCell()
 {
 	std::random_device rd;
 	std::mt19937 mt(rd());
-    std::uniform_int_distribution<> dis(0, possible_cells.size()-1);
+
+    
+    //std::uniform_int_distribution<> dis(0, possible_cells.size()-1);
     std::uniform_int_distribution<> dis_orientation(-180, 180);
-    int rand_cell_number;
 
-    for(std::size_t i = 0; i<10; i++)
-    {
-        rand_cell_number = dis(mt);
-        if(!(std::find(forbidden_list.begin(), forbidden_list.end(), rand_cell_number) != forbidden_list.end()))
-        {
-        	break;
-        }
-
-    }
-
-    forbidden_list.push_back(rand_cell_number);
-
-    maze random_cell = possible_cells[rand_cell_number];
+    maze random_cell = possible_cells[0];
 	random_cell.orientation = dis_orientation(mt);
-
+	/*for(auto bla:possible_cells)
+	{
+		std::cout << "element before: "<<bla.x<<", "<<bla.y<<std::endl;
+	}*/
+	possible_cells.erase(possible_cells.begin());
+	/*for(auto bla:possible_cells)
+	{
+		std::cout << "element after: "<<bla.x<<", "<<bla.y<<std::endl;
+	}*/
 	return random_cell;
 }
 
 void MazeReader::reset()
 {
-	forbidden_list.clear();
+	possible_cells = getPosibleCells();
+	std::random_device rd;
+	std::mt19937 mersenne_engine {rd()};  // Generates random integers
+	std::shuffle(begin(possible_cells), end(possible_cells), mersenne_engine);
+
+	/*std::shuffle(possible_cells.begin(), possible_cells.end(), mersenne_engine));*/
 }
