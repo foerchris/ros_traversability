@@ -37,6 +37,7 @@ ContourPathPlanner::ContourPathPlanner()
 	}*/
     pathForwardView = true;
     pathReversOriantation = true;
+
 }
 
 
@@ -369,6 +370,14 @@ void ContourPathPlanner::setPathPoints(std::vector<pose> inputPoints)
 
 void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
 {
+	
+	random_device rd;
+	mt19937 mt(rd());
+	uniform_real_distribution<double> setRobotSpeed(0.3,1);
+	double robotSpeed = setRobotSpeed(mt);
+	trackingControl->setRobotSpeed(robotSpeed);
+	thisNodeHandel.setParam("current_robot_speed",robotSpeed);
+
     std::vector<pose> pt;
     Poses.clear();
     pose zeroPose;

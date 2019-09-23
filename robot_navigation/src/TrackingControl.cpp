@@ -642,7 +642,7 @@ void TrackingControl::reconfigureCallback (robot_navigation::TrackingControlConf
 	prozentAngVel								= confg.prozentAngVel;
 	prozentLinVel								= confg.prozentLinVel;
 
-	robotSpeed						= confg.robotSpeed;
+	//robotSpeed						= confg.robotSpeed;
 	robotStartStop					= confg.robotStartStop;
 }
 

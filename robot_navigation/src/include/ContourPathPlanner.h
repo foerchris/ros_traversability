@@ -69,8 +69,6 @@ private:
 
 	TrackingControl* trackingControl = new TrackingControl(thisNodeHandel, 0.5, 0.2, 0.05);
 
-
-
 };
 
 

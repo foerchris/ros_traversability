@@ -68,6 +68,7 @@ public:
 	void startRobotMovement(bool startMovement);
 	bool pointDistanzCheak(const pose &globalCoordinates);
 
+	void setRobotSpeed(double speed);
 
 private:
 	void reconfigureCallback (robot_navigation::TrackingControlConfig &confg, uint32_t level);
@@ -86,7 +87,6 @@ private:
 	double clcCurvature(std::vector<pose> curvPoints);
 	double area2(pose p1, pose p2 , pose p3);
 	void panCamera();
-	void setRobotSpeed(double speed);
 	void startStopCallback (const std_msgs::BoolConstPtr& boolMsg);
 
 	ros::Publisher markerPublisher;

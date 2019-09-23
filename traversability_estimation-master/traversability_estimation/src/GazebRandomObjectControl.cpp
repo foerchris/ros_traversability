@@ -16,7 +16,7 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 		: nodeHandle_(nodeHandle),
 		  getObjectInfoFromYaml_(nodeHandle)
 {
-
+	
 	BASE_FRAME = "/base_link";
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
@@ -27,14 +27,14 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 		tf_prefix = "//GETjag1";
 	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
-
+	
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+	
 	iss >> robot_number;
 
 	BASE_FRAME = tf_prefix + BASE_FRAME;
 	MAP_FRAME = tf_prefix + MAP_FRAME;
 	ODOM_FRAME = tf_prefix + ODOM_FRAME;
-
 	modelPath = "/eda/gazebo/models/";
 
 	setModelClient = nodeHandle_.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
@@ -73,7 +73,6 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	getObjectInfoFromYaml_.loadYaml("drl_objects");
 
 	generateWorld();
-
 
 	goalPose.position.x = 18;
 	goalPose.position.y = 0;
@@ -125,7 +124,7 @@ void GazebRandomObjectControl::creatEnviroment()
 
 		if(setMazeRnd(mt)==1)
 		{
-			setObjectInWorld(true);
+			setObjectInWorld(false);
 		}
 		else
 		{
@@ -368,7 +367,8 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		for(int i=0; i<numberOfObjects; i++)
 		{
 
-			string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+			string object = getObjectInfoFromYaml_.getType(spwanedObjects[i].yamlIndex);
+			string object_name = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
 
 			object_options objectOptions;
 			getObjectInfoFromYaml_.getinitPose(spwanedObjects[i].yamlIndex,objectOptions);
@@ -403,19 +403,21 @@ void GazebRandomObjectControl::generateWorld()
 		for(int j=0; j<getObjectInfoFromYaml_.numThisObjects(i); j++)
 		{
 
-			string object = getObjectInfoFromYaml_.getName(i);
+			string object = getObjectInfoFromYaml_.getType(i);
+			string object_name = getObjectInfoFromYaml_.getName(i);
+
 			object_options objectOptions;
 			getObjectInfoFromYaml_.getinitPose(i,objectOptions);
 
 			//geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
 
 			objectNameIndex objectName;
-			objectName.name = object + "_" + tf_prefix + "_" + std::to_string(j);
+			objectName.name = object_name + "_" + tf_prefix + "_" + std::to_string(j);
 			objectName.yamlIndex = i;
 
 			spwanedObjects.push_back(objectName);
-			spwanObject(objectName.name, object, pose);
-			if(object == "object_robocup_wall250")
+			spwanObject(objectName.name, object_name, pose);
+			if(object_name == "object_robocup_wall250")
 			{
 				mazeObjectList.push_back(objectName);
 			}

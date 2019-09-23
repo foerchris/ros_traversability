@@ -46,7 +46,7 @@ class RobotPathPlanner
   ros::NodeHandle& nodeHandle_;
   ros::Publisher markerPublisher;
   std::string tf_prefix;
-
+	double speed;
 
 };
 

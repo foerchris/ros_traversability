@@ -40,7 +40,6 @@ class RobotDrive {
 		std::string BASE_FRAME;
 		std::string MAP_FRAME;
 		std::string ODOM_FRAME;
-
 		bool drive;
 		ContourPathPlanner contourPathPlanner;
 

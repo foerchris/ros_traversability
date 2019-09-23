@@ -1,7 +1,8 @@
 drl_world:
     version: 4
     objects:
-        - name                : object_robocup_floor_bright
+        - type                : object_robocup_floor_bright
+          name                : object_robocup_floor_bright
           number              : 1
           mirrored_object     : false
           shift               : 0
@@ -13,7 +14,8 @@ drl_world:
               orientationP  : 0
               orientationY  : 0
 
-        - name                : object_robocup_floor_dark
+        - type                : object_robocup_floor_dark
+          name                : object_robocup_floor_dark
           number              : 1
           mirrored_object     : false
           shift               : 0
@@ -25,7 +27,8 @@ drl_world:
               orientationP  : 0
               orientationY  : 0
 
-        - name                : object_robocup_box
+        - type                : object_robocup_box
+          name                : object_robocup_box
           number              : 3
           mirrored_object     : false
           initPose            :
@@ -36,7 +39,8 @@ drl_world:
               orientationP  : -0.23..0.23
               orientationY  : -3.141..3.141
 
-        - name                : object_robocup_wall250
+        - type                : object_robocup_wall250
+          name                : object_robocup_wall250
           number              : 10
           mirrored_object     : false
           shift               : 1.21

@@ -38,6 +38,7 @@ RobotDrive::RobotDrive(ros::NodeHandle& nodeHandle)
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 	drive = false;
+
 }
 RobotDrive::~RobotDrive()
 {
@@ -147,6 +148,7 @@ bool RobotDrive::clcPathSrv(std_srvs::Empty::Request &req,
 {
 	drive = false;
 	clcPath(0.5, pathPoses);
+	
 	return true;
 }
 

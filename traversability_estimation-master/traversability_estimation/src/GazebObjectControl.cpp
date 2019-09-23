@@ -285,14 +285,16 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 		int randNum = objectRndNumber(mt);
 		//int randNum = 0;
 
-		string object = getObjectInfoFromYaml_.getName(randNum);
+		string object = getObjectInfoFromYaml_.getType(randNum);
+		string object_name = getObjectInfoFromYaml_.getName(randNum);
+
 		object_options objectOptions;
 		getObjectInfoFromYaml_.getinitPose(randNum,objectOptions);
 
 		geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
 
 		objectNameIndex objectName;
-		objectName.name = object + "_" + tf_prefix + "_" + std::to_string(i);
+		objectName.name = object_name + "_" + tf_prefix + "_" + std::to_string(i);
 		objectName.yamlIndex = i;
 		spwanedObjects.push_back(objectName);
 		spwanObject(objectName.name, object, position);
@@ -300,7 +302,7 @@ void GazebObjectControl::generateWorld(int minObjects, int maxObjects)
 		{
 			lastX = position.position.x;
 			geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
-			objectName.name = object + "_" + tf_prefix + "_mirror_" + std::to_string(i);
+			objectName.name = object_name + "_" + tf_prefix + "_mirror_" + std::to_string(i);
 			objectName.yamlIndex = i;
 			spwanedObjects.push_back(objectName);
 			spwanObject(objectName.name, object, position);
@@ -331,14 +333,15 @@ void GazebObjectControl::generateWorld2()
 		for(int j=0; j<getObjectInfoFromYaml_.numThisObjects(i); j++)
 		{
 
-			string object = getObjectInfoFromYaml_.getName(i);
+			string object = getObjectInfoFromYaml_.getType(i);
+			string object_name = getObjectInfoFromYaml_.getName(i);
 			object_options objectOptions;
 			getObjectInfoFromYaml_.getinitPose(i,objectOptions);
 
 			//geometry_msgs::Pose position = setRandomObst(objectOptions,false,lastX);
 
 			objectNameIndex objectName;
-			objectName.name = object + "_" + tf_prefix + "_" + std::to_string(j);
+			objectName.name = object_name + "_" + tf_prefix + "_" + std::to_string(j);
 			objectName.yamlIndex = i;
 
 			spwanedObjects.push_back(objectName);
@@ -347,7 +350,7 @@ void GazebObjectControl::generateWorld2()
 			{
 			//lastX = position.position.x;
 				//geometry_msgs::Pose position = setRandomObst(objectOptions,true,lastX);
-				string objectName = object + "_" + tf_prefix + "_" + std::to_string(j)+ "_mirror_";
+				string objectName = object_name + "_" + tf_prefix + "_" + std::to_string(j)+ "_mirror_";
 
 				//spwanedObjects.push_back(objectName);
 				spwanObject(objectName, object, pose);
@@ -370,8 +373,8 @@ void GazebObjectControl::setObjectInWorld()
 
 	for(int i=0; i<numberOfObjects; i++)
 	{
-
-		string object = getObjectInfoFromYaml_.getName(spwanedObjects[i].yamlIndex);
+		string object = getObjectInfoFromYaml_.getType(spwanedObjects[i].yamlIndex);
+		std::cout<<"object"<<object<<std::endl;
 
 
 		object_options objectOptions;
