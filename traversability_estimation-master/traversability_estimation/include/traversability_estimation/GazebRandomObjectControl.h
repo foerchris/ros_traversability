@@ -70,7 +70,7 @@ class GazebRandomObjectControl
 	void resetCallback(const ros::TimerEvent& event);
 	void resetAllObjects();
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
-	void setRobotStartPose();
+	void setRobotStartPose(geometry_msgs::Pose startPose);
 	void setObjectInWorld(const bool& setMaze);
 	void odomCallback (const nav_msgs::OdometryConstPtr& odomMsg);
 

@@ -108,7 +108,6 @@ void GazebRandomObjectControl::creatEnviroment()
 {
 	if(resetWorld)
 	{
-		mazeReader.reset();
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
 
@@ -118,9 +117,26 @@ void GazebRandomObjectControl::creatEnviroment()
 		setRobotZeroPose();
 		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
+		double dist = 0;
+		geometry_msgs::Pose startPose;
+		while( dist<5.0 )
+		{
+			mazeReader.reset();
+			goalPose = transformMaze(mazeReader.getRandomCell());
+			
+			startPose = transformMaze(mazeReader.getRandomCell());
+			startPose = creatRandomOrientation(startPose); 
+			dist = sqrt(pow(startPose.position.x - goalPose.position.x, 2) + pow(startPose.position.y - goalPose.position.y, 2));
+
+		}
+		setObject(spwanedObjects[0].name, goalPose);
+		setObject(spwanedObjects[1].name, startPose);
+		setRobotStartPose(startPose);
+
 		random_device rd;
 		mt19937 mt(rd());
 		uniform_int_distribution<int> setMazeRnd(0, 1);
+
 
 		if(setMazeRnd(mt)==1)
 		{
@@ -131,19 +147,14 @@ void GazebRandomObjectControl::creatEnviroment()
 			setObjectInWorld(false);
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-		setRobotStartPose();
-
-		goalPose = transformMaze(mazeReader.getRandomCell());
-
-		setObject(spwanedObjects[0].name, goalPose);
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));		
+		
 
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 
 		nodeHandle_.setParam("reset_elevation_map",true);
 
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::this_thread::sleep_for(std::chrono::seconds(4));
 
 		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
@@ -358,13 +369,14 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		mt19937 mt(rd());
 
 		uniform_int_distribution<int> randNumber( spwanedObjects.size()-11 , spwanedObjects.size()-7);
+		
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		//int numberOfObjects = randNumber(mt);
 		int numberOfObjects = spwanedObjects.size() -5 ;
 
 		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
 
-		for(int i=0; i<numberOfObjects; i++)
+		for(int i=2; i<numberOfObjects; i++)
 		{
 
 			string object = getObjectInfoFromYaml_.getType(spwanedObjects[i].yamlIndex);
@@ -593,13 +605,8 @@ bool GazebRandomObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
 	return true;
 }
 
-void GazebRandomObjectControl::setRobotStartPose()
+void GazebRandomObjectControl::setRobotStartPose(geometry_msgs::Pose startPose)
 {
-	geometry_msgs::Pose startPose;
-	startPose = transformMaze(mazeReader.getRandomCell());
-
-	startPose = creatRandomOrientation(startPose);
-	setObject(spwanedObjects[1].name, startPose);
 	startPose.position.z = 0.5;
 	setObject(tf_prefix,startPose);
 }
