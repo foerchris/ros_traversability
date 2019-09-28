@@ -76,7 +76,7 @@ class GetContactPoints
 	visualization_msgs::Marker createCubeMarker (const std::string& tfFrame, const std::string& ns,const int& id,const geometry_msgs::Pose& pose,const  double& r,const double& g,const double& b,const double& a);
 
 
-	tf2::Quaternion getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const bool& setRoll, const bool& setPitch);
+	tf2::Quaternion getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const double& setRoll, const double& setPitch);
 
 
 	visualization_msgs::MarkerArray creatMarkerArrayFlipperLine(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b);

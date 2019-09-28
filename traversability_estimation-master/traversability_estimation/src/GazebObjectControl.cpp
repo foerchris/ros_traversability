@@ -191,7 +191,7 @@ void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
 	goalPosePublischer.publish(goalPoseMsg);
 
 
-	
+
 	if(mapImageSet && globalMapImage.cols>0 && globalMapImage.rows>0)
 	{
 		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
@@ -215,7 +215,7 @@ void GazebObjectControl::publischGoal(const ros::TimerEvent& bla)
 
 
 		image2.copyTo(cv_ptr->image);
-	
+
 		sensor_msgs::Image pubImage;
 		cv_ptr->toImageMsg(pubImage);
 

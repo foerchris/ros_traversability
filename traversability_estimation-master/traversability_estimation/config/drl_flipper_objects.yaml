@@ -13,7 +13,7 @@ drl_world:
               orientationR  : 0
               orientationP  : 0
               orientationY  : 0
-              
+
         - type                : object_robocup_box
           name                : object_robocup_box_1
           number              : 4
@@ -28,7 +28,7 @@ drl_world:
 
         - type                : object_robocup_wall
           name                : object_robocup_wall
-          number              : 4
+          number              : 0
           mirrored_object     : false
           initPose            :
               positionX     : 3..15
@@ -37,7 +37,7 @@ drl_world:
               orientationR  : 0
               orientationP  : 0
               orientationY  : 0
-        
+
         - type                : object_robocup_box
           name                : object_robocup_box_2
           number              : 4
@@ -45,7 +45,7 @@ drl_world:
           initPose            :
               positionX     : 3..15
               positionY     : 0
-              positionZ     : -0.87
+              positionZ     : -0.92
               orientationR  : 0
               orientationP  : 0
               orientationY  : 0

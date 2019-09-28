@@ -68,7 +68,7 @@ class FlipperControl
 
 	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue, FittedPlane* fittedPlane);
 
-	tf2::Quaternion newPlane(const cv::Mat& image, double* maxZValue, FittedPlane* fittedPlane, const bool& setRoll, const bool& setPitch);
+	tf2::Quaternion newPlane(const cv::Mat& image, double* maxZValue, FittedPlane* fittedPlane, const double& setRoll, const double& setPitch);
 
 
 	maxflipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);

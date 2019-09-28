@@ -281,8 +281,8 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 	cv::Mat flipperMap;
 
 	flipperMap = getCropedImage(nextPose, mapImage, regionMapWidth, regionMapLength);
-	
-	
+
+
 	return flipperMap;
 }
 double GetContactPoints::clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2)
@@ -331,7 +331,7 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 
     // perform the affine transformation
     warpAffine(mapImage, rotated, M, mapImage.size(), 2);
-	
+
     // crop the resulting image
     getRectSubPix(rotated, rect_size, rect.center, cropped);
 
@@ -447,10 +447,10 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	    	pose.position.x = nextPose.position.x + (cropLengthX/2 - cropLengthX/(flipperMaps.rows*2) - i*resultion);
 	    	pose.position.y = nextPose.position.y + (cropLengthY/2 - cropLengthY/(flipperMaps.cols*2) - j*resultion);
 			value = src.at<float >(i,j);
-			
 
-			pose.position.z = (value)*5 + 0.3;
-			
+
+			pose.position.z = (value)*5.0;
+
 
 	    	pose = rotate_point(pose, theta, nextPose);
 
@@ -560,7 +560,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vect
 	return transformedPoses;
 }
 
-tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const bool& setRoll, const bool& setPitch)
+tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const double& setRoll, const double& setPitch)
 {
 	geometry_msgs::Pose pose;
 
@@ -588,15 +588,11 @@ tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::stri
 	tf::Matrix3x3(q_robot).getRPY(rollRobot, pitchRobot, yawRobot);
 
 	tf2::Quaternion q_new;
-	if(setRoll)
+	if(fabs(setRoll)>0)
 	{
-		rollRobot = rollMap;
+		rollRobot = rollMap - setRoll;
 	}
 
-	if(setPitch)
-	{
-		pitchRobot = pitchMap;
-	}
 	//ROS_INFO("robot: roll = %4.4lf, pitch = %4.4lf, yaw = %4.4lf", rollRobot, pitchRobot, yawRobot);
 
 	q_new.setRPY(rollRobot, pitchRobot, yawRobot);

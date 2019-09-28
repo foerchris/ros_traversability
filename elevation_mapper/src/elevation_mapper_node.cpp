@@ -196,9 +196,10 @@ void msgCallback(const ros::TimerEvent&)
 
 	cv::merge(depthAlpha, 2, image2);
 
-	cv_ptr.encoding = "32FC2";
+	cv_ptr.encoding = "32FC1";
 
-	image2.copyTo(cv_ptr.image);
+	//image2.copyTo(cv_ptr.image);
+	depth.copyTo(cv_ptr.image);
 
 	sensor_msgs::Image pubImage;
 	cv_ptr.toImageMsg(pubImage);
