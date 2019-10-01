@@ -34,7 +34,7 @@ double globalyaw = 0;
 
 double fixed_velocity = 0;
 geometry_msgs::Twist currentVelocity;
-double delta_t = 0.8;
+double delta_t = 0.5;
 geometry_msgs::Pose deltaPose;
 geometry_msgs::Pose initPose;
 

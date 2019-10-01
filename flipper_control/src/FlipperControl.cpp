@@ -118,7 +118,7 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	getContactPoints.setConstants(resultion);
 	calcFlipperAngles.setParameter(dThreshold, R, r, L);
 
-	S_NE_thresshold = 0.6;
+	S_NE_thresshold = 0.05;
 }
 
 FlipperControl::~FlipperControl()
@@ -132,7 +132,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "32FC2");
+		cv_ptr = cv_bridge::toCvCopy(msg, "32FC1");
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -141,7 +141,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	cv::Mat mapImage;
 	cv_ptr->image.copyTo(mapImage);
-
+/*
 	cv::Mat depth( mapImage.rows, mapImage.cols, CV_32FC1 );
 	cv::Mat alpha( mapImage.rows, mapImage.cols, CV_32FC1 );
 
@@ -151,10 +151,12 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat out[] = { depth,alpha };
 	int from_to[] = { 0,0, 1,1};
 	cv::mixChannels( &mapImage, 1, out, 2, from_to, 2 );
-
-	//cv::imshow("depth", depth);
+*/
+	//cv::imshow("mapImage", mapImage);
 	//cv::waitKey(1);
-	depth.copyTo(globalMapImage);
+//	depth.copyTo(globalMapImage);
+	mapImage.copyTo(globalMapImage);
+
 	mapImageSet = true;
 }
 
@@ -183,26 +185,69 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 	maxflipperContactPointsAngles angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
 
 	NESMValues nESMValues = getNESMValues(angleFrontLeft, angleFrontRight, angleRearLeft, angleRearRight);
-
 	bool setPitchZero = false;
+	//bool repead = true;
+	bool repead = false;
 
-	if(nESMValues.S_NE_frontRearLeft > S_NE_thresshold || nESMValues.S_NE_rearFrontLeft> S_NE_thresshold || nESMValues.S_NE_frontRearRight > S_NE_thresshold || nESMValues.S_NE_rearFrontRight> S_NE_thresshold)
+	int i = 1;
+	while(repead)
 	{
-		//fittedPlane.b=0;
+		std::cout<<"cheak"<<std::endl;
+		std::cout<<"nESMValues.S_NE_frontRearLeft"<<nESMValues.S_NE_frontRearLeft<<std::endl;
+		std::cout<<"nESMValues.S_NE_frontRearRight"<<nESMValues.S_NE_frontRearRight<<std::endl;
+		std::cout<<"nESMValues.S_NE_rearFrontLeft"<<nESMValues.S_NE_rearFrontLeft<<std::endl;
+		std::cout<<"nESMValues.S_NE_rearFrontRight"<<nESMValues.S_NE_rearFrontRight<<std::endl;
 
-		//setPitchZero = true;
+		repead= false;
+		if(nESMValues.S_NE_frontRearLeft > S_NE_thresshold ||  nESMValues.S_NE_frontRearRight > S_NE_thresshold)
+		{
+			std::cout<<"front"<<std::endl;
 
+			quat = newPlane(mapImage, &maxZ, &fittedPlane, 0, M_PI/32*i);
+
+			angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
+
+			angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
+
+			angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
+
+			angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
+			repead = true;
+
+		}
+		else if(nESMValues.S_NE_rearFrontLeft> S_NE_thresshold || nESMValues.S_NE_rearFrontRight> S_NE_thresshold)
+		{
+			std::cout<<"back"<<std::endl;
+
+			quat = newPlane(mapImage, &maxZ, &fittedPlane, 0, -M_PI/32*i);
+
+			angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
+
+			angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
+
+			angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
+
+			angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
+
+			repead = true;
+		}
+
+		if(M_PI/32*i <M_PI/2)
+		{
+			repead= false;
+		}
+		i+=1;
 	}
 
-	bool setRollZero = false;
+	//bool setRollZero = false;
 
-	if(nESMValues.S_NE_leftRightFront > S_NE_thresshold || nESMValues.S_NE_rightLeftFront> S_NE_thresshold || nESMValues.S_NE_leftRightRear > S_NE_thresshold || nESMValues.S_NE_rightLeftRear> S_NE_thresshold)
-	{
+	//if(nESMValues.S_NE_leftRightFront > S_NE_thresshold || nESMValues.S_NE_rightLeftFront> S_NE_thresshold || nESMValues.S_NE_leftRightRear > S_NE_thresshold || nESMValues.S_NE_rightLeftRear> S_NE_thresshold)
+	//{
 		//fittedPlane.b=0;
 	//	setRollZero = true;
-	}
+	//}
 
-	if( setRollZero || setPitchZero)
+	/*if( setRollZero || setPitchZero)
 	{
 
 		quat = newPlane(mapImage, &maxZ, &fittedPlane, setRollZero, setPitchZero);
@@ -214,7 +259,7 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 		angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
 
 		angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
-	}
+	}*/
 
 	flipperAngles robotflipperAngles;
 	robotflipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft.maxFlipperAngle, angleFrontRight.maxFlipperAngle);
@@ -266,7 +311,7 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue, Fi
 	return quat;
 }
 
-tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue, FittedPlane* fittedPlane, const bool& setRoll, const bool& setPitch)
+tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue, FittedPlane* fittedPlane, const double& setRoll, const double& setPitch)
 {
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
@@ -450,7 +495,7 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 	}
 	else
 	{
-		ROS_INFO (" Front angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleFront);
+		//ROS_INFO (" Front angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleFront);
 	}
 
 	if (robotFlipperAngles.flipperAngleRear != NAN)
@@ -459,18 +504,18 @@ void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
 	}
 	else
 	{
-		ROS_INFO (" Rear angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleRear);
+		//ROS_INFO (" Rear angle NAN:\t  [%7.3f]", robotFlipperAngles.flipperAngleRear);
 	}
 
 	if(frontFlipperAngleDesiredMsg.data<=M_PI/2 && frontFlipperAngleDesiredMsg.data>=-M_PI/2)
 	{
-		std::cout<<"frontFlipperAngleDesiredMsg.data"<<frontFlipperAngleDesiredMsg.data<<std::endl;
+		//std::cout<<"frontFlipperAngleDesiredMsg.data"<<frontFlipperAngleDesiredMsg.data<<std::endl;
 		frontFlipperAngleDesiredPub.publish (frontFlipperAngleDesiredMsg);
 	}
 
 	if(rearFlipperAngleDesiredMsg.data<=M_PI/2 && rearFlipperAngleDesiredMsg.data>=-M_PI/2)
 	{
-		std::cout<<"rearFlipperAngleDesiredPub.data"<<rearFlipperAngleDesiredMsg.data<<std::endl;
+		//std::cout<<"rearFlipperAngleDesiredPub.data"<<rearFlipperAngleDesiredMsg.data<<std::endl;
 		rearFlipperAngleDesiredPub.publish (rearFlipperAngleDesiredMsg);
 	}
 }
