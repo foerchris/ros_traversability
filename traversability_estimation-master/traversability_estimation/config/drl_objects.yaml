@@ -29,12 +29,24 @@ drl_world:
 
         - type                : object_robocup_box
           name                : object_robocup_box
-          number              : 3
+          number              : 10
           mirrored_object     : false
           initPose            :
               positionX     : 3..15
               positionY     : 0
               positionZ     : -1.2..0
+              orientationR  : 0.0..0.23
+              orientationP  : -0.23..0.23
+              orientationY  : -3.141..3.141
+
+        - type                : object_robocup_box
+          name                : object_robocup_box2
+          number              : 5
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -1.1..-0.97
               orientationR  : 0.0..0.23
               orientationP  : -0.23..0.23
               orientationY  : -3.141..3.141

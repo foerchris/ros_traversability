@@ -3,7 +3,9 @@
 
 #include "traversability_estimation/OMPLPlannerWrapper.h"
 
-
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/spaces/ReedsSheppStateSpace.h>
+#include <ompl/base/ScopedState.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/cforest/CForest.h>
@@ -19,11 +21,6 @@
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
-
-
-
-
-
 
 OMPLPlanner::OMPLPlanner ()
 {
@@ -50,118 +47,11 @@ OMPLPlanner::~OMPLPlanner ()
 {
 }
 
-
-
 /**
  * Checks if state is a valid state in the given state space
  * @param state
  * @return
  */
- 
-class ValidityChecker : public ob::StateValidityChecker
-{
-public:
-	/*traversability_estimation::TraversabilityMap& traversabilityMap_;
-	Eigen::Array2i mapSize;
-	double resolution;
-	double mapsizeX;
-	double mapsizeY;
-	*/
-    //ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
-	ValidityChecker(const ob::SpaceInformationPtr& si) :
-        ob::StateValidityChecker(si)//,
-    //    traversabilityMap_(traversabilityMap)
-    {
-		/*grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
-
-		mapSize = allowedMap.getSize();
-		resolution = allowedMap.getResolution();
-
-		mapsizeX=mapSize[0]*resolution;
-		mapsizeY=mapSize[1]*resolution;*/
-	}
-    // Returns whether the given state's position overlaps the
-    // circular obstacle
-    bool isValid(const ob::State* state) const
-    {
-        return this->traversability(state) > 0.5;
-    }
-    
-    // Returns the distance from the given state's position to the
-    // boundary of the circular obstacle.
-    double traversability(const ob::State* state) const
-    {
-/*        const ompl::base::SE2StateSpace::StateType *state_2d = state->as<ompl::base::SE2StateSpace::StateType> ();
-		const int &x (int (mapSize[0]-(state_2d->getX ()+mapsizeX/2)/0.06)), &y (int (mapSize[1]-(state_2d->getY ()+mapsizeY/2)/0.06)), &yaw (int ((180 / M_PI * state_2d->getYaw ())));
-		Eigen::Array2i xyPos(x,y);
-
-		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
-
-		std::vector<double> traverability;
-		traverability.push_back(allowedMap.at("traversability_0",xyPos));
-		traverability.push_back(allowedMap.at("traversability_45",xyPos));
-		traverability.push_back(allowedMap.at("traversability_90",xyPos));
-		traverability.push_back(allowedMap.at("traversability_135",xyPos));
-
-		if(traverability[0] != traverability[0])
-		{
-			traverability.clear();
-			//	ROS_INFO("compute traverability (traverability = %lf)",traverability[0]);
-
-			traverability = traversabilityMap_.traversabilityAtPosition(xyPos);
-
-		}
-
-		int size = 4;
-		float deltaYaw = 180/size;
-		float boundry = deltaYaw/2;
-
-		for(int i=0;i<size;i++)
-		{
-			if(yaw>=-boundry && yaw<=boundry)
-			{
-				//return ompl::base::Cost(traverability[i]);
-
-				return traverability[i];
-
-			}
-			boundry += deltaYaw;
-		}
-		if(yaw<=-(180-deltaYaw/2) && yaw>=(180-deltaYaw/2))
-		{
-			//return ompl::base::Cost(traverability[0]);
-			return traverability[0];
-		}
-		*/
-		
-		return 0.1;
- 
-    }
-
-};
-
-class TraverabilityObjective : public ompl::base::StateCostIntegralObjective
-{
-public:
-    TraverabilityObjective(const ompl::base::SpaceInformationPtr& si) :
-        ompl::base::StateCostIntegralObjective(si, true)
-    {	
-	
-    }
-
-    ompl::base::Cost stateCost(const ompl::base::State* state) const
-    {
-		return ob::Cost(1 / si_->getStateValidityChecker()->clearance(state));
-    }
-};
-
-
-ompl::base::OptimizationObjectivePtr getTraversabilityObjectivconst(ompl::base::SpaceInformationPtr& si)
-{
-     return std::make_shared<TraverabilityObjective>(si);
-}
- 
- 
 bool OMPLPlanner::isStateValid (const ob::State *state)
 {
 	const ob::SE2StateSpace::StateType *state_2d = state->as<ob::SE2StateSpace::StateType> ();
@@ -212,7 +102,6 @@ bool OMPLPlanner::isStateValid (const ob::State *state)
 	return false;
 }
 
-
 /**
  * Loads the calculated map of allowed angles
  * @param angle_map
@@ -244,7 +133,6 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	//ob::StateSpacePtr space(new ob::ReedsSheppStateSpace);
 	//ob::StateSpacePtr space (new ob::DubinsStateSpace);
 	ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>());
-	
 	space = std::make_shared<ob::DubinsStateSpace>(planRadius);
 
 	ob::RealVectorBounds bounds (2);
@@ -272,22 +160,16 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	space->as<ob::SE2StateSpace> ()->setBounds (bounds);
 
 	// define a simple setup class
-	//og::SimpleSetup ss (space);
+	og::SimpleSetup ss (space);
 
-   // Construct a space information instance for this state space
-     auto si(std::make_shared<ob::SpaceInformation>(space));
-     
-     
+
 	// set state validity checking for this space
-	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
-	//si->setStateValidityChecker(std::make_shared<ValidityChecker>(si, traversabilityMap_));
-	si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
+	ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
 
-	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
+	ob::PlannerPtr planner (new og::RRTstar (ss.getSpaceInformation ()));
+	ss.setPlanner (planner);
 
-	si->setup();
-	
-	
+
 	// set the start and goal states
 	ob::ScopedState<> start (space), goal (space);
 
@@ -310,49 +192,23 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	goal[1] = goal_d.y;
 	goal[2] = goal_d.yaw;
 
-	//ss.setStartAndGoalStates (start, goal);
-	
-	// Create a problem instance
-    auto pdef(std::make_shared<ob::ProblemDefinition>(si));
-     
-    // Set the start and goal states
-    pdef->setStartAndGoalStates(start, goal);
-     
+	ss.setStartAndGoalStates (start, goal);
 
-    //ss.setOptimizationObjective(boost::bind (&OMPLPlanner::getTraversabilityObjectivconst, this, _1));
-
-	// Create the optimization objective specified by our command-line argument.
-    // This helper function is simply a switch statement.
-    pdef->setOptimizationObjective(getTraversabilityObjectivconst(si));
-     
-	//ob::PlannerPtr planner (new og::RRTstar (si.getSpaceInformation ()));
-	
-	//ss.setPlanner (planner);
-
-	// Construct the optimal planner specified by our command line argument.
-    // This helper function is simply a switch statement.
-    ob::PlannerPtr optimizingPlanner = std::make_shared<og::RRTstar>(si);
-	
-
-	optimizingPlanner->setProblemDefinition(pdef);
-    optimizingPlanner->setup();
 
 	// this call is optional, but we put it in to get more output information
-	//ss.getSpaceInformation ()->setStateValidityCheckingResolution (0.01);
-	//ss.setup ();
+	ss.getSpaceInformation ()->setStateValidityCheckingResolution (0.01);
+	ss.setup ();
 
 	// attempt to solve the problem within 30 seconds of planning time
-	//ob::PlannerStatus solved = ss.solve (2);
-     ob::PlannerStatus solved = optimizingPlanner->solve(2);
+	ob::PlannerStatus solved = ss.solve (2);
+
 
 	if (solved)
 	{
 		std::cout << "Found solution:" << std::endl;
 
-		//ss.simplifySolution ();
-		
-		//og::PathGeometric path = pdef->getSolutionPath ();
-		/*auto path = pdef->getSolutionPath();
+		ss.simplifySolution ();
+		og::PathGeometric path = ss.getSolutionPath ();
 		double length = path.length ();
 		std::cout << "length: " <<length<< std::endl;
 
@@ -367,7 +223,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 			wayPose.y = s.reals ().at(1);
 			wayPose.yaw = s.reals ().at(2);
 			waypoints.push_back (wayPose);
-		}*/
+		}
 	}
 	else
 	std::cout << "No solution found" << std::endl;

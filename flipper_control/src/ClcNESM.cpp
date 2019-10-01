@@ -24,6 +24,8 @@ double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointF
 	cv::Vec3d g1(contactPointFront.position.x, contactPointFront.position.y, contactPointFront.position.z);
 	cv::Vec3d g2(contactPointRear.position.x, contactPointRear.position.y, contactPointRear.position.z);
 	cv::Vec3d c(centerOfGravity.position.x, centerOfGravity.position.y, centerOfGravity.position.z);
+	
+	
 	g1_public = g1;
 	g2_public = g2;
 	c_public = c;

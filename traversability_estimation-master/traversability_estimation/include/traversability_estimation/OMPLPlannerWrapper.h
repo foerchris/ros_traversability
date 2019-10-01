@@ -7,6 +7,19 @@
 
 
 #include <ompl/base/State.h>
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <ompl/base/spaces/ReedsSheppStateSpace.h>
+#include <ompl/base/ScopedState.h>
+
+
+ 
+#include <ompl/base/SpaceInformation.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
+#include <ompl/base/objectives/StateCostIntegralObjective.h>
+#include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+
+ 
 #include <opencv2/opencv.hpp>
 
 #include <grid_map_ros/grid_map_ros.hpp>
@@ -27,6 +40,7 @@ struct pose {
   double pitch;
   double yaw;
 } ;
+
 class OMPLPlanner
 {
 	private:
@@ -46,6 +60,7 @@ class OMPLPlanner
 		bool clcPathCallback( std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 		// Transfrom pose relative to robot to pose relative to map
 		void robotToGlobaleTransform(pose &Pose);
+		//ompl::base::OptimizationObjectivePtr getTraversabilityObjectivconst(ompl::base::SpaceInformationPtr& si);
 
 		// Transfrom pose relative to map to pose relative to robot
 		void globaleToRobotTransform(pose &Pose);

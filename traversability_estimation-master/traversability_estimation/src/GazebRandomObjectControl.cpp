@@ -372,11 +372,12 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		//int numberOfObjects = randNumber(mt);
-		int numberOfObjects = spwanedObjects.size() -5 ;
+		int numberOfObjects = spwanedObjects.size() - 18 ;
+
 
 		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
 
-		for(int i=2; i<numberOfObjects; i++)
+		for(int i=2; i<numberOfObjects+2; i++)
 		{
 
 			string object = getObjectInfoFromYaml_.getType(spwanedObjects[i].yamlIndex);
@@ -417,7 +418,6 @@ void GazebRandomObjectControl::generateWorld()
 
 			string object = getObjectInfoFromYaml_.getType(i);
 			string object_name = getObjectInfoFromYaml_.getName(i);
-
 			object_options objectOptions;
 			getObjectInfoFromYaml_.getinitPose(i,objectOptions);
 
@@ -428,7 +428,7 @@ void GazebRandomObjectControl::generateWorld()
 			objectName.yamlIndex = i;
 
 			spwanedObjects.push_back(objectName);
-			spwanObject(objectName.name, object_name, pose);
+			spwanObject(objectName.name, object, pose);
 			if(object_name == "object_robocup_wall250")
 			{
 				mazeObjectList.push_back(objectName);
