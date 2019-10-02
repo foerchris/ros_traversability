@@ -49,6 +49,7 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   std::strcpy(Imagepath, (ros::package::getPath("traversability_estimation")+"/image").c_str());
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
   readParameters();
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
@@ -57,13 +58,21 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("upper_bound");
   elevationMapLayers_.push_back("lower_bound");
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
   // TODO: Adapt map layers to traversability filters.
   traversabilityMapLayers_.push_back(traversabilityType_);
   traversabilityMapLayers_.push_back(slopeType_);
   traversabilityMapLayers_.push_back(stepType_);
   traversabilityMapLayers_.push_back(roughnessType_);
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
   savefootprintIntervallYaw=0;
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
   first = true;
+	std::cout<<"__LINE__"<<__LINE__<<std::endl;
+
 }
 
 TraversabilityMap::~TraversabilityMap()

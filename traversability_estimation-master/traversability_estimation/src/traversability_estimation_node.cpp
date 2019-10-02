@@ -12,7 +12,9 @@
 int main(int argc, char** argv) {
   ros::init(argc, argv, "traversability_estimation");
   ros::NodeHandle nodeHandle("~");
+
   traversability_estimation::TraversabilityEstimation traversabilityEstimation(nodeHandle);
+  std::cout<<"tf_prefix"<<std::endl;
 
   // Spin
   ros::AsyncSpinner spinner(0); // Use n threads

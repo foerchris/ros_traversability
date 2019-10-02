@@ -28,7 +28,7 @@ ElevationMapper* mapper=NULL;
 ros::Publisher publisher;
 ros::Publisher elevationMapImagePublisher;
 double eleviation_mapping_resulution = 0.06;
-double scaleTo = 5;
+double scaleTo = 1;
 double creatMapszieX = 21*scaleTo;
 double creatMapszieY = 21*scaleTo;
 bool resetMap = false;
