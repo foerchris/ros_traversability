@@ -66,14 +66,17 @@ public:
 	double resolution;
 	double mapsizeX;
 	double mapsizeY;
+	grid_map::GridMap allowedMap;
 
     ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
 	//ValidityChecker(const ob::SpaceInformationPtr& si) :
         ob::StateValidityChecker(si),
-        traversabilityMap_(traversabilityMap)
-    {
-		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
+        traversabilityMap_(traversabilityMap),
+    	allowedMap(traversabilityMap.getTraversabilityMap())
 
+    {
+
+    //	allowedMap = traversabilityMap_.getTraversabilityMap();
 		mapSize = allowedMap.getSize();
 		resolution = allowedMap.getResolution();
 
@@ -84,12 +87,12 @@ public:
     // circular obstacle
     bool isValid(const ob::State* state) const
     {
-    	bool bla = true;
-    	if(this->traversability(state) > 0.5)
+    	//bool bla = true;
+    	/*if(this->traversability(state) > 0.5)
     	{
 
-    	}
-        return bla;
+    	}*/
+        return this->traversability(state) > 0.5;
     	//return true;
 
     }
@@ -102,31 +105,31 @@ public:
 		const int x = static_cast<int> (mapSize[0] - (state_2d->getX () + mapsizeX / 2) / 0.06);
 		const int y = static_cast<int> (mapSize[1] - (state_2d->getY () + mapsizeY / 2) / 0.06);
 		const int yaw = static_cast<int> ((180 / M_PI * state_2d->getYaw ()));
-		std::cout<<"x"<<x<<std::endl;
+		/*std::cout<<"x"<<x<<std::endl;
 		std::cout<<"y"<<y<<std::endl;
 		std::cout<<"yaw"<<yaw<<std::endl;
-
+*/
 		Eigen::Array2i xyPos(x,y);
 
-		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
+//		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
 
 		std::vector<double> traverability;
 		traverability.push_back(allowedMap.at("traversability_0",xyPos));
 		traverability.push_back(allowedMap.at("traversability_45",xyPos));
 		traverability.push_back(allowedMap.at("traversability_90",xyPos));
 		traverability.push_back(allowedMap.at("traversability_135",xyPos));
-		std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
+		/*std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
 		std::cout<<"traverability[1]"<<traverability[1]<<std::endl;
 		std::cout<<"traverability[2]"<<traverability[2]<<std::endl;
 		std::cout<<"traverability[3]"<<traverability[3]<<std::endl;
-
+*/
 		if(traverability[0] != traverability[0])
 		{
 			traverability.clear();
 			//	ROS_INFO("compute traverability (traverability = %lf)",traverability[0]);
 
 			traverability = traversabilityMap_.traversabilityAtPosition(xyPos);
-			std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
+			//std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
 
 		}
 
@@ -200,7 +203,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 {
 
 	ROS_INFO("plan");
-	float planRadius = 0.5;
+	float planRadius = 0.2;
 
 	//ob::StateSpacePtr space(new ob::ReedsSheppStateSpace);
 	//ob::StateSpacePtr space (new ob::DubinsStateSpace);
@@ -258,14 +261,14 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	startPose.y = 0.0;
 	startPose.yaw = 0.0;
 	robotToGlobaleTransform(startPose);
-	std::cout << "\n startPose:  x: " <<startPose.x<<", y: " <<startPose.y <<", z: " <<startPose.z<< std::endl;
+	std::cout << "\n startPose:  x: " <<startPose.x<<", y: " <<startPose.y <<", yaw: " <<startPose.yaw<< std::endl;
 
 	start[0] = startPose.x;
 	start[1] = startPose.y;
 	start[2] = startPose.yaw;
 
 	robotToGlobaleTransform(goal_d);
-	std::cout << "\n goal_d:  x: " <<goal_d.x<<", y: " <<goal_d.y <<", z: " <<goal_d.z<< std::endl;
+	std::cout << "\n goal_d:  x: " <<goal_d.x<<", y: " <<goal_d.y <<", yaw: " <<goal_d.yaw<< std::endl;
 
 
 	goal[0] = goal_d.x;
@@ -292,7 +295,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
     auto multiObjective = std::make_shared<ob::MultiOptimizationObjective>(si);
 
     multiObjective->addObjective (lengthObjective, 10.0);
-   // multiObjective->addObjective (travObjective, 1.0);
+    multiObjective->addObjective (travObjective, 1.0);
 
 
     pdef->setOptimizationObjective(multiObjective);
@@ -315,7 +318,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
 	// attempt to solve the problem within 30 seconds of planning time
 	//ob::PlannerStatus solved = ss.solve (2);
-     ob::PlannerStatus solved = optimizingPlanner->solve(2);
+     ob::PlannerStatus solved = optimizingPlanner->solve(10);
 
 	if (solved)
 	{

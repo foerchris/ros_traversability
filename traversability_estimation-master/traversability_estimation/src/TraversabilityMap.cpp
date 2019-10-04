@@ -49,7 +49,6 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   ROS_INFO("Traversability Map started.");
 
   std::strcpy(Imagepath, (ros::package::getPath("traversability_estimation")+"/image").c_str());
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
   readParameters();
   traversabilityMapPublisher_ = nodeHandle_.advertise<grid_map_msgs::GridMap>("traversability_map", 1);
@@ -58,21 +57,18 @@ TraversabilityMap::TraversabilityMap(ros::NodeHandle& nodeHandle)
   elevationMapLayers_.push_back("elevation");
   elevationMapLayers_.push_back("upper_bound");
   elevationMapLayers_.push_back("lower_bound");
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
   // TODO: Adapt map layers to traversability filters.
   traversabilityMapLayers_.push_back(traversabilityType_);
   traversabilityMapLayers_.push_back(slopeType_);
   traversabilityMapLayers_.push_back(stepType_);
   traversabilityMapLayers_.push_back(roughnessType_);
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
   savefootprintIntervallYaw=0;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
   first = true;
-	std::cout<<"__LINE__"<<__LINE__<<std::endl;
 
+	computFootprint = false;
 }
 
 TraversabilityMap::~TraversabilityMap()
@@ -176,48 +172,60 @@ bool TraversabilityMap::traversabilityMapInitialized()
 
 void TraversabilityMap::resetTraversabilityFootprintLayers()
 {
+	std::cout<<"resetTraversabilityFootprintLayers"<<std::endl;
   boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
   if (traversabilityMap_.exists("step_footprint")) traversabilityMap_.clear("step_footprint");
   if (traversabilityMap_.exists("slope_footprint")) traversabilityMap_.clear("slope_footprint");
   if (traversabilityMap_.exists("traversability_footprint")) traversabilityMap_.clear("traversability_footprint");
 }
 
+void TraversabilityMap::setcomputFootprint(bool compute)
+{
+	computFootprint = compute;
+
+}
 bool TraversabilityMap::computeTraversability()
 {
-  boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
-  grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
-  scopedLockForTraversabilityMap.unlock();
-  boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
-  grid_map::GridMap elevationMapCopy = elevationMap_;
-  scopedLockForElevationMap.unlock();
 
-  // Initialize timer.
-  ros::WallTime start = ros::WallTime::now();
+	if(computFootprint == false)
+	{
+		std::cout<<"computeTraversability"<<std::endl;
+		boost::recursive_mutex::scoped_lock scopedLockForTraversabilityMap(traversabilityMapMutex_);
+		grid_map::GridMap traversabilityMapCopy = traversabilityMap_;
+		scopedLockForTraversabilityMap.unlock();
+		boost::recursive_mutex::scoped_lock scopedLockForElevationMap(elevationMapMutex_);
+		grid_map::GridMap elevationMapCopy = elevationMap_;
+		scopedLockForElevationMap.unlock();
 
-  if (elevationMapInitialized_) {
-    if (!filter_chain_.update(elevationMapCopy, traversabilityMapCopy)) {
-      ROS_ERROR("Traversability Estimation: Could not update the filter chain! No traversability computed!");
-      traversabilityMapInitialized_ = false;
-      return false;
-    }
-  } else {
-    ROS_ERROR("Traversability Estimation: Elevation map is not initialized!");
-    traversabilityMapInitialized_ = false;
-    return false;
-  }
-  traversabilityMapInitialized_ = true;
-  traversabilityMapCopy.add("step_footprint");
-  traversabilityMapCopy.add("slope_footprint");
-  if (checkForRoughness_) traversabilityMapCopy.add("roughness_footprint");
-  traversabilityMapCopy.add("traversability_footprint");
+		// Initialize timer.
+		ros::WallTime start = ros::WallTime::now();
 
-  scopedLockForTraversabilityMap.lock();
-  traversabilityMap_ = traversabilityMapCopy;
-  scopedLockForTraversabilityMap.unlock();
-  publishTraversabilityMap();
+		if (elevationMapInitialized_) {
+		if (!filter_chain_.update(elevationMapCopy, traversabilityMapCopy)) {
+		  ROS_ERROR("Traversability Estimation: Could not update the filter chain! No traversability computed!");
+		  traversabilityMapInitialized_ = false;
+		  return false;
+		}
+		} else {
+		ROS_ERROR("Traversability Estimation: Elevation map is not initialized!");
+		traversabilityMapInitialized_ = false;
+		return false;
+		}
+		traversabilityMapInitialized_ = true;
+		traversabilityMapCopy.add("step_footprint");
+		traversabilityMapCopy.add("slope_footprint");
+		if (checkForRoughness_) traversabilityMapCopy.add("roughness_footprint");
+		traversabilityMapCopy.add("traversability_footprint");
 
-  ROS_DEBUG("Traversability map has been updated in %f s.", (ros::WallTime::now() - start).toSec());
-  return true;
+		scopedLockForTraversabilityMap.lock();
+		traversabilityMap_ = traversabilityMapCopy;
+		scopedLockForTraversabilityMap.unlock();
+		publishTraversabilityMap();
+
+		ROS_DEBUG("Traversability map has been updated in %f s.", (ros::WallTime::now() - start).toSec());
+		return true;
+	}
+
 }
 
 bool TraversabilityMap::setupTraverabilityMap(double footprintIntervallYaw)
@@ -318,7 +326,12 @@ std::vector<double> TraversabilityMap::traversabilityAtPosition(const Eigen::Arr
 }
 bool TraversabilityMap::traversabilityFootprint(double footprintIntervallYaw)
 {
-	if (!traversabilityMapInitialized_) return false;
+	computFootprint = true;
+	if (!traversabilityMapInitialized_)
+	{
+		computFootprint = false;
+		return false;
+	}
 	// Initialize timer.
 	ros::WallTime start = ros::WallTime::now();
 
@@ -414,6 +427,8 @@ bool TraversabilityMap::traversabilityFootprint(double footprintIntervallYaw)
 	publishTraversabilityMap();
 
 	ROS_INFO("Traversability of footprint has been computed in %f s.", (ros::WallTime::now() - start).toSec());
+	computFootprint = false;
+
 	return true;
 }
 

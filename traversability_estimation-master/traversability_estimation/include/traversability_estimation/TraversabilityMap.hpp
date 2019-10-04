@@ -59,6 +59,8 @@ class TraversabilityMap
    */
   bool computeTraversability();
 
+  void setcomputFootprint(bool compute);
+
   /*!
    * Checks the traversability of a footprint path and returns the traversability.
    * @param[in] path the footprint path that has to be checked.
@@ -279,6 +281,8 @@ class TraversabilityMap
   double zPosition_;
   char Imagepath[100];
   double savefootprintIntervallYaw;
+
+  bool computFootprint;
 };
 
 } /* namespace */
