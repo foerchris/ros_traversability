@@ -27,6 +27,8 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
       robotSlopeType_("robot_slope"),
       getImageCallback_(false)
 {
+	std::cout<<"TraversabilityEstimation_ "<<__LINE__<<std::endl;
+
   ROS_DEBUG("Traversability estimation node started.");
   readParameters();
   submapClient_ = nodeHandle_.serviceClient<grid_map_msgs::GetGridMap>(submapServiceName_);
@@ -44,15 +46,27 @@ TraversabilityEstimation::TraversabilityEstimation(ros::NodeHandle& nodeHandle)
   footprintPathService_ = nodeHandle_.advertiseService("check_footprint_path", &TraversabilityEstimation::checkFootprintPath, this);
   updateParameters_ = nodeHandle_.advertiseService("update_parameters", &TraversabilityEstimation::updateParameter, this);
   traversabilityFootprint_ = nodeHandle_.advertiseService("traversability_footprint", &TraversabilityEstimation::traversabilityFootprint, this);
-  clcPathSrv = nodeHandle_.advertiseService("clcPath", &TraversabilityEstimation::clcPathCallback, this);
 
   saveToBagService_ = nodeHandle_.advertiseService("save_to_bag", &TraversabilityEstimation::saveToBag, this);
   //imageSubscriber_ = nodeHandle_.subscribe(imageTopic_,1,&TraversabilityEstimation::imageCallback, this);
 
-  tf_prefix = ros::this_node::getNamespace();
+ /* tf_prefix = ros::this_node::getNamespace();
   tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
   std::size_t pos = tf_prefix.find("/");
   tf_prefix = tf_prefix.substr(0, pos-1);
+*/
+	tf_prefix = ros::this_node::getNamespace();
+	if(tf_prefix == "/")
+	{
+		tf_prefix = "//GETjag1";
+	}
+	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
+
+	clcPathSrv = nodeHandle_.advertiseService("/"+tf_prefix+"/clcPath", &TraversabilityEstimation::clcPathCallback, this);
+
+	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
+	int robot_number = 1;
+	iss >> robot_number;
 
   eleviationSubscriber_ = nodeHandle_.subscribe<grid_map_msgs::GridMap>("/"+tf_prefix+"/GridMap",1,boost::bind (&TraversabilityEstimation::elevationMapCallback, this, _1));
   GoalSubscriber = nodeHandle_.subscribe<nav_msgs::Odometry>("/"+tf_prefix+"/goal_pose",1,boost::bind(&TraversabilityEstimation::goalPoseCallback, this, _1));
@@ -97,7 +111,7 @@ visualization_msgs::Marker TraversabilityEstimation::createMarker (std::string n
 
 	marker.pose.position.x = x;
 	marker.pose.position.y = y;
-	marker.pose.position.z = 0.0;
+	marker.pose.position.z = 0.2;
 	marker.pose.orientation.x = 0.0;
 	marker.pose.orientation.y = 0.0;
 	marker.pose.orientation.z = 0.0;
@@ -118,7 +132,11 @@ bool TraversabilityEstimation::clcPathCallback( std_srvs::Empty::Request& reques
 	{
 
 		std::vector<pose> poses;
+		traversabilityMap_.setcomputFootprint(true);
+
 		omplPlanner.plan(goalPose,poses);
+
+		traversabilityMap_.setcomputFootprint(false);
 
 		visualization_msgs::MarkerArray markerArray;
 
@@ -374,8 +392,29 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
 bool TraversabilityEstimation::traversabilityFootprint(
     std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
+//traversabilityMap_.setupTraverabilityMap(45);
+
+	stetupMap = true;
+
+	std::vector<pose> poses;
+	traversabilityMap_.setcomputFootprint(true);
+
+
 	if (!traversabilityMap_.traversabilityFootprint(45))
 		return false;
+
+	omplPlanner.setTraversabilityMap(&traversabilityMap_);
+	omplPlanner.plan(goalPose,poses);
+
+	visualization_msgs::MarkerArray markerArray;
+
+	for(std::size_t i=0; i<poses.size();i++)
+	{
+		printf ("pose x: %4.4f pose y: %4.4f \n", poses.at(i).x, poses.at(i).y);
+		markerArray.markers.push_back (createMarker("static line", i, poses.at(i).x, poses.at(i).y, 1.0, 1.0, 0.0, 1.0));
+	}
+	markerPublisher.publish(markerArray);
+	traversabilityMap_.setcomputFootprint(false);
 
   return true;
 }

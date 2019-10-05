@@ -57,58 +57,79 @@ OMPLPlanner::~OMPLPlanner ()
  * @param state
  * @return
  */
- 
+
 class ValidityChecker : public ob::StateValidityChecker
 {
 public:
-	/*traversability_estimation::TraversabilityMap& traversabilityMap_;
+	traversability_estimation::TraversabilityMap& traversabilityMap_;
 	Eigen::Array2i mapSize;
 	double resolution;
 	double mapsizeX;
 	double mapsizeY;
-	*/
-    //ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
-	ValidityChecker(const ob::SpaceInformationPtr& si) :
-        ob::StateValidityChecker(si)//,
-    //    traversabilityMap_(traversabilityMap)
-    {
-		/*grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
+	grid_map::GridMap allowedMap;
 
+    ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
+	//ValidityChecker(const ob::SpaceInformationPtr& si) :
+        ob::StateValidityChecker(si),
+        traversabilityMap_(traversabilityMap),
+    	allowedMap(traversabilityMap.getTraversabilityMap())
+
+    {
+
+    //	allowedMap = traversabilityMap_.getTraversabilityMap();
 		mapSize = allowedMap.getSize();
 		resolution = allowedMap.getResolution();
 
 		mapsizeX=mapSize[0]*resolution;
-		mapsizeY=mapSize[1]*resolution;*/
+		mapsizeY=mapSize[1]*resolution;
 	}
     // Returns whether the given state's position overlaps the
     // circular obstacle
     bool isValid(const ob::State* state) const
     {
+    	//bool bla = true;
+    	/*if(this->traversability(state) > 0.5)
+    	{
+
+    	}*/
         return this->traversability(state) > 0.5;
+    	//return true;
+
     }
-    
+
     // Returns the distance from the given state's position to the
     // boundary of the circular obstacle.
     double traversability(const ob::State* state) const
     {
-/*        const ompl::base::SE2StateSpace::StateType *state_2d = state->as<ompl::base::SE2StateSpace::StateType> ();
-		const int &x (int (mapSize[0]-(state_2d->getX ()+mapsizeX/2)/0.06)), &y (int (mapSize[1]-(state_2d->getY ()+mapsizeY/2)/0.06)), &yaw (int ((180 / M_PI * state_2d->getYaw ())));
+        const ompl::base::SE2StateSpace::StateType *state_2d = state->as<ompl::base::SE2StateSpace::StateType> ();
+		const int x = static_cast<int> (mapSize[0] - (state_2d->getX () + mapsizeX / 2) / 0.06);
+		const int y = static_cast<int> (mapSize[1] - (state_2d->getY () + mapsizeY / 2) / 0.06);
+		const int yaw = static_cast<int> ((180 / M_PI * state_2d->getYaw ()));
+		/*std::cout<<"x"<<x<<std::endl;
+		std::cout<<"y"<<y<<std::endl;
+		std::cout<<"yaw"<<yaw<<std::endl;
+*/
 		Eigen::Array2i xyPos(x,y);
 
-		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
+//		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
 
 		std::vector<double> traverability;
 		traverability.push_back(allowedMap.at("traversability_0",xyPos));
 		traverability.push_back(allowedMap.at("traversability_45",xyPos));
 		traverability.push_back(allowedMap.at("traversability_90",xyPos));
 		traverability.push_back(allowedMap.at("traversability_135",xyPos));
-
+		/*std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
+		std::cout<<"traverability[1]"<<traverability[1]<<std::endl;
+		std::cout<<"traverability[2]"<<traverability[2]<<std::endl;
+		std::cout<<"traverability[3]"<<traverability[3]<<std::endl;
+*/
 		if(traverability[0] != traverability[0])
 		{
 			traverability.clear();
 			//	ROS_INFO("compute traverability (traverability = %lf)",traverability[0]);
 
 			traverability = traversabilityMap_.traversabilityAtPosition(xyPos);
+			//std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
 
 		}
 
@@ -132,10 +153,9 @@ public:
 			//return ompl::base::Cost(traverability[0]);
 			return traverability[0];
 		}
-		*/
-		
-		return 0.1;
- 
+
+		return 0;
+
     }
 
 };
@@ -143,75 +163,19 @@ public:
 class TraverabilityObjective : public ompl::base::StateCostIntegralObjective
 {
 public:
-    TraverabilityObjective(const ompl::base::SpaceInformationPtr& si) :
-        ompl::base::StateCostIntegralObjective(si, true)
-    {	
-	
+	ValidityChecker& validityChecker_;
+    TraverabilityObjective(const ompl::base::SpaceInformationPtr& si, ValidityChecker& validityChecker) :
+        ompl::base::StateCostIntegralObjective(si, true),
+		validityChecker_(validityChecker)
+    {
+
     }
 
     ompl::base::Cost stateCost(const ompl::base::State* state) const
     {
-		return ob::Cost(1 / si_->getStateValidityChecker()->clearance(state));
+		return ob::Cost(validityChecker_.traversability(state));
     }
 };
-
-
-ompl::base::OptimizationObjectivePtr getTraversabilityObjectivconst(ompl::base::SpaceInformationPtr& si)
-{
-     return std::make_shared<TraverabilityObjective>(si);
-}
- 
- 
-bool OMPLPlanner::isStateValid (const ob::State *state)
-{
-	const ob::SE2StateSpace::StateType *state_2d = state->as<ob::SE2StateSpace::StateType> ();
-	const int &x (int (mapSize[0]-(state_2d->getX ()+mapsizeX/2)/0.06)), &y (int (mapSize[1]-(state_2d->getY ()+mapsizeY/2)/0.06)), &yaw (int ((180 / M_PI * state_2d->getYaw ())));
-	Eigen::Array2i xyPos(x,y);
-
-
-	std::vector<double> traverability;
-	traverability.push_back(allowedMap.at("traversability_0",xyPos));
-	traverability.push_back(allowedMap.at("traversability_45",xyPos));
-	traverability.push_back(allowedMap.at("traversability_90",xyPos));
-	traverability.push_back(allowedMap.at("traversability_135",xyPos));
-
-	if(traverability[0] != traverability[0])
-	{
-		traverability.clear();
-		//	ROS_INFO("compute traverability (traverability = %lf)",traverability[0]);
-
-		traverability = traversabilityMap_->traversabilityAtPosition(xyPos);
-		allowedMap = traversabilityMap_->getTraversabilityMap();
-
-	}
-
-
-
-	int size = 4;
-	float deltaYaw = 180/size;
-	float boundry = deltaYaw/2;
-
-	for(int i=0;i<size;i++)
-	{
-		if(yaw>=-boundry && yaw<=boundry)
-		{
-			if(traverability[i]>0.5)
-			{
-				return true;
-			}
-		}
-		boundry += deltaYaw;
-	}
-	if(yaw<=-(180-deltaYaw/2) && yaw>=(180-deltaYaw/2))
-	{
-		if(traverability[0]>0.5)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 
 /**
  * Loads the calculated map of allowed angles
@@ -239,12 +203,12 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 {
 
 	ROS_INFO("plan");
-	float planRadius = 0.5;
+	float planRadius = 0.2;
 
 	//ob::StateSpacePtr space(new ob::ReedsSheppStateSpace);
 	//ob::StateSpacePtr space (new ob::DubinsStateSpace);
 	ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>());
-	
+
 	space = std::make_shared<ob::DubinsStateSpace>(planRadius);
 
 	ob::RealVectorBounds bounds (2);
@@ -276,18 +240,19 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
    // Construct a space information instance for this state space
      auto si(std::make_shared<ob::SpaceInformation>(space));
-     
-     
+
+
 	// set state validity checking for this space
 	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
-	//si->setStateValidityChecker(std::make_shared<ValidityChecker>(si, traversabilityMap_));
-	si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
+    auto validityChecker = std::make_shared<ValidityChecker>(si, *traversabilityMap_);
+	si->setStateValidityChecker(validityChecker);
+	//si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
 
 	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
 
 	si->setup();
-	
-	
+
+
 	// set the start and goal states
 	ob::ScopedState<> start (space), goal (space);
 
@@ -296,14 +261,14 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	startPose.y = 0.0;
 	startPose.yaw = 0.0;
 	robotToGlobaleTransform(startPose);
-	std::cout << "startPose:  x: " <<startPose.x<<", y: " <<startPose.y <<", z: " <<startPose.z<< std::endl;
+	std::cout << "\n startPose:  x: " <<startPose.x<<", y: " <<startPose.y <<", yaw: " <<startPose.yaw<< std::endl;
 
 	start[0] = startPose.x;
 	start[1] = startPose.y;
 	start[2] = startPose.yaw;
 
 	robotToGlobaleTransform(goal_d);
-	std::cout << "goal_d:  x: " <<goal_d.x<<", y: " <<goal_d.y <<", z: " <<goal_d.z<< std::endl;
+	std::cout << "\n goal_d:  x: " <<goal_d.x<<", y: " <<goal_d.y <<", yaw: " <<goal_d.yaw<< std::endl;
 
 
 	goal[0] = goal_d.x;
@@ -311,28 +276,38 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	goal[2] = goal_d.yaw;
 
 	//ss.setStartAndGoalStates (start, goal);
-	
+
 	// Create a problem instance
     auto pdef(std::make_shared<ob::ProblemDefinition>(si));
-     
+
     // Set the start and goal states
     pdef->setStartAndGoalStates(start, goal);
-     
+
 
     //ss.setOptimizationObjective(boost::bind (&OMPLPlanner::getTraversabilityObjectivconst, this, _1));
 
 	// Create the optimization objective specified by our command-line argument.
     // This helper function is simply a switch statement.
-    pdef->setOptimizationObjective(getTraversabilityObjectivconst(si));
-     
+
+    auto lengthObjective = std::make_shared<ob::PathLengthOptimizationObjective>(si);
+    auto travObjective = std::make_shared<TraverabilityObjective>(si, *validityChecker);
+
+    auto multiObjective = std::make_shared<ob::MultiOptimizationObjective>(si);
+
+    multiObjective->addObjective (lengthObjective, 10.0);
+    multiObjective->addObjective (travObjective, 1.0);
+
+
+    pdef->setOptimizationObjective(multiObjective);
+
 	//ob::PlannerPtr planner (new og::RRTstar (si.getSpaceInformation ()));
-	
+
 	//ss.setPlanner (planner);
 
 	// Construct the optimal planner specified by our command line argument.
     // This helper function is simply a switch statement.
     ob::PlannerPtr optimizingPlanner = std::make_shared<og::RRTstar>(si);
-	
+
 
 	optimizingPlanner->setProblemDefinition(pdef);
     optimizingPlanner->setup();
@@ -343,31 +318,42 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
 	// attempt to solve the problem within 30 seconds of planning time
 	//ob::PlannerStatus solved = ss.solve (2);
-     ob::PlannerStatus solved = optimizingPlanner->solve(2);
+     ob::PlannerStatus solved = optimizingPlanner->solve(10);
 
 	if (solved)
 	{
 		std::cout << "Found solution:" << std::endl;
+		 std::cout
+		             << optimizingPlanner->getName()
+		             << " found a solution of length "
+		             << pdef->getSolutionPath()->length()
+		             << " with an optimization objective value of "
+		             << pdef->getSolutionPath()->cost(pdef->getOptimizationObjective()) << std::endl;
 
-		//ss.simplifySolution ();
-		
-		//og::PathGeometric path = pdef->getSolutionPath ();
-		/*auto path = pdef->getSolutionPath();
-		double length = path.length ();
-		std::cout << "length: " <<length<< std::endl;
+		 std::string outputFile = ros::package::getPath("traversability_estimation")+"/bla.txt";
 
-		path.interpolate (length / 0.05 + 1);
+		// ros::package::getPath("traversability_estimation");
+		 std::ofstream outFile(outputFile.c_str());
+         std::static_pointer_cast<og::PathGeometric>(pdef->getSolutionPath())->
+             printAsMatrix(outFile);
+         outFile.close();
+         auto geoPath = *std::static_pointer_cast<og::PathGeometric>(pdef->getSolutionPath());
 
-		ob::ScopedState<> s (space);
-		for (std::size_t i = 0; i < path.getStateCount (); i++)
-		{
-			s = path.getState (i);
-			pose wayPose;
-			wayPose.x = s.reals ().at(0);
-			wayPose.y = s.reals ().at(1);
-			wayPose.yaw = s.reals ().at(2);
-			waypoints.push_back (wayPose);
-		}*/
+         double length = geoPath.length ();
+     		std::cout << "length: " <<length<< std::endl;
+
+     		geoPath.interpolate (length / 0.05 + 1);
+
+     		ob::ScopedState<> s (space);
+     		for (std::size_t i = 0; i < geoPath.getStateCount (); i++)
+     		{
+     			s = geoPath.getState (i);
+     			pose wayPose;
+     			wayPose.x = s.reals ().at(0);
+     			wayPose.y = s.reals ().at(1);
+     			wayPose.yaw = s.reals ().at(2);
+     			waypoints.push_back (wayPose);
+     		}
 	}
 	else
 	std::cout << "No solution found" << std::endl;
