@@ -42,7 +42,7 @@
 #include <get_std_msgs/IntegerBool.h>
 
 #include <robot_navigation/StepConfig.h>
-#include <TrackingControl.h>
+#include <robot_navigation/TrackingControl.h>
 #include "StairBehavior.h"
 #include "StepBehavior.h"
 

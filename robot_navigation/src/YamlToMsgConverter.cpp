@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include "YamlToMsgConverter.h"
+#include "robot_navigation/YamlToMsgConverter.h"
 
 const std::string PARAM_ROBOT_CONFIG_PATH = "/robot_configs";
 

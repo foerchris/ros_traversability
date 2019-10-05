@@ -1,0 +1,11 @@
+<launch>
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+
+		<node pkg="hector_trajectory_server" name="hector_trajectory_server" type="hector_trajectory_server" output="screen" respawn="true">
+		</node>
+	</group>
+
+
+</launch>

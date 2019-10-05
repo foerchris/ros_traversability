@@ -4,8 +4,8 @@
  *  Created on: Aug 23, 2017
  *      Author: chfo
  */
-#include <RobotControl.h>
-#include "YamlToMsgConverter.h"
+#include <robot_navigation/RobotControl.h>
+#include "robot_navigation/YamlToMsgConverter.h"
 
 
 const std::string PARAM_ROBOT_CONFIG_PATH = "/Untitled Folder";

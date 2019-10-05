@@ -389,10 +389,13 @@ bool TraversabilityEstimation::requestElevationMap(grid_map_msgs::GridMap& map)
   return true;
 }
 
+
 bool TraversabilityEstimation::traversabilityFootprint(
     std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
 {
 //traversabilityMap_.setupTraverabilityMap(45);
+	trackingControl->startRobotMovement(false);
+	trackingControl->setRobotSpeed(0.5);
 
 	stetupMap = true;
 
@@ -415,6 +418,12 @@ bool TraversabilityEstimation::traversabilityFootprint(
 	}
 	markerPublisher.publish(markerArray);
 	traversabilityMap_.setcomputFootprint(false);
+
+	std::cout<<"startRobotMovement"<<std::endl;
+
+	trackingControl->referencePath(poses,true);
+
+	trackingControl->startRobotMovement(true);
 
   return true;
 }

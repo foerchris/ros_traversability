@@ -12,14 +12,14 @@
 #include <ompl/base/ScopedState.h>
 
 
- 
+
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/base/objectives/StateCostIntegralObjective.h>
 #include <ompl/base/objectives/MaximizeMinClearanceObjective.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 
- 
+
 #include <opencv2/opencv.hpp>
 
 #include <grid_map_ros/grid_map_ros.hpp>
@@ -32,14 +32,8 @@
 #include <Eigen/Core>
 #include "traversability_estimation/TraversabilityMap.hpp"
 
-struct pose {
-  double x;
-  double y;
-  double z;
-  double roll;
-  double pitch;
-  double yaw;
-} ;
+#include <robot_navigation/TrackingControl.h>
+
 
 class OMPLPlanner
 {
@@ -54,6 +48,7 @@ class OMPLPlanner
 	public:
 		OMPLPlanner ();
 		~OMPLPlanner ();
+
 		void plan (pose goal_d, std::vector<pose> &waypoints);
 		void setTraversabilityMap (traversability_estimation::TraversabilityMap* traversabilityMap);
 		void setTraversabilityGridMap(grid_map::GridMap travGridMap);

@@ -6,7 +6,7 @@
  */
 
 
-#include "TrackingControl.h"
+#include "robot_navigation/TrackingControl.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -22,13 +22,13 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
 	tf_prefix = "//GETjag1";
-	
+
 	tf_prefix = ros::this_node::getNamespace();
 	if(tf_prefix == "/")
 	{
 		tf_prefix = "//GETjag1";
 	}
-	
+
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
 
 	istringstream iss (tf_prefix.substr(6, tf_prefix.size()));

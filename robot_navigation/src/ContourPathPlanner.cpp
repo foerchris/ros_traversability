@@ -1,4 +1,4 @@
-#include "ContourPathPlanner.h"
+#include "robot_navigation/ContourPathPlanner.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -370,7 +370,7 @@ void ContourPathPlanner::setPathPoints(std::vector<pose> inputPoints)
 
 void ContourPathPlanner::clcPathToSinglePoint(double planRadius)
 {
-	
+
 	random_device rd;
 	mt19937 mt(rd());
 	uniform_real_distribution<double> setRobotSpeed(0.3,1);

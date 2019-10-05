@@ -7,7 +7,7 @@
 
 
 
-#include "SnakeMode.h"
+#include "robot_navigation/SnakeMode.h"
 
 
 constexpr double D2R = M_PI / 180.0;

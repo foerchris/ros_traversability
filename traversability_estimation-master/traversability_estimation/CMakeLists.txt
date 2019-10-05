@@ -36,6 +36,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   flipper_control
+  robot_navigation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -43,6 +44,7 @@ find_package(Eigen3 REQUIRED)
 find_package(kindr QUIET)
 find_package(PkgConfig REQUIRED)
 find_package(flipper_control REQUIRED)
+find_package(robot_navigation REQUIRED)
 if(NOT kindr_FOUND)
   # Attempt to find package-based kindr
   pkg_check_modules(kindr kindr REQUIRED)
@@ -76,6 +78,7 @@ catkin_package(
     geometry_msgs
     sensor_msgs
     flipper_control
+    robot_navigation
 #  DEPENDS Eigen
 )
 
@@ -92,6 +95,7 @@ include_directories(
   ${Eigen_INCLUDE_DIRS}
   ${kindr_INCLUDE_DIRS}
   ${flipper_controlINCLUDE_DIRS}
+  ${robot_navigationINCLUDE_DIRS}
 )
 
 ## Declare a cpp library

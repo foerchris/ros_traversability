@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include "FlipperControl.h"
+#include "robot_navigation/FlipperControl.h"
 
 int main(int argc, char **argv)
 {

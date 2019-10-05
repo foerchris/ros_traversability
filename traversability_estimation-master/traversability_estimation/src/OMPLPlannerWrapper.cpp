@@ -67,6 +67,7 @@ public:
 	double mapsizeX;
 	double mapsizeY;
 	grid_map::GridMap allowedMap;
+	std::vector<std::string> orientationMapNames;
 
     ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
 	//ValidityChecker(const ob::SpaceInformationPtr& si) :
@@ -82,6 +83,11 @@ public:
 
 		mapsizeX=mapSize[0]*resolution;
 		mapsizeY=mapSize[1]*resolution;
+
+		orientationMapNames.push_back("traversability_0");
+		orientationMapNames.push_back("traversability_45");
+		orientationMapNames.push_back("traversability_90");
+		orientationMapNames.push_back("traversability_135");
 	}
     // Returns whether the given state's position overlaps the
     // circular obstacle
@@ -93,7 +99,8 @@ public:
 
     	}*/
         return this->traversability(state) > 0.5;
-    	//return true;
+        //return true;
+
 
     }
 
@@ -105,57 +112,64 @@ public:
 		const int x = static_cast<int> (mapSize[0] - (state_2d->getX () + mapsizeX / 2) / 0.06);
 		const int y = static_cast<int> (mapSize[1] - (state_2d->getY () + mapsizeY / 2) / 0.06);
 		const int yaw = static_cast<int> ((180 / M_PI * state_2d->getYaw ()));
-		/*std::cout<<"x"<<x<<std::endl;
-		std::cout<<"y"<<y<<std::endl;
-		std::cout<<"yaw"<<yaw<<std::endl;
-*/
+
 		Eigen::Array2i xyPos(x,y);
 
-//		grid_map::GridMap allowedMap = traversabilityMap_.getTraversabilityMap();
-
-		std::vector<double> traverability;
-		traverability.push_back(allowedMap.at("traversability_0",xyPos));
-		traverability.push_back(allowedMap.at("traversability_45",xyPos));
-		traverability.push_back(allowedMap.at("traversability_90",xyPos));
-		traverability.push_back(allowedMap.at("traversability_135",xyPos));
-		/*std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
-		std::cout<<"traverability[1]"<<traverability[1]<<std::endl;
-		std::cout<<"traverability[2]"<<traverability[2]<<std::endl;
-		std::cout<<"traverability[3]"<<traverability[3]<<std::endl;
-*/
-		if(traverability[0] != traverability[0])
-		{
-			traverability.clear();
-			//	ROS_INFO("compute traverability (traverability = %lf)",traverability[0]);
-
-			traverability = traversabilityMap_.traversabilityAtPosition(xyPos);
-			//std::cout<<"traverability[0]"<<traverability[0]<<std::endl;
-
-		}
 
 		int size = 4;
 		float deltaYaw = 180/size;
 		float boundry = deltaYaw/2;
 
-		for(int i=0;i<size;i++)
+		std::string orientation;
+
+		for(int i=0;i<size-1;i++)
 		{
-			if(yaw>=-boundry && yaw<=boundry)
+
+			if(boundry + i*deltaYaw <= fabs(yaw) && boundry + deltaYaw * (i+1) > fabs(yaw) )
 			{
-				//return ompl::base::Cost(traverability[i]);
-
-				return traverability[i];
-
+				double travValue = allowedMap.at(orientationMapNames[i+1],xyPos);
+				if(travValue != travValue)
+				{
+					travValue = traversabilityMap_.traversabilityAtPosition(xyPos)[i];
+					if(travValue != travValue)
+					{
+						std::cout<<"not exploraded area"<<std::endl;
+						return 0.0;
+					}
+				}
+			return travValue;
 			}
-			boundry += deltaYaw;
 		}
-		if(yaw<=-(180-deltaYaw/2) && yaw>=(180-deltaYaw/2))
+
+		if(0 <= fabs(yaw) && boundry > boundry )
 		{
-			//return ompl::base::Cost(traverability[0]);
-			return traverability[0];
+			double travValue = allowedMap.at(orientationMapNames[0],xyPos);
+			if(travValue != travValue)
+			{
+				travValue = traversabilityMap_.traversabilityAtPosition(xyPos)[0];
+				if(travValue != travValue)
+				{
+					std::cout<<"not exploraded area"<<std::endl;
+					return 0.0;
+				}
+			}
+			return travValue;
 		}
-
-		return 0;
-
+		else if(180 - boundry < fabs(yaw))
+		{
+			double travValue = allowedMap.at(orientationMapNames[0],xyPos);
+			if(travValue != travValue)
+			{
+				travValue = traversabilityMap_.traversabilityAtPosition(xyPos)[0];
+				if(travValue != travValue)
+				{
+					std::cout<<"not exploraded area"<<std::endl;
+					return 0.0;
+				}
+			}
+			return travValue;
+		}
+		return 0.0;
     }
 
 };
@@ -318,7 +332,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
 	// attempt to solve the problem within 30 seconds of planning time
 	//ob::PlannerStatus solved = ss.solve (2);
-     ob::PlannerStatus solved = optimizingPlanner->solve(10);
+     ob::PlannerStatus solved = optimizingPlanner->solve(20);
 
 	if (solved)
 	{
@@ -359,7 +373,6 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	std::cout << "No solution found" << std::endl;
 
 }
-
 
 void OMPLPlanner::globaleToRobotTransform(pose &Pose)
 {

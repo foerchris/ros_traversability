@@ -65,20 +65,28 @@ generate_dynamic_reconfigure_options(
    cfg/StepBehavior.cfg
 )
 include_directories(
+    include
 	${PCL_INCLUDE_DIRS}
 	${OpenCV_INCLUDE_DIRS}
 	${OMPL_INCLUDE_DIRS}
-	${PROJECT_SOURCE_DIR}/src/include
 	${EIGEN3_INCLUDE_DIR}
 	${catkin_INCLUDE_DIRS}
 )
 
 catkin_package(
-	     INCLUDE_DIRS src/include
-      LIBRARIES myLineLib
+      INCLUDE_DIRS include
+	   LIBRARIES robot_navigation
 	  CATKIN_DEPENDS message_runtime std_msgs dynamic_reconfigure geometry_msgs roscpp sensor_msgs tf get_std_msgs get_vis_msgs
 	#  DEPENDS system_lib
 )
+
+add_library(robot_navigation  src/TrackingControl.cpp)
+
+
+target_link_libraries(robot_navigation
+                        ${catkin_LIBRARIES}
+)
+
 
 add_executable(robot_navigation_server
 				src/robot_navigation_server.cpp
@@ -135,4 +143,14 @@ add_dependencies(robot_navigation_server ${PROJECT_NAME}_gencfg)
 
 add_dependencies(auto_robot_navigation_server ${PROJECT_NAME}_gencpp)
 add_dependencies(auto_robot_navigation_server ${PROJECT_NAME}_gencfg)
+
+
+install(TARGETS robot_navigation
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+
 

@@ -16,7 +16,7 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 		: nodeHandle_(nodeHandle),
 		  getObjectInfoFromYaml_(nodeHandle)
 {
-	
+
 	BASE_FRAME = "/base_link";
 	MAP_FRAME = "/map";
 	ODOM_FRAME = "/odom";
@@ -27,9 +27,9 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 		tf_prefix = "//GETjag1";
 	}
 	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
-	
+
 	std::istringstream iss (tf_prefix.substr(6, tf_prefix.size()));
-	
+
 	iss >> robot_number;
 
 	BASE_FRAME = tf_prefix + BASE_FRAME;
@@ -123,16 +123,33 @@ void GazebRandomObjectControl::creatEnviroment()
 		{
 			mazeReader.reset();
 			goalPose = transformMaze(mazeReader.getRandomCell());
-			
+
 			startPose = transformMaze(mazeReader.getRandomCell());
-			startPose = creatRandomOrientation(startPose); 
+			startPose = creatRandomOrientation(startPose);
 			dist = sqrt(pow(startPose.position.x - goalPose.position.x, 2) + pow(startPose.position.y - goalPose.position.y, 2));
 
 		}
 		setObject(spwanedObjects[0].name, goalPose);
 		setObject(spwanedObjects[1].name, startPose);
 		setRobotStartPose(startPose);
+/*		maze bla;
+		bla.x = 3.75;
+		bla.y = -3,75;
+		bla.orientation = 180;
 
+		startPose = transformMaze(bla);
+
+		setObject(spwanedObjects[1].name, startPose);
+		setRobotStartPose(startPose);
+
+		bla.x = -3.75;
+		bla.y = 1.25;
+		bla.orientation = 180;
+
+		goalPose = transformMaze(bla);
+
+		setObject(spwanedObjects[0].name, goalPose);
+*/
 		random_device rd;
 		mt19937 mt(rd());
 		uniform_int_distribution<int> setMazeRnd(0, 1);
@@ -147,8 +164,8 @@ void GazebRandomObjectControl::creatEnviroment()
 			setObjectInWorld(false);
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));		
-		
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
 
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -246,7 +263,7 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 		cv_ptr_sub_map.header.frame_id =cv_ptr->header.frame_id;
 		cv_ptr_sub_map.encoding = "32FC1";
 		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		
+
 		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
 		cv::Mat alpha( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
 		cv::Mat out[] = { depth,alpha };
@@ -268,12 +285,12 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 
 
 		groundImageDepth.copyTo(cv_ptr_sub_map.image);
-	
+
 		sensor_msgs::Image pubImage;
 		cv_ptr_sub_map.toImageMsg(pubImage);
 
 		elevationMapImagePublisher.publish(pubImage);
-		
+
 	}
 }
 
@@ -369,7 +386,7 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		mt19937 mt(rd());
 
 		uniform_int_distribution<int> randNumber( spwanedObjects.size()-11 , spwanedObjects.size()-7);
-		
+
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		//int numberOfObjects = randNumber(mt);
 		int numberOfObjects = spwanedObjects.size() - 10 ;

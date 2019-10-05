@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include "FlipperControl.h"
+#include "robot_navigation/FlipperControl.h"
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 

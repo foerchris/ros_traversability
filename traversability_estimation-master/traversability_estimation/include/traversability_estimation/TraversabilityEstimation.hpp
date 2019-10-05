@@ -32,10 +32,14 @@
 #include <opencv2/opencv.hpp>
 
 #include "traversability_estimation/OMPLPlannerWrapper.h"
+#include <robot_navigation/TrackingControl.h>
+
+
 
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <nav_msgs/Odometry.h>
+
 
 namespace traversability_estimation {
 
@@ -259,6 +263,9 @@ class TraversabilityEstimation
   bool stetupMap;
   ros::Publisher markerPublisher;
   OMPLPlanner omplPlanner;
+  ros::NodeHandle thisNodeHandel;
+
+  TrackingControl* trackingControl = new TrackingControl(thisNodeHandel, 0.5, 0.2, 0.05);
 
 };
 

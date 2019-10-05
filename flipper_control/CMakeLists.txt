@@ -61,7 +61,6 @@ generate_dynamic_reconfigure_options(
 include_directories(
     include
 	${OpenCV_INCLUDE_DIRS}
-	${PROJECT_SOURCE_DIR}/src/include
 	${EIGEN3_INCLUDE_DIR}
 	${catkin_INCLUDE_DIRS}
 )

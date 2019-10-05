@@ -6,7 +6,7 @@
  */
 
 
-#include "StepBehavior.h"
+#include "robot_navigation/StepBehavior.h"
 
 
 constexpr double D2R = M_PI / 180.0;
