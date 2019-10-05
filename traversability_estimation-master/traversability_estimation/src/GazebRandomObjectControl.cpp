@@ -372,7 +372,7 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 		
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		//int numberOfObjects = randNumber(mt);
-		int numberOfObjects = spwanedObjects.size() - 18 ;
+		int numberOfObjects = spwanedObjects.size() - 10 ;
 
 
 		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
