@@ -29,7 +29,7 @@ drl_world:
 
         - type                : object_robocup_box
           name                : object_robocup_box
-          number              : 10
+          number              : 5
           mirrored_object     : false
           initPose            :
               positionX     : 3..15
@@ -53,7 +53,7 @@ drl_world:
 
         - type                : object_robocup_wall250
           name                : object_robocup_wall250
-          number              : 10
+          number              : 5
           mirrored_object     : false
           shift               : 1.21
           initPose            :
