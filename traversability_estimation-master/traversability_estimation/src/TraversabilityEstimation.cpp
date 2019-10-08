@@ -395,7 +395,8 @@ bool TraversabilityEstimation::traversabilityFootprint(
 {
 //traversabilityMap_.setupTraverabilityMap(45);
 	trackingControl->startRobotMovement(false);
-	trackingControl->setRobotSpeed(0.5);
+	trackingControl->setFollowPath(false);
+	trackingControl->setRobotSpeed(0.2);
 
 	stetupMap = true;
 
@@ -405,7 +406,15 @@ bool TraversabilityEstimation::traversabilityFootprint(
 
 	if (!traversabilityMap_.traversabilityFootprint(45))
 		return false;
+	/*cv_bridge::CvImage cv_ptr;
 
+	grid_map::GridMap map = traversabilityMap_.getTraversabilityMap();
+
+	grid_map::GridMapRosConverter::toCvImage(map, std::string("traversability_0") ,  "16UC1" , cv_ptr);
+
+	cv::imshow("bla", cv_ptr.image);
+	cv::waitKey(0);
+	*/
 	omplPlanner.setTraversabilityMap(&traversabilityMap_);
 	omplPlanner.plan(goalPose,poses);
 
@@ -421,9 +430,10 @@ bool TraversabilityEstimation::traversabilityFootprint(
 
 	std::cout<<"startRobotMovement"<<std::endl;
 
-	trackingControl->referencePath(poses,true);
+	trackingControl->setPath(poses);
 
 	trackingControl->startRobotMovement(true);
+	trackingControl->setFollowPath(true);
 
   return true;
 }

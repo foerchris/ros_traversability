@@ -434,6 +434,8 @@ bool TraversabilityMap::traversabilityFootprint(double footprintIntervallYaw)
 
 void TraversabilityMap::saveTravImage(const std::string& target, const std::string& name)
 {
+	ROS_INFO("saveTravImage");
+
 	char filename[100];
 	char path_f[200];
 

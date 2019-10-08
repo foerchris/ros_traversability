@@ -45,6 +45,7 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
     odomSub = nh.subscribe<nav_msgs::Odometry> ("odom", 1, &TrackingControl::odomCallback,this);
 	forwardMode=1;
     robotStartStopSub = nh.subscribe<std_msgs::Bool> ("start_stop_robot", 1, &TrackingControl::startStopCallback,this);
+	followPathTimer = nh.createTimer(ros::Duration(0.1), boost::bind (&TrackingControl::followPathCallback, this, _1));
 
 	// ROS Publisher
 	velPub = nh.advertise<geometry_msgs::Twist>( "cmd_vel",1);	// ROS services
@@ -53,6 +54,8 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
 	save=0;
 	count=0;
 	robotStartStop=true;
+	followPath= false;
+
 	robotSpeed = 0.2;
 	currentTrackingState=START;
 	Kp = 0.5;
@@ -78,7 +81,6 @@ TrackingControl::TrackingControl(ros::NodeHandle nh, double turn_speed, double f
 	dsy=0;
 	dAngle=0;
 
-
 	tfListener = std::unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
     // dynamic reconfigure
@@ -94,6 +96,22 @@ TrackingControl::~TrackingControl()
 
 }
 
+void TrackingControl::followPathCallback(const ros::TimerEvent& bla)
+{
+	if(followPath)
+	{
+		referencePath(globalPath,true);
+	}
+}
+
+void TrackingControl::setFollowPath(bool follow)
+{
+	followPath=follow;
+}
+void TrackingControl::setPath(std::vector<pose> path)
+{
+	globalPath = path;
+}
 void TrackingControl::alginCamera(const bool& choseFrontRearView)
 {
 	std::cout<<"alginCamera"<<std::endl;

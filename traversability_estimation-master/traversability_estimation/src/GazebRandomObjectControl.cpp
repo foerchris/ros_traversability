@@ -132,19 +132,19 @@ void GazebRandomObjectControl::creatEnviroment()
 		setObject(spwanedObjects[0].name, goalPose);
 		setObject(spwanedObjects[1].name, startPose);
 		setRobotStartPose(startPose);
-/*		maze bla;
-		bla.x = 3.75;
-		bla.y = -3,75;
-		bla.orientation = 180;
+		/*maze bla;
+		bla.x = -3.75;
+		bla.y = -1,25;
+		bla.orientation = 0;
 
 		startPose = transformMaze(bla);
 
 		setObject(spwanedObjects[1].name, startPose);
 		setRobotStartPose(startPose);
 
-		bla.x = -3.75;
-		bla.y = 1.25;
-		bla.orientation = 180;
+		bla.x = 3.75;
+		bla.y = -1.25;
+		bla.orientation = 0;
 
 		goalPose = transformMaze(bla);
 

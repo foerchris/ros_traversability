@@ -69,7 +69,9 @@ public:
 	bool pointDistanzCheak(const pose &globalCoordinates);
 
 	void setRobotSpeed(double speed);
-
+	void followPathCallback(const ros::TimerEvent& bla);
+	void setPath(std::vector<pose> path);
+	void setFollowPath(bool follow);
 private:
 	void reconfigureCallback (robot_navigation::TrackingControlConfig &confg, uint32_t level);
 	bool followObjectCallback(std_srvs::Empty::Request &req,
@@ -89,6 +91,7 @@ private:
 	void panCamera();
 	void startStopCallback (const std_msgs::BoolConstPtr& boolMsg);
 
+
 	ros::Publisher markerPublisher;
 	visualization_msgs::Marker createMarker (std::string ns, int id, double x, double y,  double r, double g , double b , double a );
 	// ROS publisher
@@ -98,6 +101,10 @@ private:
 	ros::Publisher 	camAngleYawPub;
 	ros::Subscriber	odomSub;
 	ros::Subscriber robotStartStopSub;
+
+	ros::Timer followPathTimer;
+	std::vector<pose> globalPath;
+	bool followPath;
 	std_msgs::Float64 camAnglePitch;
 	std_msgs::Float64 camAngleYaw;
 

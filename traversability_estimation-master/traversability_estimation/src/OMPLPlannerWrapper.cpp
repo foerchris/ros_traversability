@@ -98,7 +98,7 @@ public:
     	{
 
     	}*/
-        return this->traversability(state) > 0.5;
+        return this->traversability(state) > 0.3;
         //return true;
 
 
@@ -108,6 +108,8 @@ public:
     // boundary of the circular obstacle.
     double traversability(const ob::State* state) const
     {
+		//std::cout<<"traversability"<<std::endl;
+
         const ompl::base::SE2StateSpace::StateType *state_2d = state->as<ompl::base::SE2StateSpace::StateType> ();
 		const int x = static_cast<int> (mapSize[0] - (state_2d->getX () + mapsizeX / 2) / 0.06);
 		const int y = static_cast<int> (mapSize[1] - (state_2d->getY () + mapsizeY / 2) / 0.06);
@@ -119,12 +121,11 @@ public:
 		int size = 4;
 		float deltaYaw = 180/size;
 		float boundry = deltaYaw/2;
+		//std::cout<<"allowedMap.at(traversability_0,xyPos)"<<allowedMap.at("traversability_0",xyPos)<<std::endl;
 
 		std::string orientation;
-
 		for(int i=0;i<size-1;i++)
 		{
-
 			if(boundry + i*deltaYaw <= fabs(yaw) && boundry + deltaYaw * (i+1) > fabs(yaw) )
 			{
 				double travValue = allowedMap.at(orientationMapNames[i+1],xyPos);
@@ -141,7 +142,7 @@ public:
 			}
 		}
 
-		if(0 <= fabs(yaw) && boundry > boundry )
+		if(0 <= fabs(yaw) && boundry > fabs(yaw) )
 		{
 			double travValue = allowedMap.at(orientationMapNames[0],xyPos);
 			if(travValue != travValue)
@@ -308,8 +309,8 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
     auto multiObjective = std::make_shared<ob::MultiOptimizationObjective>(si);
 
-    multiObjective->addObjective (lengthObjective, 10.0);
-    multiObjective->addObjective (travObjective, 1.0);
+    multiObjective->addObjective (lengthObjective, 5.0);
+    multiObjective->addObjective (travObjective, 5.0);
 
 
     pdef->setOptimizationObjective(multiObjective);
