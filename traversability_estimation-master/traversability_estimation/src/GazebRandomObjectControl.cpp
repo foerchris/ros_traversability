@@ -90,7 +90,20 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	resetWorld = true;
 	calculating = false;
 
+	geometry_msgs::Pose startPose;
 
+	maze bla;
+	bla.x = -3.75;
+	bla.y = 1,25;
+	bla.orientation = 0;
+
+	startPose = transformMaze(bla);
+
+	setObject(spwanedObjects[1].name, startPose);
+	setRobotStartPose(startPose);
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	//nodeHandle_.setParam("reset_elevation_map",true);
 }
 
 GazebRandomObjectControl::~GazebRandomObjectControl ()
@@ -106,7 +119,7 @@ void GazebRandomObjectControl::resetCallback(const ros::TimerEvent& event)
 
 void GazebRandomObjectControl::creatEnviroment()
 {
-	bool eval = false;
+	bool eval = true;
 		if(resetWorld)
 		{
 			nodeHandle_.setParam("End_of_episode",false);
@@ -117,23 +130,33 @@ void GazebRandomObjectControl::creatEnviroment()
 			if(eval)
 			{
 				maze bla;
-				bla.x = 3.75;
-				bla.y = -3,75;
-				bla.orientation = 180;
+				/*bla.x = -3.75;
+				bla.y = 1,25;
+				bla.orientation = 0;
 
 				startPose = transformMaze(bla);
 
 				setObject(spwanedObjects[1].name, startPose);
 				setRobotStartPose(startPose);
-
-				bla.x = -3.75;
-				bla.y = 1.25;
-				bla.orientation = 180;
+*/
+				bla.x = 3.75;
+				bla.y = -1.25;
+				bla.orientation = 0;
 
 				goalPose = transformMaze(bla);
 
 				setObject(spwanedObjects[0].name, goalPose);
 
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+
+				//nodeHandle_.setParam("reset_elevation_map",true);
+
+				std::this_thread::sleep_for(std::chrono::seconds(4));
+
+				nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
 			}
 			else
