@@ -106,74 +106,84 @@ void GazebRandomObjectControl::resetCallback(const ros::TimerEvent& event)
 
 void GazebRandomObjectControl::creatEnviroment()
 {
+	bool eval = false;
 	if(resetWorld)
 	{
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
 
-		//reset obstacles
-		resetAllObjects();
-		// set all getjag to a zero pose
-		setRobotZeroPose();
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-		double dist = 0;
 		geometry_msgs::Pose startPose;
-		while( dist<5.0 )
+
+		if(eval)
 		{
-			mazeReader.reset();
-			goalPose = transformMaze(mazeReader.getRandomCell());
+			maze bla;
+			bla.x = 3.75;
+			bla.y = -3,75;
+			bla.orientation = 180;
 
-			startPose = transformMaze(mazeReader.getRandomCell());
-			startPose = creatRandomOrientation(startPose);
-			dist = sqrt(pow(startPose.position.x - goalPose.position.x, 2) + pow(startPose.position.y - goalPose.position.y, 2));
+			startPose = transformMaze(bla);
 
-		}
-		setObject(spwanedObjects[0].name, goalPose);
-		setObject(spwanedObjects[1].name, startPose);
-		setRobotStartPose(startPose);
-/*		maze bla;
-		bla.x = 3.75;
-		bla.y = -3,75;
-		bla.orientation = 180;
+			setObject(spwanedObjects[1].name, startPose);
+			setRobotStartPose(startPose);
 
-		startPose = transformMaze(bla);
+			bla.x = -3.75;
+			bla.y = 1.25;
+			bla.orientation = 180;
 
-		setObject(spwanedObjects[1].name, startPose);
-		setRobotStartPose(startPose);
+			goalPose = transformMaze(bla);
 
-		bla.x = -3.75;
-		bla.y = 1.25;
-		bla.orientation = 180;
-
-		goalPose = transformMaze(bla);
-
-		setObject(spwanedObjects[0].name, goalPose);
-*/
-		random_device rd;
-		mt19937 mt(rd());
-		uniform_int_distribution<int> setMazeRnd(0, 1);
+			setObject(spwanedObjects[0].name, goalPose);
 
 
-		if(setMazeRnd(mt)==1)
-		{
-			setObjectInWorld(false);
 		}
 		else
 		{
-			setObjectInWorld(false);
+			//reset obstacles
+			resetAllObjects();
+			// set all getjag to a zero pose
+			setRobotZeroPose();
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+			double dist = 0;
+			while( dist<5.0 )
+			{
+				mazeReader.reset();
+				goalPose = transformMaze(mazeReader.getRandomCell());
+
+				startPose = transformMaze(mazeReader.getRandomCell());
+				startPose = creatRandomOrientation(startPose);
+				dist = sqrt(pow(startPose.position.x - goalPose.position.x, 2) + pow(startPose.position.y - goalPose.position.y, 2));
+
+			}
+			setObject(spwanedObjects[0].name, goalPose);
+			setObject(spwanedObjects[1].name, startPose);
+			setRobotStartPose(startPose);
+
+			random_device rd;
+			mt19937 mt(rd());
+			uniform_int_distribution<int> setMazeRnd(0, 1);
+
+			if(setMazeRnd(mt)==1)
+			{
+				setObjectInWorld(false);
+			}
+			else
+			{
+				setObjectInWorld(false);
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+
+			nodeHandle_.setParam("reset_elevation_map",true);
+
+			std::this_thread::sleep_for(std::chrono::seconds(4));
+
+			nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-
-		nodeHandle_.setParam("reset_elevation_map",true);
-
-		std::this_thread::sleep_for(std::chrono::seconds(4));
-
-		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);
 
 	}
 
