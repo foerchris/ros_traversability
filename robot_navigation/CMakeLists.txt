@@ -88,6 +88,10 @@ target_link_libraries(robot_navigation
 )
 
 
+add_executable(track_movement
+				src/track_movement.cpp
+                )
+
 add_executable(robot_navigation_server
 				src/robot_navigation_server.cpp
 				src/RobotControl.cpp
@@ -125,9 +129,11 @@ target_link_libraries(robot_navigation_server
 target_link_libraries(auto_robot_navigation_server
   ${catkin_LIBRARIES}
   ${OMPL_LIBRARIES}
-
 )
 
+target_link_libraries(track_movement
+  ${catkin_LIBRARIES}
+)
 
 target_link_libraries(flipper_control_server
   ${OpenCV_LIBRARIES}
