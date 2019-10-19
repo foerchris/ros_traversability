@@ -132,7 +132,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, "32FC1");
+		cv_ptr = cv_bridge::toCvCopy(msg, "32FC2");
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -141,7 +141,7 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	}
 	cv::Mat mapImage;
 	cv_ptr->image.copyTo(mapImage);
-/*
+
 	cv::Mat depth( mapImage.rows, mapImage.cols, CV_32FC1 );
 	cv::Mat alpha( mapImage.rows, mapImage.cols, CV_32FC1 );
 
@@ -151,11 +151,11 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat out[] = { depth,alpha };
 	int from_to[] = { 0,0, 1,1};
 	cv::mixChannels( &mapImage, 1, out, 2, from_to, 2 );
-*/
+
 	//cv::imshow("mapImage", mapImage);
 	//cv::waitKey(1);
 //	depth.copyTo(globalMapImage);
-	mapImage.copyTo(globalMapImage);
+	depth.copyTo(globalMapImage);
 
 	mapImageSet = true;
 }

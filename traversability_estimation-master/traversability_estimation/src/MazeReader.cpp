@@ -12,8 +12,8 @@ MazeReader::MazeReader ()
 {
 	//std::ofstream myfile;
 	//path = ros::package::getPath("traversability_estimation")+"/mazegenerator-master";
-	path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
-	//path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
+	//path = "/scratch-local/cdtemp/chfo/traverability/traversability_estimation/Gazebo Script";
+	path = "/home/chfo/Dropbox/Masterarbeit/python code/traversability_estimation/Gazebo Script";
 
 	env_size = 10.0;
 	possible_cells = getPosibleCells();
@@ -113,7 +113,7 @@ maze MazeReader::getRandomCell()
 	std::random_device rd;
 	std::mt19937 mt(rd());
 
-    
+
     //std::uniform_int_distribution<> dis(0, possible_cells.size()-1);
     std::uniform_int_distribution<> dis_orientation(-180, 180);
 
