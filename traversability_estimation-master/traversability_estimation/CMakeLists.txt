@@ -120,34 +120,6 @@ add_executable(
   src/OMPLPlannerWrapper.cpp
 )
 
-add_executable(robot_positioning_node
-    src/robot_positioning_node.cpp
-    src/MazeReader.cpp
-)
-
-add_executable(gazebo_control_node
-    src/gazebo_control_node.cpp
-    src/GazebObjectControl.cpp
-    src/GetObjectInfoFromYaml.cpp
-)
-
-add_executable(gazebo_random_control_node
-    src/gazebo_random_control_node.cpp
-    src/GazebRandomObjectControl.cpp
-    src/GetObjectInfoFromYaml.cpp
-    src/MazeReader.cpp
-)
-add_executable(robot_positioning_node_random
-    src/robot_positioning_node_random.cpp
-    src/MazeReader.cpp
-)
-
-add_executable(get_text_file_data
-    src/get_text_file_data.cpp
-    src/MazeReader.cpp
-
-)
-
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
   ${PROJECT_NAME}_node
@@ -157,31 +129,6 @@ target_link_libraries(
   ${PROJECT_NAME}
 )
 
-target_link_libraries(robot_positioning_node
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(gazebo_control_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  yaml-cpp
-)
-
-
-target_link_libraries(gazebo_random_control_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-  yaml-cpp
-)
-
-
-target_link_libraries(robot_positioning_node_random
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(get_text_file_data
-  ${catkin_LIBRARIES}
-)
 #############
 ## Install ##
 #############

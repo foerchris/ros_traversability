@@ -37,28 +37,39 @@
 
 class OMPLPlanner
 {
-	private:
-		std::vector<std::vector<int>> allowedAngle_map;
-		grid_map::GridMap allowedMap;
-		bool isStateValid (const ompl::base::State *state);
-		Eigen::Array2i mapSize;
-		double resolution;
-		double mapsizeX;
-		double mapsizeY;
+
 	public:
 		OMPLPlanner ();
 		~OMPLPlanner ();
 
+		// plan a path from current pose to goal pose
 		void plan (pose goal_d, std::vector<pose> &waypoints);
-		void setTraversabilityMap (traversability_estimation::TraversabilityMap* traversabilityMap);
-		void setTraversabilityGridMap(grid_map::GridMap travGridMap);
-		bool clcPathCallback( std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
-		// Transfrom pose relative to robot to pose relative to map
-		void robotToGlobaleTransform(pose &Pose);
-		//ompl::base::OptimizationObjectivePtr getTraversabilityObjectivconst(ompl::base::SpaceInformationPtr& si);
 
-		// Transfrom pose relative to map to pose relative to robot
+		// set reference to traversability map
+		void setTraversabilityMap (traversability_estimation::TraversabilityMap* traversabilityMap);
+
+		// set reference to traversability map as gridmap
+		void setTraversabilityGridMap(grid_map::GridMap travGridMap);
+
+		// service call to calculate path
+		bool clcPathCallback( std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
+
+		// Transform pose relative to robot to pose relative to map
+		void robotToGlobaleTransform(pose &Pose);
+		// Transform pose relative to map to pose relative to robot
 		void globaleToRobotTransform(pose &Pose);
+
+
+
+	private:
+
+		std::vector<std::vector<int>> allowedAngle_map;
+		grid_map::GridMap allowedMap;
+		Eigen::Array2i mapSize;
+		double resolution;
+		double mapsizeX;
+		double mapsizeY;
+
 		std::string tf_prefix;
 		std::vector<std::vector<int>> hahdh;
 

@@ -70,14 +70,12 @@ public:
 	std::vector<std::string> orientationMapNames;
 
     ValidityChecker(const ob::SpaceInformationPtr& si, traversability_estimation::TraversabilityMap& traversabilityMap) :
-	//ValidityChecker(const ob::SpaceInformationPtr& si) :
         ob::StateValidityChecker(si),
         traversabilityMap_(traversabilityMap),
     	allowedMap(traversabilityMap.getTraversabilityMap())
 
     {
 
-    //	allowedMap = traversabilityMap_.getTraversabilityMap();
 		mapSize = allowedMap.getSize();
 		resolution = allowedMap.getResolution();
 
@@ -93,15 +91,7 @@ public:
     // circular obstacle
     bool isValid(const ob::State* state) const
     {
-    	//bool bla = true;
-    	/*if(this->traversability(state) > 0.5)
-    	{
-
-    	}*/
         return this->traversability(state) > 0.3;
-        //return true;
-
-
     }
 
     // Returns the distance from the given state's position to the
@@ -220,8 +210,6 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	ROS_INFO("plan");
 	float planRadius = 0.2;
 
-	//ob::StateSpacePtr space(new ob::ReedsSheppStateSpace);
-	//ob::StateSpacePtr space (new ob::DubinsStateSpace);
 	ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>());
 
 	space = std::make_shared<ob::DubinsStateSpace>(planRadius);
@@ -239,7 +227,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
 	printf("mapsizeX: %lf", mapsizeX);
 	printf("mapsizeY: %lf", mapsizeY);
-	//allowedMap.get
+
 	bounds.setLow (0, -mapsizeX/2); //1.14
 	bounds.setLow (1, -mapsizeY/2);
 	bounds.setLow (2, 0.0 * boost::math::constants::pi<double> ());
@@ -250,21 +238,14 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
 	space->as<ob::SE2StateSpace> ()->setBounds (bounds);
 
-	// define a simple setup class
-	//og::SimpleSetup ss (space);
 
    // Construct a space information instance for this state space
      auto si(std::make_shared<ob::SpaceInformation>(space));
 
 
 	// set state validity checking for this space
-	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
     auto validityChecker = std::make_shared<ValidityChecker>(si, *traversabilityMap_);
 	si->setStateValidityChecker(validityChecker);
-	//si->setStateValidityChecker(std::make_shared<ValidityChecker>(si));
-
-	//ss.setStateValidityChecker (boost::bind (&OMPLPlanner::isStateValid, this, _1));
-
 	si->setup();
 
 
@@ -290,7 +271,6 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	goal[1] = goal_d.y;
 	goal[2] = goal_d.yaw;
 
-	//ss.setStartAndGoalStates (start, goal);
 
 	// Create a problem instance
     auto pdef(std::make_shared<ob::ProblemDefinition>(si));
@@ -299,11 +279,9 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
     pdef->setStartAndGoalStates(start, goal);
 
 
-    //ss.setOptimizationObjective(boost::bind (&OMPLPlanner::getTraversabilityObjectivconst, this, _1));
 
 	// Create the optimization objective specified by our command-line argument.
     // This helper function is simply a switch statement.
-
     auto lengthObjective = std::make_shared<ob::PathLengthOptimizationObjective>(si);
     auto travObjective = std::make_shared<TraverabilityObjective>(si, *validityChecker);
 
@@ -315,9 +293,7 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 
     pdef->setOptimizationObjective(multiObjective);
 
-	//ob::PlannerPtr planner (new og::RRTstar (si.getSpaceInformation ()));
 
-	//ss.setPlanner (planner);
 
 	// Construct the optimal planner specified by our command line argument.
     // This helper function is simply a switch statement.
@@ -327,13 +303,10 @@ void OMPLPlanner::plan (pose goal_d, std::vector<pose> &waypoints)
 	optimizingPlanner->setProblemDefinition(pdef);
     optimizingPlanner->setup();
 
-	// this call is optional, but we put it in to get more output information
-	//ss.getSpaceInformation ()->setStateValidityCheckingResolution (0.01);
-	//ss.setup ();
 
 	// attempt to solve the problem within 30 seconds of planning time
 	//ob::PlannerStatus solved = ss.solve (2);
-     ob::PlannerStatus solved = optimizingPlanner->solve(20);
+     ob::PlannerStatus solved = optimizingPlanner->solve(4);
 
 	if (solved)
 	{
