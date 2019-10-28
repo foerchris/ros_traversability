@@ -1,18 +1,18 @@
 /*
- * GazebRandomObjectControl.cpp
+ * SimulationsKontrolleNavigation.cpp
  *
  *  Created on: 04.07.2019
  *      Author: chfo
  */
 
-#include "traversability_estimation/GazebRandomObjectControl.h"
+#include "simulations_kontrolle/SimulationsKontrolleNavigation.h"
 
 #include <image_transport/image_transport.h>
 
 
 using namespace std;
 
-GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
+SimulationsKontrolleNavigation::SimulationsKontrolleNavigation(ros::NodeHandle& nodeHandle)
 		: nodeHandle_(nodeHandle),
 		  getObjectInfoFromYaml_(nodeHandle)
 {
@@ -44,15 +44,15 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 
 	markerPublisher = nodeHandle_.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 20);
 
-	//resetRobot = nodeHandle_.advertiseService("reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
-	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &GazebRandomObjectControl::resetRobotSrv, this);
+	//resetRobot = nodeHandle_.advertiseService("reset_robot", &SimulationsKontrolleNavigation::resetRobotSrv, this);
+	resetRobot = nodeHandle_.advertiseService("/" + tf_prefix+"/reset_robot", &SimulationsKontrolleNavigation::resetRobotSrv, this);
 
 
 	goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/goal_pose", 20);
 
 	currentPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("/" + tf_prefix+"/current_pose", 20);
 
-	odomSub = nodeHandle_.subscribe<nav_msgs::Odometry> ("/" + tf_prefix+"/odom", 1, &GazebRandomObjectControl::odomCallback,this);
+	odomSub = nodeHandle_.subscribe<nav_msgs::Odometry> ("/" + tf_prefix+"/odom", 1, &SimulationsKontrolleNavigation::odomCallback,this);
 
 	//goalPosePublischer = nodeHandle_.advertise<nav_msgs::Odometry>("goal_pose", 20);
 	elevationMapImagePublisher = nodeHandle_.advertise<sensor_msgs::Image>("/" + tf_prefix+"/elevation_robot_ground_map", 20);
@@ -60,11 +60,11 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 
 	static image_transport::ImageTransport it(nodeHandle_);
 	static image_transport::Subscriber it_sub;
-	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&GazebRandomObjectControl::MapImageCallback, this, _1));
-	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&GazebRandomObjectControl::MapImageCallback, this, _1));
+	//it_sub = it.subscribe("elevation_map_image", 1, boost::bind (&SimulationsKontrolleNavigation::MapImageCallback, this, _1));
+	it_sub = it.subscribe("/" + tf_prefix+"/elevation_map_image", 1, boost::bind (&SimulationsKontrolleNavigation::MapImageCallback, this, _1));
 
-	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebRandomObjectControl::publischGoal, this, _1));
-	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&GazebRandomObjectControl::resetCallback, this, _1));
+	msg_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&SimulationsKontrolleNavigation::publischGoal, this, _1));
+	reset_timer = nodeHandle_.createTimer(ros::Duration(0.1), boost::bind (&SimulationsKontrolleNavigation::resetCallback, this, _1));
 
 	tfListener = unique_ptr<tf::TransformListener> (new tf::TransformListener);
 
@@ -106,18 +106,18 @@ GazebRandomObjectControl::GazebRandomObjectControl(ros::NodeHandle& nodeHandle)
 	//nodeHandle_.setParam("reset_elevation_map",true);
 }
 
-GazebRandomObjectControl::~GazebRandomObjectControl ()
+SimulationsKontrolleNavigation::~SimulationsKontrolleNavigation ()
 {
 	destroyWorld();
 }
 
-void GazebRandomObjectControl::resetCallback(const ros::TimerEvent& event)
+void SimulationsKontrolleNavigation::resetCallback(const ros::TimerEvent& event)
 {
 	creatEnviroment();
 }
 
 
-void GazebRandomObjectControl::creatEnviroment()
+void SimulationsKontrolleNavigation::creatEnviroment()
 {
 	bool eval = true;
 		if(resetWorld)
@@ -216,21 +216,7 @@ void GazebRandomObjectControl::creatEnviroment()
 	}
 }
 
-void GazebRandomObjectControl::clcGoalPathSrvsCall()
-{
-	std_srvs::Empty empty;
-	if (clcPathClient.call(empty))
-	{
-		//ROS_INFO("Successful to call service: clc_path_to_goal");
-	}
-	else
-	{
-		ROS_ERROR("Unsuccessful to call service: clc_path_to_goal");
-		//return 1;
-	}
-
-}
-void GazebRandomObjectControl::odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
+void SimulationsKontrolleNavigation::odomCallback (const nav_msgs::OdometryConstPtr& odomMsg)
 {
 	nav_msgs::Odometry currentPoseMsg;
 
@@ -263,8 +249,8 @@ void GazebRandomObjectControl::odomCallback (const nav_msgs::OdometryConstPtr& o
 	currentPosePublischer.publish(currentPoseMsg);
 
 }
-void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
-//void GazebRandomObjectControl::publischGoal(const geometry_msgs::Pose& goalPose)
+void SimulationsKontrolleNavigation::publischGoal(const ros::TimerEvent& bla)
+//void SimulationsKontrolleNavigation::publischGoal(const geometry_msgs::Pose& goalPose)
 {
 
 
@@ -327,7 +313,7 @@ void GazebRandomObjectControl::publischGoal(const ros::TimerEvent& bla)
 	}
 }
 
-void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs::Pose startPose)
+void SimulationsKontrolleNavigation::setObject(const string& modelName, geometry_msgs::Pose startPose)
 {
 	gazebo_msgs::SetModelState setmodelstate;
 	gazebo_msgs::ModelState modelstate;
@@ -367,7 +353,7 @@ void GazebRandomObjectControl::setObject(const string& modelName, geometry_msgs:
 	}
 }
 
-void GazebRandomObjectControl::destroyWorld()
+void SimulationsKontrolleNavigation::destroyWorld()
 {
 	for(auto object:spwanedObjects)
 	{
@@ -375,7 +361,7 @@ void GazebRandomObjectControl::destroyWorld()
 	}
 }
 
-void GazebRandomObjectControl::resetAllObjects()
+void SimulationsKontrolleNavigation::resetAllObjects()
 {
 	geometry_msgs::Pose pose;
 	pose.position.x = 18;
@@ -397,7 +383,7 @@ void GazebRandomObjectControl::resetAllObjects()
 	}
 }
 
-void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
+void SimulationsKontrolleNavigation::setObjectInWorld(const bool& setMaze)
 {
 
 	if(setMaze)
@@ -452,7 +438,7 @@ void GazebRandomObjectControl::setObjectInWorld(const bool& setMaze)
 	}
 }
 
-void GazebRandomObjectControl::generateWorld()
+void SimulationsKontrolleNavigation::generateWorld()
 {
 
 	geometry_msgs::Pose pose;
@@ -494,7 +480,7 @@ void GazebRandomObjectControl::generateWorld()
 		}
 	}
 }
-geometry_msgs::Pose GazebRandomObjectControl::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
+geometry_msgs::Pose SimulationsKontrolleNavigation::setRandomObst(const object_options& objectOptions,const bool& mirror, const double& lastX)
 {
 	geometry_msgs::Pose pose;
 
@@ -521,7 +507,7 @@ geometry_msgs::Pose GazebRandomObjectControl::setRandomObst(const object_options
 	return pose;
 }
 
-double GazebRandomObjectControl::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
+double SimulationsKontrolleNavigation::creatRndPosition(const min_max_object_pose& minMaxObjectPose)
 {
 	random_device rd;
 	mt19937 mt(rd());
@@ -542,7 +528,7 @@ double GazebRandomObjectControl::creatRndPosition(const min_max_object_pose& min
 	return value;
 
 }
-void GazebRandomObjectControl::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
+void SimulationsKontrolleNavigation::spwanObject(const string& modelName, const string& xmlName, geometry_msgs::Pose startPose)
 {
 
 	geometry_msgs::Pose robotStartPose;
@@ -578,7 +564,7 @@ void GazebRandomObjectControl::spwanObject(const string& modelName, const string
 	}
 }
 
-void GazebRandomObjectControl::deleteObject(const string& modelName)
+void SimulationsKontrolleNavigation::deleteObject(const string& modelName)
 {
 	gazebo_msgs::DeleteModel deleteModel;
 
@@ -596,7 +582,7 @@ void GazebRandomObjectControl::deleteObject(const string& modelName)
 	}
 }
 
-string  GazebRandomObjectControl::readXmlFile(const string& name)
+string  SimulationsKontrolleNavigation::readXmlFile(const string& name)
 {
 	string filePath = modelPath + name + "/model.sdf";
 
@@ -607,7 +593,7 @@ string  GazebRandomObjectControl::readXmlFile(const string& name)
 }
 
 
-void GazebRandomObjectControl::poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs::Odometry& setPose)
+void SimulationsKontrolleNavigation::poseToOdomMsg(const geometry_msgs::Pose& pose, nav_msgs::Odometry& setPose)
 {
 	 setPose.pose.pose.position.x = pose.position.x;
 	 setPose.pose.pose.position.y = pose.position.y;
@@ -622,7 +608,7 @@ void GazebRandomObjectControl::poseToOdomMsg(const geometry_msgs::Pose& pose, na
 
 
 
-visualization_msgs::Marker GazebRandomObjectControl::createMarker (std::string ns, int id, double x, double y,  double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0)
+visualization_msgs::Marker SimulationsKontrolleNavigation::createMarker (std::string ns, int id, double x, double y,  double r = 1.0, double g = 0.0, double b = 0.0, double a = 1.0)
 {
 	visualization_msgs::Marker marker;
 
@@ -656,20 +642,20 @@ visualization_msgs::Marker GazebRandomObjectControl::createMarker (std::string n
 
 	return marker;
 }
-bool GazebRandomObjectControl::resetRobotSrv(std_srvs::Empty::Request &req,
+bool SimulationsKontrolleNavigation::resetRobotSrv(std_srvs::Empty::Request &req,
 		std_srvs::Empty::Response &res)
 {
 	setRobotZeroPose();
 	return true;
 }
 
-void GazebRandomObjectControl::setRobotStartPose(geometry_msgs::Pose startPose)
+void SimulationsKontrolleNavigation::setRobotStartPose(geometry_msgs::Pose startPose)
 {
 	startPose.position.z = 0.5;
 	setObject(tf_prefix,startPose);
 }
 
-void GazebRandomObjectControl::setRobotZeroPose()
+void SimulationsKontrolleNavigation::setRobotZeroPose()
 {
 	geometry_msgs::Pose startPose;
 	startPose.position.x = 16.5;
@@ -689,7 +675,7 @@ void GazebRandomObjectControl::setRobotZeroPose()
 }
 
 
-geometry_msgs::Pose GazebRandomObjectControl::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
+geometry_msgs::Pose SimulationsKontrolleNavigation::tfTransform(const geometry_msgs::Pose& pose,const string& destination_frame,const string& original_frame)
 {
 	// TF transformation of the Point which is nearest to the robot
 	const ros::Time& scanTimeStamp = ros::Time (0);
@@ -747,7 +733,7 @@ geometry_msgs::Pose GazebRandomObjectControl::tfTransform(const geometry_msgs::P
 }
 
 
-void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
+void SimulationsKontrolleNavigation::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
 
 	try
@@ -771,7 +757,7 @@ void GazebRandomObjectControl::MapImageCallback(const sensor_msgs::ImageConstPtr
 	mapImageSet = true;
 }
 
-geometry_msgs::Pose GazebRandomObjectControl::transformMaze(maze position)
+geometry_msgs::Pose SimulationsKontrolleNavigation::transformMaze(maze position)
 {
 	geometry_msgs::Pose pose;
 
@@ -793,7 +779,7 @@ geometry_msgs::Pose GazebRandomObjectControl::transformMaze(maze position)
 }
 
 
-geometry_msgs::Pose GazebRandomObjectControl::creatRandomOrientation(geometry_msgs::Pose pose)
+geometry_msgs::Pose SimulationsKontrolleNavigation::creatRandomOrientation(geometry_msgs::Pose pose)
 {
 	std::random_device rd;
 	std::mt19937 mt(rd());

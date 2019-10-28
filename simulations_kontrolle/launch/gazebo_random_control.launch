@@ -1,0 +1,11 @@
+<launch>
+	<arg name="namespace" default="GETjag"/>
+
+	<group ns="$(arg namespace)">
+
+		<node pkg="traversability_estimation" name="gazebo_random_control_node" type="gazebo_random_control_node" output="screen" respawn="false">
+		</node>
+	</group>
+
+
+</launch>

@@ -324,6 +324,10 @@ std::vector<double> TraversabilityMap::traversabilityAtPosition(const Eigen::Arr
 	traverabilityMap.push_back(traversabilitys);
 	return traversabilitys.traversabilitys;
 }
+void TraversabilityMap::lockComputFootprint(bool lock)
+{
+	computFootprint = true;
+}
 bool TraversabilityMap::traversabilityFootprint(double footprintIntervallYaw)
 {
 	computFootprint = true;

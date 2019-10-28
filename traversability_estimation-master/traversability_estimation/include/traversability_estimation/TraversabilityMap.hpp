@@ -136,6 +136,7 @@ class TraversabilityMap
    * @return true if the traversability map is initialized.
    */
   bool traversabilityMapInitialized();
+  void lockComputFootprint(bool lock);
 
  private:
 

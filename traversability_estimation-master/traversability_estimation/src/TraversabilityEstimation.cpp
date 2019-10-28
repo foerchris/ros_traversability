@@ -396,7 +396,7 @@ bool TraversabilityEstimation::traversabilityFootprint(
 //traversabilityMap_.setupTraverabilityMap(45);
 	trackingControl->startRobotMovement(false);
 	trackingControl->setFollowPath(false);
-	trackingControl->setRobotSpeed(0.2);
+	trackingControl->setRobotSpeed(0.9);
 
 	stetupMap = true;
 

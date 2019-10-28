@@ -1,0 +1,52 @@
+drl_world:
+    version: 4
+    objects:
+        - type                : object_robocup_stairs35
+          name                : object_robocup_stairs35
+          number              : 2
+          mirrored_object     : true
+          shift               : 1.21
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : 0
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0
+
+        - type                : object_robocup_box
+          name                : object_robocup_box_1
+          number              : 3
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -1.1..-0.97
+              orientationR  : 0.0..0.23
+              orientationP  : -0.2..0.2
+              orientationY  : -0.2..0.2
+
+        - type                : object_robocup_wall
+          name                : object_robocup_wall
+          number              : 0
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -0.85
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0
+
+        - type                : object_robocup_box
+          name                : object_robocup_box_2
+          number              : 5
+          mirrored_object     : false
+          initPose            :
+              positionX     : 3..15
+              positionY     : 0
+              positionZ     : -0.92
+              orientationR  : 0
+              orientationP  : 0
+              orientationY  : 0
+

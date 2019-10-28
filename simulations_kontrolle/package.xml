@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package>
+  <name>simulations_kontrolle</name>
+  <version>0.1.0</version>
+  <description>ROS package for drl simulation kontroll in gazebo </description>
+  <maintainer email="cfoer@todo.todo">anofen</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>tf_conversions</build_depend>
+  <build_depend>grid_map_ros</build_depend>
+  <build_depend>grid_map_core</build_depend>
+  <build_depend>grid_map_msgs</build_depend>
+  <build_depend>grid_map_filters</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>flipper_control</build_depend>
+  <build_depend>robot_navigation</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>tf_conversions</run_depend>
+  <run_depend>grid_map_ros</run_depend>
+  <run_depend>grid_map_core</run_depend>
+  <run_depend>grid_map_msgs</run_depend>
+  <run_depend>grid_map_filters</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>flipper_control</run_depend>
+  <run_depend>robot_navigation</run_depend>
+
+
+</package>
