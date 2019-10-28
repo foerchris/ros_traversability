@@ -21,9 +21,9 @@
 // Tf
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
-#include <flipper_control/GetContactPoints.h>
-#include <flipper_control/CalcFlipperAngles.h>
-#include <flipper_control/ClcNESM.h>
+#include <flipper_control/CropMap.h>
+#include <flipper_control/FlipperAngles.h>
+#include <flipper_control/NESM.h>
 #include <flipper_control/FitPlane.h>
 
 #include <dynamic_reconfigure/server.h>
@@ -71,18 +71,18 @@ class FlipperControl
 	tf2::Quaternion newPlane(const cv::Mat& image, double* maxZValue, FittedPlane* fittedPlane, const double& setRoll, const double& setPitch);
 
 
-	maxflipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
+	MaxFlipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
 
 	///*********************** stability analysis for all possibility's
 	double stabilityAnalysis(const geometry_msgs::Pose& g1,const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const std::string& frame1, const std::string& frame2,  const bool& rotatePitch, const int& rotationDirection);
-	NESMValues getNESMValues(maxflipperContactPointsAngles frontLeft, maxflipperContactPointsAngles frontRight, maxflipperContactPointsAngles rearLeft, maxflipperContactPointsAngles rearRight);
+	int cheakNESM(MaxFlipperContactPointsAngles frontLeft, MaxFlipperContactPointsAngles frontRight, MaxFlipperContactPointsAngles rearLeft, MaxFlipperContactPointsAngles rearRight);
 	void displayAllRotatedPoints(const std::string& position, const std::string& frame);
 	void displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b);
 
 
 	double returnBiggerVel(const double& vel1, const double& vel2);
 
-	void publishAngles (flipperAngles robotFlipperAngles);
+	void publishAngles (RobotFlipperAngles robotFlipperAngles);
 
 	geometry_msgs::Pose addPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
 	geometry_msgs::Pose subPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
@@ -104,7 +104,7 @@ class FlipperControl
 	std::string BASE_FRAME;
 	std::string NEXT_BASE_FRAME;
 	std::string ROTATED_NEXT_BASE_FRAME;
-
+	std::string STATIC_NEXT_BASE_FRAME;
 	std::string MAP_FRAME;
 	std::string ODOM_FRAME;
 	std::string FLIPPER_FRONT_LEFT_FRAME;
@@ -117,10 +117,10 @@ class FlipperControl
 	std::string FLIPPER_REGION_REAR_LEFT_FRAME;
 	std::string FLIPPER_REGION_REAR_RIGHT_FRAME;
 	// Obeject declarations
-	GetContactPoints getContactPoints;
+	CropMap cropMap;
 	FitPlane fitPlane;
-	ClcNESM clcNESM;
-	CalcFlipperAngles calcFlipperAngles;
+	NESM nesm;
+	FlipperAngles flipperAngles;
 
 	cv::Mat globalMapImage;
 

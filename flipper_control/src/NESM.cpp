@@ -1,31 +1,31 @@
 /*
- * ClcNESM.cpp
+ * NESM.cpp
  *
  *  Created on: 01.02.2019
  *      Author: chfo
  */
 
-#include <flipper_control/ClcNESM.h>
+#include <flipper_control/NESM.h>
 
-ClcNESM::ClcNESM()
+NESM::NESM()
 {
 	NESM_thresshold = 0.5; //// SET to the right value
 
 }
 
-ClcNESM::~ClcNESM()
+NESM::~NESM()
 {
 
 }
 
 
-double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointFront, const geometry_msgs::Pose& contactPointRear, const geometry_msgs::Pose& centerOfGravity, const bool& rotatePitch,const int& rotationDirection)
+double NESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointFront, const geometry_msgs::Pose& contactPointRear, const geometry_msgs::Pose& centerOfGravity, const bool& rotatePitch,const int& rotationDirection)
 {
 	cv::Vec3d g1(contactPointFront.position.x, contactPointFront.position.y, contactPointFront.position.z);
 	cv::Vec3d g2(contactPointRear.position.x, contactPointRear.position.y, contactPointRear.position.z);
 	cv::Vec3d c(centerOfGravity.position.x, centerOfGravity.position.y, centerOfGravity.position.z);
-	
-	
+
+
 	g1_public = g1;
 	g2_public = g2;
 	c_public = c;
@@ -78,14 +78,14 @@ double ClcNESM::clcNESMStabilityMeasure(const geometry_msgs::Pose& contactPointF
 	return S_NE;
 }
 
-double ClcNESM::magnitude(const cv::Vec3d& v)
+double NESM::magnitude(const cv::Vec3d& v)
 {
 	return sqrt(pow(v[0],2)+ pow(v[1],2)+ pow(v[2],2));
 }
 
 
 
-cv::Vec3d ClcNESM::clcQuaternion(const cv::Vec3d& v,const tf2::Quaternion& q)
+cv::Vec3d NESM::clcQuaternion(const cv::Vec3d& v,const tf2::Quaternion& q)
 {
     // Extract the vector part of the quaternion
 	cv::Vec3d u(q.getX(), q.getY(), q.getZ());

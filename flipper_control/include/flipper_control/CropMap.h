@@ -5,8 +5,8 @@
  *      Author: chfo
  */
 
-#ifndef ROS_ROBOCUP_FLIPPERCONTROL_SRC_GETCONTACTPOINTS_H_
-#define ROS_ROBOCUP_FLIPPERCONTROL_SRC_GETCONTACTPOINTS_H_
+#ifndef ROS_ROBOCUP_FLIPPERCONTROL_SRC_CropMap_H_
+#define ROS_ROBOCUP_FLIPPERCONTROL_SRC_CropMap_H_
 
 // ROS
 #include <ros/ros.h>
@@ -26,19 +26,19 @@ struct Vector3
 {
     float x, y, z;
 };
-class GetContactPoints
+class CropMap
 {
 	public:
 	/*!
 	 * Constructor.
 	 * @param nodeHandle the ROS node handle.
 	 */
-	GetContactPoints();
+	CropMap();
 
 	/*!
 	 * Destructor.
 	 */
-	virtual ~GetContactPoints();
+	virtual ~CropMap();
 
 
 	// returns the a region according to the  width and length from the map given its coordinat frame
@@ -109,4 +109,4 @@ class GetContactPoints
 };
 
 
-#endif /* ROS_ROBOCUP_FLIPPERCONTROL_SRC_GETCONTACTPOINTS_H_ */
+#endif /* ROS_ROBOCUP_FLIPPERCONTROL_SRC_CropMap_H_ */

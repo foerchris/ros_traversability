@@ -79,6 +79,8 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 
 	NEXT_BASE_FRAME = tf_prefix + "/next_" + BASE_FRAME;
 	BASE_FRAME = tf_prefix + "/" +BASE_FRAME;
+	STATIC_NEXT_BASE_FRAME = tf_prefix + "/static" +"_next_" + BASE_FRAME;
+
 	MAP_FRAME = tf_prefix + "/" + MAP_FRAME;
 	ODOM_FRAME = tf_prefix + "/" + ODOM_FRAME;
 
@@ -115,8 +117,8 @@ FlipperControl::FlipperControl(ros::NodeHandle& nodeHandle)
 	TracksBaseLinkDist = 0.275;
 	cropeMapLength = 2;
 
-	getContactPoints.setConstants(resultion);
-	calcFlipperAngles.setParameter(dThreshold, R, r, L);
+	cropMap.setConstants(resultion);
+	flipperAngles.setParameter(dThreshold, R, r, L);
 
 	S_NE_thresshold = 0.05;
 }
@@ -145,16 +147,12 @@ void FlipperControl::MapImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv::Mat depth( mapImage.rows, mapImage.cols, CV_32FC1 );
 	cv::Mat alpha( mapImage.rows, mapImage.cols, CV_32FC1 );
 
-
 	// forming an array of matrices is a quite efficient operation,
 	// because the matrix data is not copied, only the headers
 	cv::Mat out[] = { depth,alpha };
 	int from_to[] = { 0,0, 1,1};
 	cv::mixChannels( &mapImage, 1, out, 2, from_to, 2 );
 
-	//cv::imshow("mapImage", mapImage);
-	//cv::waitKey(1);
-//	depth.copyTo(globalMapImage);
 	depth.copyTo(globalMapImage);
 
 	mapImageSet = true;
@@ -176,81 +174,35 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 
 	tf2::Quaternion quat = groundPlane(mapImage, &maxZ, &fittedPlane);
 
-	maxflipperContactPointsAngles angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
+	MaxFlipperContactPointsAngles angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
 
-	maxflipperContactPointsAngles angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
+	MaxFlipperContactPointsAngles angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
 
-	maxflipperContactPointsAngles angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
+	MaxFlipperContactPointsAngles angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
 
-	maxflipperContactPointsAngles angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
+	MaxFlipperContactPointsAngles angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
 
-	NESMValues nESMValues = getNESMValues(angleFrontLeft, angleFrontRight, angleRearLeft, angleRearRight);
-	bool setPitchZero = false;
-	//bool repead = true;
-	bool repead = false;
 
-	int i = 1;
-	while(repead)
+	int nesmCase = cheakNESM(angleFrontLeft, angleFrontRight, angleRearLeft, angleRearRight);
+
+
+	if(nesmCase == 2)
 	{
-		std::cout<<"cheak"<<std::endl;
-		std::cout<<"nESMValues.S_NE_frontRearLeft"<<nESMValues.S_NE_frontRearLeft<<std::endl;
-		std::cout<<"nESMValues.S_NE_frontRearRight"<<nESMValues.S_NE_frontRearRight<<std::endl;
-		std::cout<<"nESMValues.S_NE_rearFrontLeft"<<nESMValues.S_NE_rearFrontLeft<<std::endl;
-		std::cout<<"nESMValues.S_NE_rearFrontRight"<<nESMValues.S_NE_rearFrontRight<<std::endl;
+		geometry_msgs::Pose pose;
+		pose.position.x = 0;
+		pose.position.y = 0;
+		pose.position.z = 0;
 
-		repead= false;
-		if(nESMValues.S_NE_frontRearLeft > S_NE_thresshold ||  nESMValues.S_NE_frontRearRight > S_NE_thresshold)
-		{
-			std::cout<<"front"<<std::endl;
+		pose.orientation.x = 0;
+		pose.orientation.y = 0;
+		pose.orientation.z = 0;
+		pose.orientation.w = 1.0;
 
-			quat = newPlane(mapImage, &maxZ, &fittedPlane, 0, M_PI/32*i);
-
-			angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
-
-			angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
-
-			angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
-
-			angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
-			repead = true;
-
-		}
-		else if(nESMValues.S_NE_rearFrontLeft> S_NE_thresshold || nESMValues.S_NE_rearFrontRight> S_NE_thresshold)
-		{
-			std::cout<<"back"<<std::endl;
-
-			quat = newPlane(mapImage, &maxZ, &fittedPlane, 0, -M_PI/32*i);
-
-			angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
-
-			angleFrontRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REGION_FRONT_RIGHT_FRAME);
-
-			angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
-
-			angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
-
-			repead = true;
-		}
-
-		if(M_PI/32*i <M_PI/2)
-		{
-			repead= false;
-		}
-		i+=1;
-	}
-
-	//bool setRollZero = false;
-
-	//if(nESMValues.S_NE_leftRightFront > S_NE_thresshold || nESMValues.S_NE_rightLeftFront> S_NE_thresshold || nESMValues.S_NE_leftRightRear > S_NE_thresshold || nESMValues.S_NE_rightLeftRear> S_NE_thresshold)
-	//{
-		//fittedPlane.b=0;
-	//	setRollZero = true;
-	//}
-
-	/*if( setRollZero || setPitchZero)
-	{
-
-		quat = newPlane(mapImage, &maxZ, &fittedPlane, setRollZero, setPitchZero);
+		pose = cropMap.tfTransform(pose, NEXT_BASE_FRAME, STATIC_NEXT_BASE_FRAME);
+		quat.setX(pose.orientation.x);
+		quat.setY(pose.orientation.y);
+		quat.setZ(pose.orientation.z);
+		quat.setW(pose.orientation.w);
 
 		angleFrontLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_FRONT_LEFT_FRAME,FLIPPER_REGION_FRONT_LEFT_FRAME);
 
@@ -259,13 +211,13 @@ void FlipperControl::SequenceControl(cv::Mat mapImage)
 		angleRearLeft = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REGION_REAR_LEFT_FRAME);
 
 		angleRearRight = flipperRegion(mapImage, quat, maxZ, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REGION_REAR_RIGHT_FRAME);
-	}*/
+	}
 
-	flipperAngles robotflipperAngles;
-	robotflipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft.maxFlipperAngle, angleFrontRight.maxFlipperAngle);
-	robotflipperAngles.flipperAngleRear = returnBiggerVel(angleRearLeft.maxFlipperAngle, angleRearRight.maxFlipperAngle);
+	RobotFlipperAngles robotFlipperAngles;
+	robotFlipperAngles.flipperAngleFront = returnBiggerVel(angleFrontLeft.maxFlipperAngle, angleFrontRight.maxFlipperAngle);
+	robotFlipperAngles.flipperAngleRear = returnBiggerVel(angleRearLeft.maxFlipperAngle, angleRearRight.maxFlipperAngle);
 
-	publishAngles(robotflipperAngles);
+	publishAngles(robotFlipperAngles);
 
 }
 
@@ -275,9 +227,9 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue, Fi
 {
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
-	groundContactPoints = getContactPoints.getRegions(image,fitPlaneLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
+	groundContactPoints = cropMap.getRegions(image,fitPlaneLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 	*fittedPlane = fitPlane.fitPlane(groundContactPoints);
 
 
@@ -292,13 +244,13 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue, Fi
 	pose.orientation.z = quat.getZ();
 	pose.orientation.w = quat.getW();
 
-	markerPublisher.publish(getContactPoints.creatCubeMarkerArrayFlipperPoints(pose,"fitted_plane",NEXT_BASE_FRAME,1.0, 0.0, 0.0));
+	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"fitted_plane",NEXT_BASE_FRAME,1.0, 0.0, 0.0));
 
 
-	*maxZValue = getContactPoints.clcMaxZ(groundContactPoints,quat, trackLength-0.1);
+	*maxZValue = cropMap.clcMaxZ(groundContactPoints,quat, trackLength-0.1);
 	pose.position.z = *maxZValue;
 
-	markerPublisher.publish(getContactPoints.creatCubeMarkerArrayFlipperPoints(pose,"fitted_shifted_plane",NEXT_BASE_FRAME,0.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"fitted_shifted_plane",NEXT_BASE_FRAME,0.0, 1.0, 0.0));
 
 	sensor_msgs::Imu pubRotation;
 	pubRotation.orientation.x = quat.getX();
@@ -315,13 +267,13 @@ tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue,
 {
 	std::vector<geometry_msgs::Pose> groundContactPoints;
 
-	groundContactPoints = getContactPoints.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
+	groundContactPoints = cropMap.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 
 	tf2::Quaternion quat = fitPlane.getRotations(*fittedPlane);
 
-	quat = getContactPoints.getDestQuat(quat, MAP_FRAME, NEXT_BASE_FRAME, setRoll, setPitch);
+	quat = cropMap.getDestQuat(quat, MAP_FRAME, NEXT_BASE_FRAME, setRoll, setPitch);
 
 	geometry_msgs::Pose pose;
 	pose.position.x = 0;
@@ -333,13 +285,13 @@ tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue,
 	pose.orientation.z = quat.getZ();
 	pose.orientation.w = quat.getW();
 
-	markerPublisher.publish(getContactPoints.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_plane",NEXT_BASE_FRAME,1.0, 0.0, 0.0));
+	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_plane",NEXT_BASE_FRAME,1.0, 0.0, 0.0));
 
 
-	*maxZValue = getContactPoints.clcMaxZ(groundContactPoints,quat, trackLength-0.1);
+	*maxZValue = cropMap.clcMaxZ(groundContactPoints,quat, trackLength-0.1);
 	pose.position.z = *maxZValue;
 
-	markerPublisher.publish(getContactPoints.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_shifted_plane",NEXT_BASE_FRAME,0.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_shifted_plane",NEXT_BASE_FRAME,0.0, 1.0, 0.0));
 
 	sensor_msgs::Imu pubRotation;
 	pubRotation.orientation.x = quat.getX();
@@ -352,15 +304,15 @@ tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue,
 	return quat;
 }
 
-maxflipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame)
+MaxFlipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame)
 {
 
 	std::vector<geometry_msgs::Pose> groundContactPoints;
-	maxflipperContactPointsAngles flipperAngle;
-	groundContactPoints = getContactPoints.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperRegionFrame);
+	MaxFlipperContactPointsAngles maxFlipperContactPointsAngles;
+	groundContactPoints = cropMap.getRegions(image,flipperLength, flipperWidth, MAP_FRAME, flipperRegionFrame);
 
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(groundContactPoints,flipperRegionFrame, flipperRegionFrame,  1.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(groundContactPoints,flipperRegionFrame, flipperRegionFrame,  1.0, 1.0, 0.0));
 
 	for(auto groundContactPoint:groundContactPoints)
 	{
@@ -369,97 +321,79 @@ maxflipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const 
 
 	std::vector<geometry_msgs::Pose> newGroundContactPoints;
 
-	newGroundContactPoints = getContactPoints.clcNewFlipperPoses(groundContactPoints,quat, maxZ, NEXT_BASE_FRAME, flipperFrame, flipperRegionFrame);
+	newGroundContactPoints = cropMap.clcNewFlipperPoses(groundContactPoints,quat, maxZ, NEXT_BASE_FRAME, flipperFrame, flipperRegionFrame);
 
 
 	//***** display new points relativ to base_link should be the same as befor + offset
-	newGroundContactPoints = getContactPoints.transformPose(newGroundContactPoints, NEXT_BASE_FRAME,  flipperFrame);
+	newGroundContactPoints = cropMap.transformPose(newGroundContactPoints, NEXT_BASE_FRAME,  flipperFrame);
 
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", ROTATED_NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(newGroundContactPoints,flipperFrame +"_next", ROTATED_NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
 
-	newGroundContactPoints = getContactPoints.transformPose(newGroundContactPoints, flipperFrame, NEXT_BASE_FRAME);
+	newGroundContactPoints = cropMap.transformPose(newGroundContactPoints, flipperFrame, NEXT_BASE_FRAME);
 	//*****
 
-	flipperAngle = calcFlipperAngles.clcContactAngles(newGroundContactPoints);
+	maxFlipperContactPointsAngles = flipperAngles.clcContactAngles(newGroundContactPoints);
 
-	std::vector<geometry_msgs::Pose> linePoints = fitPlane.sampleLine(flipperAngle.maxFlipperAngle, sqrt(pow(flipperAngle.pose.position.x,2) + pow(flipperAngle.pose.position.y,2)), 0.06);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperLine(linePoints,flipperFrame +"_line", flipperFrame,  0.0, 1.0, 0.0));
+	std::vector<geometry_msgs::Pose> linePoints = fitPlane.sampleLine(maxFlipperContactPointsAngles.maxFlipperAngle, sqrt(pow(maxFlipperContactPointsAngles.pose.position.x,2) + pow(maxFlipperContactPointsAngles.pose.position.y,2)), 0.06);
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperLine(linePoints,flipperFrame +"_line", flipperFrame,  0.0, 1.0, 0.0));
 
-	return flipperAngle;
+	return maxFlipperContactPointsAngles;
 }
 
 double FlipperControl::stabilityAnalysis(const geometry_msgs::Pose& g1,const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const std::string& frame1, const std::string& frame2,  const bool& rotatePitch, const int& rotationDirection)
 {
 	double nESMValue = 0;
-	geometry_msgs::Pose frontTransfromed = getContactPoints.tfTransform(g1, frame1, frame1);
+	geometry_msgs::Pose frontTransfromed = cropMap.tfTransform(g1, frame1, STATIC_NEXT_BASE_FRAME);
 
-	geometry_msgs::Pose rearTransfromed = getContactPoints.tfTransform(g2, frame1, frame2);
+	geometry_msgs::Pose rearTransfromed = cropMap.tfTransform(g2, frame2, STATIC_NEXT_BASE_FRAME);
 
-	geometry_msgs::Pose centerOfGravityTransfromed = getContactPoints.tfTransform(c, frame1, NEXT_BASE_FRAME);
+	geometry_msgs::Pose centerOfGravityTransfromed = cropMap.tfTransform(c, NEXT_BASE_FRAME, STATIC_NEXT_BASE_FRAME);
 
-	nESMValue = clcNESM.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed, rotatePitch, rotationDirection);
+	nESMValue = nesm.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed, rotatePitch, rotationDirection);
 	return nESMValue;
 }
 
-NESMValues FlipperControl::getNESMValues(maxflipperContactPointsAngles frontLeft, maxflipperContactPointsAngles frontRight, maxflipperContactPointsAngles rearLeft, maxflipperContactPointsAngles rearRight)
+int FlipperControl::cheakNESM(MaxFlipperContactPointsAngles frontLeft, MaxFlipperContactPointsAngles frontRight, MaxFlipperContactPointsAngles rearLeft, MaxFlipperContactPointsAngles rearRight)
 {
-	NESMValues nESMValues;
-
 	geometry_msgs::Pose centerOfGravity;
 	centerOfGravity.position.x = 0;
-	centerOfGravity.position.y = TracksBaseLinkDist;
-	centerOfGravity.position.z = R;
+	centerOfGravity.position.y = 0;
+	centerOfGravity.position.z = 0;
 	centerOfGravity.orientation.x = 0;
 	centerOfGravity.orientation.y = 0;
 	centerOfGravity.orientation.z = 0;
 	centerOfGravity.orientation.w = 1;
 
-	nESMValues.S_NE_frontRearLeft = stabilityAnalysis(frontLeft.pose, rearLeft.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_REAR_LEFT_FRAME, true, 1);
-	//displayAllRotatedPoints("S_NE_frontRearLeft", FLIPPER_FRONT_LEFT_FRAME);
+	double front_rear = stabilityAnalysis(frontLeft.pose, rearLeft.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_REAR_LEFT_FRAME, true, 1);
+	//double left_right = stabilityAnalysis(frontLeft.pose, rearLeft.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_REAR_LEFT_FRAME, true, 1);
 
-	nESMValues.S_NE_rearFrontLeft = stabilityAnalysis(rearLeft.pose, frontLeft.pose, centerOfGravity, FLIPPER_REAR_LEFT_FRAME, FLIPPER_FRONT_LEFT_FRAME, true, 1);
-	//displayAllRotatedPoints("S_NE_rearFrontLeft", FLIPPER_REAR_LEFT_FRAME);
-
-
-	centerOfGravity.position.y = -TracksBaseLinkDist;
-
-	nESMValues.S_NE_frontRearRight = stabilityAnalysis(frontRight.pose, rearRight.pose, centerOfGravity, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_REAR_RIGHT_FRAME, true, 1);
-	//displayAllRotatedPoints("S_NE_frontRearRight", FLIPPER_FRONT_RIGHT_FRAME);
-
-	nESMValues.S_NE_rearFrontRight = stabilityAnalysis(rearRight.pose, frontRight.pose, centerOfGravity, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_FRONT_RIGHT_FRAME, true, 1);
-	//displayAllRotatedPoints("S_NE_rearFrontRight", FLIPPER_REAR_RIGHT_FRAME);
-
-	centerOfGravity.position.x = 0.244;
-	centerOfGravity.position.y = 0;
-	frontLeft.pose.position.x = 0;
-	frontRight.pose.position.x = 0;
-	rearLeft.pose.position.x = 0;
-	rearRight.pose.position.x = 0;
-
-	nESMValues.S_NE_leftRightFront = stabilityAnalysis(frontLeft.pose, frontRight.pose, centerOfGravity, FLIPPER_FRONT_LEFT_FRAME, FLIPPER_FRONT_RIGHT_FRAME, false, -1);
-	nESMValues.S_NE_rightLeftFront = stabilityAnalysis(frontRight.pose, frontLeft.pose, centerOfGravity, FLIPPER_FRONT_RIGHT_FRAME, FLIPPER_FRONT_LEFT_FRAME, false, 1);
-
-	centerOfGravity.position.x = -0.244;
-
-	nESMValues.S_NE_leftRightRear = stabilityAnalysis(rearLeft.pose, rearRight.pose, centerOfGravity, FLIPPER_REAR_LEFT_FRAME, FLIPPER_REAR_RIGHT_FRAME, false, 1);
-	//displayAllRotatedPoints("S_NE_leftRightRear", FLIPPER_REAR_LEFT_FRAME);
-
-	nESMValues.S_NE_rightLeftRear = stabilityAnalysis(rearRight.pose, rearLeft.pose, centerOfGravity, FLIPPER_REAR_RIGHT_FRAME, FLIPPER_REAR_LEFT_FRAME, false, -1);
-	//displayAllRotatedPoints("S_NE_rightLeftRear", FLIPPER_REAR_RIGHT_FRAME);
-
-
-	return nESMValues;
+	//if(front_rear <= thresholdNESM && left_right <= thresholdNESM)
+	//{
+	//	return 3;
+	//}
+	if(front_rear <= S_NE_thresshold)
+	{
+		return 2;
+	}
+	//else if(left_right <= S_NE_thresshold)
+	//{
+	//	return 1;
+	//}
+	else
+	{
+		return 0;
+	}
 }
 
 void FlipperControl::displayAllRotatedPoints(const std::string& position, const std::string& frame)
 {
-	displayRotatedPoints(clcNESM.g1_public, position + "g1", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(clcNESM.g2_public, position + "g2", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(clcNESM.c_public, position + "c", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(clcNESM.g1_prime_public, position + "g1_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(clcNESM.g2_prime_public, position + "g2_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(clcNESM.c_prime_public, position + "c_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(clcNESM.p_highest_public, position + "p_highest_public", frame, 0.0, 1.0, 0.0);
+	displayRotatedPoints(nesm.g1_public, position + "g1", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(nesm.g2_public, position + "g2", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(nesm.c_public, position + "c", frame, 0.0, 0.0, 1.0);
+	displayRotatedPoints(nesm.g1_prime_public, position + "g1_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(nesm.g2_prime_public, position + "g2_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(nesm.c_prime_public, position + "c_prime", frame, 1.0, 0.0, 0.0);
+	displayRotatedPoints(nesm.p_highest_public, position + "p_highest_public", frame, 0.0, 1.0, 0.0);
 
 }
 void FlipperControl::displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b)
@@ -471,7 +405,7 @@ void FlipperControl::displayRotatedPoints(const cv::Vec3d& point, const std::str
 	pose.position.y = point[1];
 	pose.position.z = point[2];
 	poses.push_back(pose);
-	markerPublisher.publish(getContactPoints.creatMarkerArrayFlipperPoints(poses , name, frame,  0.0, 0.0, 1.0));
+	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(poses , name, frame,  0.0, 0.0, 1.0));
 }
 double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
 {
@@ -485,7 +419,7 @@ double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
 	}
 }
 
-void FlipperControl::publishAngles (flipperAngles robotFlipperAngles)
+void FlipperControl::publishAngles (RobotFlipperAngles robotFlipperAngles)
 {
 	static std_msgs::Float64 frontFlipperAngleDesiredMsg;
 	static std_msgs::Float64 rearFlipperAngleDesiredMsg;

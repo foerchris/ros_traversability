@@ -35,7 +35,7 @@
 #include <chrono>
 #include <thread>
 
-#include <flipper_control/GetContactPoints.h>
+#include <flipper_control/CropMap.h>
 #include "simulations_kontrolle/GetObjectInfoFromYaml.h"
 #include "simulations_kontrolle/MazeReader.h"
 
@@ -163,7 +163,7 @@ class SimulationsKontrolleNavigation
 
 	visualization_msgs::MarkerArray markerArray;
 
-	GetContactPoints getContactPoints;
+	CropMap cropMap;
 	GetObjectInfoFromYaml getObjectInfoFromYaml_;
 	MazeReader mazeReader;
 

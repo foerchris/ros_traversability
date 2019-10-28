@@ -1,23 +1,23 @@
 /*
- * ClcNESM.h
+ * NESM.h
  *
  *  Created on: 01.02.2019
  *      Author: chfo
  */
 
-#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CLCNESM_H_
-#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CLCNESM_H_
+#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_NESM_H_
+#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_NESM_H_
 
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <opencv2/core.hpp>
-class ClcNESM
+class NESM
 {
 	public:
-	ClcNESM();
-	virtual ~ClcNESM();
+	NESM();
+	virtual ~NESM();
 
 	double clcNESMStabilityMeasure(const geometry_msgs::Pose& g1, const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const bool& rotatePitch, const int& rotationDirection);
 
@@ -46,4 +46,4 @@ class ClcNESM
 
 };
 
-#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CLCNESM_H_ */
+#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_NESM_H_ */

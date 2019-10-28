@@ -35,7 +35,7 @@
 #include <chrono>
 #include <thread>
 
-#include <flipper_control/GetContactPoints.h>
+#include <flipper_control/CropMap.h>
 #include "simulations_kontrolle/GetObjectInfoFromYaml.h"
 
 
@@ -161,7 +161,7 @@ class SimulationsKontrolleFlipper
 
 	visualization_msgs::MarkerArray markerArray;
 
-	GetContactPoints getContactPoints;
+	CropMap cropMap;
 	GetObjectInfoFromYaml getObjectInfoFromYaml_;
 
 };

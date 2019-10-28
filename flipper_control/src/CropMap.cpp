@@ -5,7 +5,7 @@
  *      Author: chfo
  */
 
-#include <flipper_control/GetContactPoints.h>
+#include <flipper_control/CropMap.h>
 
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
@@ -22,7 +22,7 @@ using namespace cv;
 constexpr double D2R = M_PI / 180.0;
 constexpr double R2D = 180.0 / M_PI;
 
-GetContactPoints::GetContactPoints()
+CropMap::CropMap()
 {
 
 	tfListener = std::unique_ptr<tf::TransformListener> (new tf::TransformListener);
@@ -39,15 +39,15 @@ GetContactPoints::GetContactPoints()
 	resultion = 0.06;
 }
 
-GetContactPoints::~GetContactPoints()
+CropMap::~CropMap()
 {
 
 }
-void GetContactPoints::setConstants(const double& imageResultion)
+void CropMap::setConstants(const double& imageResultion)
 {
 	resultion = imageResultion;
 }
-visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+visualization_msgs::MarkerArray CropMap::creatMarkerArrayFlipperPoints(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;
 
@@ -58,7 +58,7 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperPoints(
 	return markerArray;
 }
 
-visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y, const double& z,const  double& r,const double& g,const double& b,const double& a)
+visualization_msgs::Marker CropMap::createMarker (const std::string& tfFrame, const std::string& ns,const int& id,const double& x,const double& y, const double& z,const  double& r,const double& g,const double& b,const double& a)
 {
 	visualization_msgs::Marker marker;
 
@@ -91,7 +91,7 @@ visualization_msgs::Marker GetContactPoints::createMarker (const std::string& tf
 	return marker;
 }
 
-visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperLine(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+visualization_msgs::MarkerArray CropMap::creatMarkerArrayFlipperLine(const std::vector<geometry_msgs::Pose>& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;
 
@@ -100,7 +100,7 @@ visualization_msgs::MarkerArray GetContactPoints::creatMarkerArrayFlipperLine(co
 
 	return markerArray;
 }
-visualization_msgs::Marker GetContactPoints::createLineMarker (const std::string& tfFrame, const std::string& ns,const int& id, const std::vector<geometry_msgs::Pose>& poses,const  double& r,const double& g,const double& b,const double& a)
+visualization_msgs::Marker CropMap::createLineMarker (const std::string& tfFrame, const std::string& ns,const int& id, const std::vector<geometry_msgs::Pose>& poses,const  double& r,const double& g,const double& b,const double& a)
 {
 
     visualization_msgs::Marker line_strip;
@@ -141,7 +141,7 @@ visualization_msgs::Marker GetContactPoints::createLineMarker (const std::string
 	return line_strip;
 }
 
-visualization_msgs::MarkerArray GetContactPoints::creatCubeMarkerArrayFlipperPoints(const geometry_msgs::Pose& pose, const std::string& name, const std::string& frame, float r, float g, float b)
+visualization_msgs::MarkerArray CropMap::creatCubeMarkerArrayFlipperPoints(const geometry_msgs::Pose& pose, const std::string& name, const std::string& frame, float r, float g, float b)
 {
 	visualization_msgs::MarkerArray markerArray;
 
@@ -149,7 +149,7 @@ visualization_msgs::MarkerArray GetContactPoints::creatCubeMarkerArrayFlipperPoi
 
 	return markerArray;
 }
-visualization_msgs::Marker GetContactPoints::createCubeMarker (const std::string& tfFrame, const std::string& ns,const int& id,const geometry_msgs::Pose& pose,const  double& r,const double& g,const double& b,const double& a)
+visualization_msgs::Marker CropMap::createCubeMarker (const std::string& tfFrame, const std::string& ns,const int& id,const geometry_msgs::Pose& pose,const  double& r,const double& g,const double& b,const double& a)
 {
 	visualization_msgs::Marker marker;
 
@@ -185,7 +185,7 @@ visualization_msgs::Marker GetContactPoints::createCubeMarker (const std::string
 
 
 
-std::vector<geometry_msgs::Pose> GetContactPoints::getRegions(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
+std::vector<geometry_msgs::Pose> CropMap::getRegions(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
 {
 	geometry_msgs::Pose pose;
 
@@ -234,7 +234,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getRegions(cv::Mat mapImage, 
 	return getPosesFromImage(flipperMap, nextPose, original_frame, destination_frame);
 }
 
-cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
+cv::Mat CropMap::getRobotGroundImage(cv::Mat mapImage, const double& regionLength, const double& regionWidth, const std::string& destination_frame, const std::string& original_frame)
 {
 	geometry_msgs::Pose pose;
 
@@ -285,7 +285,7 @@ cv::Mat GetContactPoints::getRobotGroundImage(cv::Mat mapImage, const double& re
 
 	return flipperMap;
 }
-double GetContactPoints::clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2)
+double CropMap::clcDistanz(const geometry_msgs::Pose& pose1,const geometry_msgs::Pose& pose2)
 {
 	double x = pose1.position.x - pose2.position.x; //calculating number to square in next step
 	double y = pose1.position.y - pose2.position.y;
@@ -300,7 +300,7 @@ double GetContactPoints::clcDistanz(const geometry_msgs::Pose& pose1,const geome
 
 
 
-cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
+cv::Mat CropMap::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
 {
     mapSizeX = mapImage.cols;
     mapSizeY = mapImage.rows;
@@ -339,7 +339,7 @@ cv::Mat GetContactPoints::getCropedImage(geometry_msgs::Pose& pose, cv::Mat mapI
 	return cropped;
 }
 
-cv::Mat GetContactPoints::getCropedImage16US1(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
+cv::Mat CropMap::getCropedImage16US1(geometry_msgs::Pose& pose, cv::Mat mapImage, double rectSizeX, double rectSizeY)
 {
     mapSizeX = mapImage.cols;
     mapSizeY = mapImage.rows;
@@ -381,7 +381,7 @@ cv::Mat GetContactPoints::getCropedImage16US1(geometry_msgs::Pose& pose, cv::Mat
 
 
 // Include center point of your rectangle, size of your rectangle and the degrees of rotation
-void GetContactPoints::DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rotatedRectangle)
+void CropMap::DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rotatedRectangle)
 {
     cv::Scalar color = cv::Scalar(255.0, 255.0, 255.0); // white
 
@@ -404,7 +404,7 @@ void GetContactPoints::DrawRotatedRectangle(cv::Mat& image, cv::RotatedRect rota
 }
 
 
-std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat flipperMaps, const geometry_msgs::Pose& nextPose, const std::string& destination_frame,const std::string& original_frame)
+std::vector<geometry_msgs::Pose> CropMap::getPosesFromImage(cv::Mat flipperMaps, const geometry_msgs::Pose& nextPose, const std::string& destination_frame,const std::string& original_frame)
 {
 	std::vector<geometry_msgs::Pose> poses;
 
@@ -462,7 +462,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::getPosesFromImage(cv::Mat fli
 	}
 	return poses;
 }
-double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double& trackLength)
+double CropMap::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double& trackLength)
 {
 	double maxZ = -1000;
 
@@ -483,7 +483,7 @@ double GetContactPoints::clcMaxZ(const std::vector<geometry_msgs::Pose>& poses, 
 	return maxZ;
 }
 
-std::vector<geometry_msgs::Pose> GetContactPoints::clcNewFlipperPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double maxZ, const std::string& baseFrame, const std::string& flipperFrame, const std::string& flipperRegionFrame)
+std::vector<geometry_msgs::Pose> CropMap::clcNewFlipperPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q, const double maxZ, const std::string& baseFrame, const std::string& flipperFrame, const std::string& flipperRegionFrame)
 {
 	std::vector<geometry_msgs::Pose> newPoses = transformPose(poses, baseFrame, flipperRegionFrame);
 
@@ -503,7 +503,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewFlipperPoses(const std:
 }
 
 
-std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
+std::vector<geometry_msgs::Pose> CropMap::clcNewPoses(const std::vector<geometry_msgs::Pose>& poses, tf2::Quaternion q)
 {
 
 
@@ -519,7 +519,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::clcNewPoses(const std::vector
 }
 
 
-geometry_msgs::Pose GetContactPoints::clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q)
+geometry_msgs::Pose CropMap::clcQuternion(const geometry_msgs::Pose& pose,const tf2::Quaternion& q)
 {
 	geometry_msgs::Pose pose_prime;
 	cv::Vec3d v(pose.position.x,pose.position.y,pose.position.z);
@@ -538,7 +538,7 @@ geometry_msgs::Pose GetContactPoints::clcQuternion(const geometry_msgs::Pose& po
 	return pose_prime;
 }
 
-geometry_msgs::Pose GetContactPoints::rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose)
+geometry_msgs::Pose CropMap::rotate_point(geometry_msgs::Pose pPose ,const float& theta,const geometry_msgs::Pose& oPose)
 {
 	geometry_msgs::Pose newPose = pPose;
 	newPose.position.x = cos(theta) * (pPose.position.x-oPose.position.x) - sin(theta) * (pPose.position.y-oPose.position.y) + oPose.position.x;
@@ -548,7 +548,7 @@ geometry_msgs::Pose GetContactPoints::rotate_point(geometry_msgs::Pose pPose ,co
 
 
 
-std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame)
+std::vector<geometry_msgs::Pose> CropMap::transformPose(const std::vector<geometry_msgs::Pose>& poses,const std::string& destination_frame,const std::string& original_frame)
 {
 	std::vector<geometry_msgs::Pose> transformedPoses;
 	geometry_msgs::Pose transPose;
@@ -560,7 +560,7 @@ std::vector<geometry_msgs::Pose> GetContactPoints::transformPose(const std::vect
 	return transformedPoses;
 }
 
-tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const double& setRoll, const double& setPitch)
+tf2::Quaternion CropMap::getDestQuat(tf2::Quaternion q, const std::string& destination_frame, const std::string& original_frame, const double& setRoll, const double& setPitch)
 {
 	geometry_msgs::Pose pose;
 
@@ -599,7 +599,7 @@ tf2::Quaternion GetContactPoints::getDestQuat(tf2::Quaternion q, const std::stri
 	return q_new;
 }
 
-geometry_msgs::Pose GetContactPoints::tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame)
+geometry_msgs::Pose CropMap::tfTransform(const geometry_msgs::Pose& pose,const std::string& destination_frame,const std::string& original_frame)
 {
 	// TF transformation of the Point which is nearest to the robot
 	const ros::Time& scanTimeStamp = ros::Time (0);

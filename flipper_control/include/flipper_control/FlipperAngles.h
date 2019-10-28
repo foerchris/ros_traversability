@@ -1,12 +1,12 @@
 /*
- * CalcFlipperAngles.h
+ * FlipperAngles.h
  *
  *  Created on: 16.01.2019
  *      Author: chfo
  */
 
-#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_
-#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_
+#ifndef ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FlipperAngles_H_
+#define ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FlipperAngles_H_
 
 
 // ROS
@@ -21,7 +21,7 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <opencv2/imgproc.hpp>
 
-struct flipperContactPointsAngles {
+struct FlipperContactPointsAngles {
 	std::vector<geometry_msgs::Pose> pose;
 	std::vector<double> phi1;
 	std::vector<double> phi2;
@@ -30,30 +30,30 @@ struct flipperContactPointsAngles {
 
 };
 
-struct maxflipperContactPointsAngles {
+struct MaxFlipperContactPointsAngles {
 	geometry_msgs::Pose pose;
 	double maxFlipperAngle;
 };
 
 
-struct flipperAngles {
+struct RobotFlipperAngles {
 	double flipperAngleFront;
 	double flipperAngleRear;
 };
 
-class CalcFlipperAngles
+class FlipperAngles
 {
 	public:
-	CalcFlipperAngles();
-	virtual ~CalcFlipperAngles();
-	maxflipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
+	FlipperAngles();
+	virtual ~FlipperAngles();
+	MaxFlipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
 
 	void setParameter(double p1, double p2, double p3, double p4);
 
 
 	private:
 
-	maxflipperContactPointsAngles maxFlipperAngle(const flipperContactPointsAngles& flipperAngles);
+	MaxFlipperContactPointsAngles maxFlipperAngle(const FlipperContactPointsAngles& flipperAngles);
 
 	double dThreshold;
 	double R;
@@ -65,4 +65,4 @@ class CalcFlipperAngles
 };
 
 
-#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_CALCFLIPPERANGLES_H_ */
+#endif /* ROS_ROBOCUP_FLIPPER_CONTROL_SRC_INCLUDE_FlipperAngles_H_ */

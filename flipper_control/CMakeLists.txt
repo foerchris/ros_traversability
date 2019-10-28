@@ -72,7 +72,7 @@ catkin_package(
 	#  DEPENDS system_lib
 )
 
-add_library(flipper_control  src/GetContactPoints.cpp)
+add_library(flipper_control  src/CropMap.cpp)
 
 
 target_link_libraries(flipper_control
@@ -83,10 +83,10 @@ target_link_libraries(flipper_control
 add_executable(flipper_control_server
 				src/flipper_control_server.cpp
 				src/FlipperControl.cpp
-				src/GetContactPoints.cpp
-				src/CalcFlipperAngles.cpp
+				src/CropMap.cpp
+				src/FlipperAngles.cpp
 				src/FitPlane.cpp
-				src/ClcNESM.cpp
+				src/NESM.cpp
 				)
 
 add_executable(tf_broadcaster

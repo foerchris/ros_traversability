@@ -200,8 +200,8 @@ void SimulationsKontrolleFlipper::publischGoal(const ros::TimerEvent& bla)
 		int from_to[] = { 0,0, 1,1};
 		cv::mixChannels( &globalMapImage, 1, out, 2, from_to, 2 );
 
-		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,2.2,1.5,  MAP_FRAME, BASE_FRAME);
-		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageDepth = cropMap.getRobotGroundImage(depth,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageAlpha = cropMap.getRobotGroundImage(alpha,2.2,1.5,  MAP_FRAME, BASE_FRAME);
 
 		//cv::mixChannels( &groundImage, 1, out, 2, from_to, 2 );
 		cv::Mat depthAlpha[2];

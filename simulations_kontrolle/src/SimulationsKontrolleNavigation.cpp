@@ -281,7 +281,7 @@ void SimulationsKontrolleNavigation::publischGoal(const ros::TimerEvent& bla)
 		cv_ptr_sub_map.header.stamp = cv_ptr->header.stamp;
 		cv_ptr_sub_map.header.frame_id =cv_ptr->header.frame_id;
 		cv_ptr_sub_map.encoding = "32FC2";
-		//cv::Mat groundImage = getContactPoints.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
+		//cv::Mat groundImage = cropMap.getRobotGroundImage(globalMapImage,2.2,1.5,  MAP_FRAME, BASE_FRAME);
 
 		cv::Mat depth( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
 		cv::Mat alpha( globalMapImage.rows, globalMapImage.cols, CV_32FC1 );
@@ -289,8 +289,8 @@ void SimulationsKontrolleNavigation::publischGoal(const ros::TimerEvent& bla)
 		int from_to[] = { 0,0, 1,1};
 		cv::mixChannels( &globalMapImage, 1, out, 2, from_to, 2 );
 
-		cv::Mat groundImageDepth = getContactPoints.getRobotGroundImage(depth,12,12,  MAP_FRAME, BASE_FRAME);
-		cv::Mat groundImageAlpha = getContactPoints.getRobotGroundImage(alpha,12,12,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageDepth = cropMap.getRobotGroundImage(depth,12,12,  MAP_FRAME, BASE_FRAME);
+		cv::Mat groundImageAlpha = cropMap.getRobotGroundImage(alpha,12,12,  MAP_FRAME, BASE_FRAME);
 
 		//cv::mixChannels( &groundImage, 1, out, 2, from_to, 2 );
 		cv::Mat depthAlpha[2];

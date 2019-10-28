@@ -1,0 +1,158 @@
+/*
+ * flipper_tf_broadcaster.cpp
+ *
+ *  Created on: 21.12.2018
+ *      Author: chfo
+ */
+
+
+#include <ros/ros.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Twist.h>
+
+#include <cstdio>
+#include <tf2/LinearMath/Quaternion.h>
+#include <nav_msgs/Odometry.h>
+
+#include <sensor_msgs/Imu.h>
+#include <dynamic_reconfigure/server.h>
+#include <flipper_control/broadcasterConfig.h>
+
+
+std::string destination_frame = "/base_link";
+std::string original_frame = "/map";
+std::string new_frame;
+
+std::string tf_prefix = "GETjag";
+
+#include <tf/transform_datatypes.h>
+
+geometry_msgs::TransformStamped static_transformStamped;
+
+double globalyaw = 0;
+
+double fixed_velocity = 0;
+geometry_msgs::Twist currentVelocity;
+double delta_t = 0.5;
+geometry_msgs::Pose deltaPose;
+geometry_msgs::Pose initPose;
+double globRoll;
+double globPitch;
+double globYaw;
+
+void imuCallback (const sensor_msgs::Imu::ConstPtr& imu_ptr)
+{
+	double x = imu_ptr->orientation.x;
+	double y = imu_ptr->orientation.y;
+	double z = imu_ptr->orientation.z;
+	double w = imu_ptr->orientation.w;
+
+	tf::Quaternion q (x, y, z, w);
+	tf::Matrix3x3 m (q);
+	m.getRPY (globRoll, globPitch, globYaw);
+}
+
+
+void cmdCallback (const geometry_msgs::TwistConstPtr& cmdMsg)
+{
+	currentVelocity.angular = cmdMsg->angular;
+	currentVelocity.linear = cmdMsg->linear;
+
+	double theta = currentVelocity.angular.z * delta_t;
+	double v_dot = currentVelocity.linear.x * delta_t;
+	//double v_dot = fixed_velocity* delta_t;
+
+	static_transformStamped.header.stamp = ros::Time::now();
+
+	static_transformStamped.transform.translation.x = initPose.position.x +  v_dot * cos(theta) ;
+	static_transformStamped.transform.translation.y = initPose.position.y + v_dot * sin(theta);
+	static_transformStamped.transform.translation.z = initPose.position.z + 0;
+
+	tf2::Quaternion quat;
+
+	if(globalyaw==0)
+	{
+		quat.setRPY(-globRoll,-globPitch,theta);
+	}
+	else
+	{
+		quat.setRPY(-globRoll,-globPitch,theta-globalyaw);
+	}
+
+	static_transformStamped.transform.rotation.x = quat.getX();
+	static_transformStamped.transform.rotation.y = quat.getY();
+	static_transformStamped.transform.rotation.z = quat.getZ();
+	static_transformStamped.transform.rotation.w = quat.getW();
+}
+void reconfigureCallback(flipper_control::broadcasterConfig &config, uint32_t level)
+{
+		  fixed_velocity =config.fixed_velocity;
+}
+
+int main(int argc, char **argv)
+{
+	ros::init(argc,argv, "tf_broadcaster");
+
+	if(strcmp(argv[1],"world")==0)
+	{
+		ROS_ERROR("Your static turtle name cannot be 'world'");
+		return -1;
+	}
+
+
+
+	static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+
+	ros::NodeHandle nodeHandle;
+	ros::Rate rate=100;
+	//ros::Subscriber odomSub = nodeHandle.subscribe<nav_msgs::Odometry> ("odom", 20, odomCallback);
+	ros::Subscriber odomSub = nodeHandle.subscribe<geometry_msgs::Twist> ("cmd_vel", 20, cmdCallback);
+	ros::Subscriber imuSub = nodeHandle.subscribe<sensor_msgs::Imu> ("/GETjag/imu/data", 20, imuCallback);
+
+	// setting up reconfigure servers
+	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig> server;
+	static dynamic_reconfigure::Server<flipper_control::broadcasterConfig>::CallbackType f;
+	f = boost::bind(&reconfigureCallback,_1, _2);
+	server.setCallback(f);
+
+	tf_prefix = "//GETjag";
+	tf_prefix = ros::this_node::getNamespace();
+
+	tf_prefix = tf_prefix.substr(2, tf_prefix.size()-1);
+
+
+	destination_frame = tf_prefix + "/" + argv[1];
+	original_frame = tf_prefix + "/" + argv[2];
+
+	static_transformStamped.header.stamp = ros::Time::now();
+	static_transformStamped.header.frame_id = original_frame;
+	static_transformStamped.child_frame_id = destination_frame;
+
+	static_transformStamped.transform.translation.x = atof(argv[3]);
+	static_transformStamped.transform.translation.y = atof(argv[4]);
+	static_transformStamped.transform.translation.z = atof(argv[5]);
+	initPose.position.x = atof(argv[3]);
+	initPose.position.y = atof(argv[4]);
+	initPose.position.z = atof(argv[5]);
+
+	globalyaw = atof(argv[8]);
+	tf2::Quaternion quat;
+	quat.setRPY(0,0, globalyaw);
+	static_transformStamped.transform.rotation.x = quat.x();
+	static_transformStamped.transform.rotation.y = quat.y();
+	static_transformStamped.transform.rotation.z = quat.z();
+	static_transformStamped.transform.rotation.w = quat.w();
+
+
+	ROS_INFO("Spinning until killed publishing %s to world", new_frame.c_str());
+	while(ros::ok())
+	{
+		static_broadcaster.sendTransform(static_transformStamped);
+		ros::spinOnce();
+		rate.sleep();
+
+	}
+	return 0;
+};
+
