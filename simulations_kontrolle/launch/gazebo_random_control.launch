@@ -3,7 +3,7 @@
 
 	<group ns="$(arg namespace)">
 
-		<node pkg="traversability_estimation" name="gazebo_random_control_node" type="gazebo_random_control_node" output="screen" respawn="false">
+		<node pkg="simulations_kontrolle" name="simulation_navigation_controle_node" type="simulation_navigation_controle_node" output="screen" respawn="false">
 		</node>
 	</group>
 

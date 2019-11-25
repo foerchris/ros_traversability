@@ -93,9 +93,9 @@ SimulationsKontrolleNavigation::SimulationsKontrolleNavigation(ros::NodeHandle& 
 	geometry_msgs::Pose startPose;
 
 	maze bla;
-	bla.x = 1.25;
-	bla.y = -4;
-	bla.orientation = -180;
+	bla.x = -3.75;
+	bla.y = 1.25;
+	bla.orientation = 0;
 
 	startPose = transformMaze(bla);
 
@@ -139,8 +139,8 @@ void SimulationsKontrolleNavigation::creatEnviroment()
 				setObject(spwanedObjects[1].name, startPose);
 				setRobotStartPose(startPose);
 */
-				bla.x = 1.25;
-				bla.y = -1,25;
+				bla.x = 3.75;
+				bla.y = -1.25;
 				bla.orientation = 0;
 
 				goalPose = transformMaze(bla);
@@ -168,7 +168,7 @@ void SimulationsKontrolleNavigation::creatEnviroment()
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
 				double dist = 0;
-				while( dist<2.0 )
+				while( dist<5.0 )
 				{
 					mazeReader.reset();
 					goalPose = transformMaze(mazeReader.getRandomCell());
@@ -188,11 +188,11 @@ void SimulationsKontrolleNavigation::creatEnviroment()
 
 				if(setMazeRnd(mt)==1)
 				{
-					setObjectInWorld(true);
+					setObjectInWorld(false);
 				}
 				else
 				{
-					setObjectInWorld(true);
+					setObjectInWorld(false);
 				}
 
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -416,8 +416,9 @@ void SimulationsKontrolleNavigation::setObjectInWorld(const bool& setMaze)
 
 		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 		//int numberOfObjects = randNumber(mt);
-		int numberOfObjects = spwanedObjects.size() - 10 ;
+		//int numberOfObjects = spwanedObjects.size() - 10 ;
 
+		int numberOfObjects = 8 ;
 
 		std::shuffle(spwanedObjects.begin()+2, spwanedObjects.end(), std::default_random_engine(seed));
 
