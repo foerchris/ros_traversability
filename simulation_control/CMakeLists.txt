@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(simulations_kontrolle)
+project(simulation_control)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
@@ -80,15 +80,15 @@ include_directories(
 
 
 
-add_executable(simulation_flipper_controle_node
-    src/simulation_flipper_controle_node.cpp
-    src/SimulationsKontrolleFlipper.cpp
+add_executable(simulation_flipper_control_node
+    src/simulation_flipper_control_node.cpp
+    src/SimulationControlFlipper.cpp
     src/GetObjectInfoFromYaml.cpp
 )
 
-add_executable(simulation_navigation_controle_node
-    src/simulation_navigation_controle_node.cpp
-    src/SimulationsKontrolleNavigation.cpp
+add_executable(simulation_navigation_control_node
+    src/simulation_navigation_control_node.cpp
+    src/SimulationControlNavigation.cpp
     src/GetObjectInfoFromYaml.cpp
     src/MazeReader.cpp
 )
@@ -101,14 +101,14 @@ add_executable(get_text_file_data
 
 
 
-target_link_libraries(simulation_flipper_controle_node
+target_link_libraries(simulation_flipper_control_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   yaml-cpp
 )
 
 
-target_link_libraries(simulation_navigation_controle_node
+target_link_libraries(simulation_navigation_control_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   yaml-cpp

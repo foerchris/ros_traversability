@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>simulations_kontrolle</name>
+  <name>simulation_control</name>
   <version>0.1.0</version>
   <description>ROS package for drl simulation kontroll in gazebo </description>
   <maintainer email="cfoer@todo.todo">anofen</maintainer>
