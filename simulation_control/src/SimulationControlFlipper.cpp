@@ -107,24 +107,6 @@ void SimulationsKontrolleFlipper::creatEnviroment()
 {
 	if(resetWorld)
 	{
-		/*nodeHandle_.setParam("End_of_episode",false);
-		resetWorld = false;
-		// set all getjag to a zero pose
-		setRobotZeroPose();
-
-		//reset obstacles
-		destroyWorld();
-
-		generateWorld(1,4);
-
-		nodeHandle_.setParam("reset_elevation_map",true);
-
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-
-		clcGoalPathSrvsCall();
-
-		nodeHandle_.setParam("Ready_to_Start_DRL_Agent",true);*/
-
 		nodeHandle_.setParam("End_of_episode",false);
 		resetWorld = false;
 		// set all getjag to a zero pose

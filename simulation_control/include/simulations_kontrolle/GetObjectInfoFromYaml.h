@@ -40,28 +40,57 @@ class GetObjectInfoFromYaml {
 		GetObjectInfoFromYaml(ros::NodeHandle& nodeHandle);
 		~GetObjectInfoFromYaml();
 
-		// load yaml file from specific location
+		/**
+		* load yaml file from specific location
+		* @param configName;
+		*/
 		void loadYaml(const std::string& configName);
 
-		// return number of objects definte by the yaml file
+		/**
+		* return number of objects define by the yaml file
+		* @return number of objects
+		*/
 		int numPossibleObjects();
 
-		// return name of the object from yaml file at index
+		/**
+		* return name of the object from yaml file at index
+		* @param index; index of the object
+		* @return name of object
+		*/
 		std::string getName(const int& index);
 
-		// return type of the object from yaml file at index
+		/**
+		* return type of the object from yaml file at index
+		* @param index; index of the object
+		* @return type of object
+		*/
 		std::string getType(const int& index);
 
-		// get allows poses for the object when placing randome
+		/**
+		* get allows poses for the object when placing random
+		* @param index; index of the object
+		* @param objectOptions; returns the the options to place objects
+		*/
 		void getinitPose(const int& index, object_options& objectOptions);
 
-		// return number of object at index definte by the yaml file
+		/**
+		* return number of object at index define by the yaml file
+		* @param index; index of the object
+		* @return random objects
+		*/
 		int numThisObjects(const int& index);
 
 
 	private:
 
-		// return value for object at index
+		/**
+		* get values from opjectsOptions
+		* @param index; index of the object
+		* @param object; nanme of the object
+		* @param min; min position
+		* @param max; max position
+		* @return return value
+		*/
 		int returnValue(const int& index,const std::string& object, double& min, double& max);
 
 		std::string path;

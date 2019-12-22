@@ -263,46 +263,6 @@ tf2::Quaternion FlipperControl::groundPlane(cv::Mat image, double* maxZValue, Fi
 	return quat;
 }
 
-tf2::Quaternion FlipperControl::newPlane(const cv::Mat& image,double* maxZValue, FittedPlane* fittedPlane, const double& setRoll, const double& setPitch)
-{
-	std::vector<geometry_msgs::Pose> groundContactPoints;
-
-	groundContactPoints = cropMap.getRegions(image,FlipperTrackLength, 2*TracksBaseLinkDist, MAP_FRAME, NEXT_BASE_FRAME);
-
-	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(groundContactPoints,"robot_disred_ground_pose", NEXT_BASE_FRAME,  1.0, 1.0, 0.0));
-
-	tf2::Quaternion quat = fitPlane.getRotations(*fittedPlane);
-
-	quat = cropMap.getDestQuat(quat, MAP_FRAME, NEXT_BASE_FRAME, setRoll, setPitch);
-
-	geometry_msgs::Pose pose;
-	pose.position.x = 0;
-	pose.position.y = 0;
-	pose.position.z = 0;
-
-	pose.orientation.x = quat.getX();
-	pose.orientation.y = -quat.getY();
-	pose.orientation.z = quat.getZ();
-	pose.orientation.w = quat.getW();
-
-	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_plane",NEXT_BASE_FRAME,1.0, 0.0, 0.0));
-
-
-	*maxZValue = cropMap.clcMaxZ(groundContactPoints,quat, trackLength-0.1);
-	pose.position.z = *maxZValue;
-
-	markerPublisher.publish(cropMap.creatCubeMarkerArrayFlipperPoints(pose,"new_fitted_shifted_plane",NEXT_BASE_FRAME,0.0, 1.0, 0.0));
-
-	sensor_msgs::Imu pubRotation;
-	pubRotation.orientation.x = quat.getX();
-	pubRotation.orientation.y = -quat.getY();
-	pubRotation.orientation.z = quat.getZ();
-	pubRotation.orientation.w = quat.getW();
-
-	planeRotationPub.publish(pubRotation);
-
-	return quat;
-}
 
 MaxFlipperContactPointsAngles FlipperControl::flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame)
 {
@@ -349,7 +309,7 @@ double FlipperControl::stabilityAnalysis(const geometry_msgs::Pose& g1,const geo
 
 	geometry_msgs::Pose centerOfGravityTransfromed = cropMap.tfTransform(c, NEXT_BASE_FRAME, STATIC_NEXT_BASE_FRAME);
 
-	nESMValue = nesm.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed, rotatePitch, rotationDirection);
+	nESMValue = nesm.clcNESMStabilityMeasure(frontTransfromed, rearTransfromed, centerOfGravityTransfromed);
 	return nESMValue;
 }
 
@@ -385,28 +345,6 @@ int FlipperControl::cheakNESM(MaxFlipperContactPointsAngles frontLeft, MaxFlippe
 	}
 }
 
-void FlipperControl::displayAllRotatedPoints(const std::string& position, const std::string& frame)
-{
-	displayRotatedPoints(nesm.g1_public, position + "g1", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(nesm.g2_public, position + "g2", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(nesm.c_public, position + "c", frame, 0.0, 0.0, 1.0);
-	displayRotatedPoints(nesm.g1_prime_public, position + "g1_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(nesm.g2_prime_public, position + "g2_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(nesm.c_prime_public, position + "c_prime", frame, 1.0, 0.0, 0.0);
-	displayRotatedPoints(nesm.p_highest_public, position + "p_highest_public", frame, 0.0, 1.0, 0.0);
-
-}
-void FlipperControl::displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b)
-{
-	std::vector<geometry_msgs::Pose> poses;
-	geometry_msgs::Pose pose;
-	poses.clear();
-	pose.position.x = point[0];
-	pose.position.y = point[1];
-	pose.position.z = point[2];
-	poses.push_back(pose);
-	markerPublisher.publish(cropMap.creatMarkerArrayFlipperPoints(poses , name, frame,  0.0, 0.0, 1.0));
-}
 double FlipperControl::returnBiggerVel(const double& vel1, const double& vel2)
 {
 	if(vel1>vel2)

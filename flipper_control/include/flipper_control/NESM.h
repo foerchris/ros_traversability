@@ -19,7 +19,16 @@ class NESM
 	NESM();
 	virtual ~NESM();
 
-	double clcNESMStabilityMeasure(const geometry_msgs::Pose& g1, const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const bool& rotatePitch, const int& rotationDirection);
+	/*!
+	 * calculate the nesm stability measure
+	 * @param g1
+	 * @param g2
+	 * @param c
+	 * @param rotatePitch
+	 * @param rotationDirection
+	 * @return
+	 */
+	double clcNESMStabilityMeasure(const geometry_msgs::Pose& g1, const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c);
 
 
 	cv::Vec3d g1_prime_public;

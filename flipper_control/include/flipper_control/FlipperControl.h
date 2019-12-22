@@ -60,33 +60,105 @@ class FlipperControl
 
 	private:
 
+	/*!
+	 * callback to subscribe elevation map
+	 * @param msg
+	 */
 	void MapImageCallback(const sensor_msgs::ImageConstPtr& msg);
 
+	/*!
+	 * timer to execute flipper calculation
+	 * @param event
+	 */
 	void FlipperSequenzCallback(const ros::TimerEvent& event);
 
+	/*!
+	 * Sequence to calculate flippers
+	 * @param mapImage
+	 */
 	void SequenceControl(cv::Mat mapImage);
 
+	/*!
+	 * calculate the hyperplane and max z values
+	 * @param image; image of the elevation map
+	 * @param maxZValue; max z value
+	 * @param fittedPlane; hyperplane
+	 * @return
+	 */
 	tf2::Quaternion groundPlane(cv::Mat image, double* maxZValue, FittedPlane* fittedPlane);
 
-	tf2::Quaternion newPlane(const cv::Mat& image, double* maxZValue, FittedPlane* fittedPlane, const double& setRoll, const double& setPitch);
-
-
+	/*!
+	 * croped region for the flipper
+	 * @param image; image of the elevation map
+	 * @param quat; quternion from hyperplane
+	 * @param maxZ; max z value
+	 * @param flipperFrame; frame of flipper
+	 * @param flipperRegionFrame
+	 * @return calculated flipper angles
+	 */
 	MaxFlipperContactPointsAngles flipperRegion(cv::Mat image,const tf2::Quaternion& quat, const double& maxZ, const std::string& flipperFrame, const std::string& flipperRegionFrame);
 
 	///*********************** stability analysis for all possibility's
+
+	/*!
+	 * calculate stability analysis
+	 * @param g1
+	 * @param g2
+	 * @param c
+	 * @param frame1
+	 * @param frame2
+	 * @param rotatePitch
+	 * @param rotationDirection
+	 * @return
+	 */
 	double stabilityAnalysis(const geometry_msgs::Pose& g1,const geometry_msgs::Pose& g2, const geometry_msgs::Pose& c, const std::string& frame1, const std::string& frame2,  const bool& rotatePitch, const int& rotationDirection);
+
+	/*!
+	 * check if the stability criteria is satisfied
+	 * @param frontLeft; nesm front, from right to left
+	 * @param frontRight; nesm front, from left to right
+	 * @param rearLeft; nesm rear, from right to left
+	 * @param rearRight; nesm rear, from left to right
+	 * @return return 0 if robot is stable
+	 */
 	int cheakNESM(MaxFlipperContactPointsAngles frontLeft, MaxFlipperContactPointsAngles frontRight, MaxFlipperContactPointsAngles rearLeft, MaxFlipperContactPointsAngles rearRight);
-	void displayAllRotatedPoints(const std::string& position, const std::string& frame);
-	void displayRotatedPoints(const cv::Vec3d& point, const std::string& name, const std::string& frame, float r, float g, float b);
 
 
+	/*!
+	 * return bigger value
+	 * @param vel1
+	 * @param vel2
+	 * @return bigger value
+	 */
 	double returnBiggerVel(const double& vel1, const double& vel2);
 
+	/*!
+	 * publish the flipper angle for the robot
+	 * @param robotFlipperAngles
+	 */
 	void publishAngles (RobotFlipperAngles robotFlipperAngles);
 
+	/*!
+	 * add two poses
+	 * @param pose1
+	 * @param pose2
+	 * @return result
+	 */
 	geometry_msgs::Pose addPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
+
+	/*!
+	 * subtract two poses
+	 * @param pose1
+	 * @param pose2
+	 * @return result
+	 */
 	geometry_msgs::Pose subPose(const geometry_msgs::Pose& pose1, const geometry_msgs::Pose& pose2);
 
+	/*!
+	 * dynamic reconfigure callback
+	 * @param config
+	 * @param level
+	 */
 	void reconfigureCallback(flipper_control::FlipperControlConfig&config, uint32_t level);
 
 	ros::Publisher markerPublisher;

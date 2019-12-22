@@ -46,13 +46,31 @@ class FlipperAngles
 	public:
 	FlipperAngles();
 	virtual ~FlipperAngles();
+
+	/*!
+	 * calculate flipper contact angles
+	 * @param values; ground contact points
+	 * @return max flipper contact points
+	 */
 	MaxFlipperContactPointsAngles clcContactAngles(const std::vector<geometry_msgs::Pose>& values);
 
+	/*!
+	 * set flipper parameters
+	 * @param p1
+	 * @param p2
+	 * @param p3
+	 * @param p4
+	 */
 	void setParameter(double p1, double p2, double p3, double p4);
 
 
 	private:
 
+	/*!
+	 * get max flipper angles
+	 * @param flipperAngles; flipper angles
+	 * @return max flipper angles
+	 */
 	MaxFlipperContactPointsAngles maxFlipperAngle(const FlipperContactPointsAngles& flipperAngles);
 
 	double dThreshold;

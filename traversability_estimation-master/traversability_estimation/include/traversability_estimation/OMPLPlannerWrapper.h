@@ -42,21 +42,43 @@ class OMPLPlanner
 		OMPLPlanner ();
 		~OMPLPlanner ();
 
-		// plan a path from current pose to goal pose
+		/*!
+		 * plan a path from current pose to goal pose
+		 * @param goal_d; goal pose
+		 * @param waypoints; final path
+		 */
 		void plan (pose goal_d, std::vector<pose> &waypoints);
 
-		// set reference to traversability map
+		/*!
+		 * set reference to traversability map
+		 * @param traversabilityMap; pointer to object of traversabilityMap
+		 */
 		void setTraversabilityMap (traversability_estimation::TraversabilityMap* traversabilityMap);
 
-		// set reference to traversability map as gridmap
+		/*!
+		 * set reference to traversability map as gridmap
+		 * @param travGridMap; traversability map as Grid Map
+		 */
 		void setTraversabilityGridMap(grid_map::GridMap travGridMap);
 
-		// service call to calculate path
+		/*!
+		 * service call to calculate path
+		 * @param request
+		 * @param response
+		 * @return
+		 */
 		bool clcPathCallback( std_srvs::Empty::Request& request, std_srvs::Empty::Response& response);
 
-		// Transform pose relative to robot to pose relative to map
+		/*!
+		 * Transform pose relative to robot to pose relative to map
+		 * @param Pose; pose to transform
+		 */
 		void robotToGlobaleTransform(pose &Pose);
-		// Transform pose relative to map to pose relative to robot
+
+		/*!
+		 * Transform pose relative to map to pose relative to robot
+		 * @param Pose; pose to transform
+		 */
 		void globaleToRobotTransform(pose &Pose);
 
 

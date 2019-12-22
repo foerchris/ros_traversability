@@ -26,13 +26,32 @@ class MazeReader
  public:
 	MazeReader ();
 	~MazeReader ();
+	/**
+	* read maze and get wall positions
+	* @param num; number of training environment
+	* @return return position of maze walls
+	*/
 	std::vector<maze> readTextFile (const int& num);
+	/**
+	* get random cells form possible cells
+	* @param num; number of objects
+	* @return return random cell from possible cells
+	*/
 	maze getRandomCell();
+
+	/**
+	* reset the maze
+	*/
 	void reset();
 
 
  private:
+	/**
+	* get all possible cells
+	* @return all possible centers of cells
+	*/
 	std::vector<maze> getPosibleCells ();
+
 
 	std::vector<maze> possible_cells;
 	std::vector<int> forbidden_list;
